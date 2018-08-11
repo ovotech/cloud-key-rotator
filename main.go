@@ -26,6 +26,7 @@ type Specification struct {
 	AgeMetricGranularity string `default:"day"`
 	AwsRegions           string
 	GcpProject           string
+	IncludeAwsUserKeys   bool
 	DatadogAPIKey        string `required:"true"`
 }
 
@@ -39,18 +40,27 @@ func main() {
 	providers = append(providers, keys.Provider{GcpProject: "",
 		Provider: "aws"})
 	keySlice := keys.Keys(providers)
-	keySlice = filterKeys(keySlice)
+	keySlice = filterKeys(keySlice, spec)
+	keySlice = adjustAges(keySlice, spec)
 	postMetric(keySlice, spec)
 }
 
-func filterKeys(keys []keys.Key) (filteredKeys []keys.Key) {
+func adjustAges(keys []keys.Key, spec Specification) (adjustedKeys []keys.Key) {
+	for _, key := range keys {
+		key.Age = adjustAgeScale(key.Age, spec)
+		adjustedKeys = append(adjustedKeys, key)
+	}
+	return adjustedKeys
+}
+
+func filterKeys(keys []keys.Key, spec Specification) (filteredKeys []keys.Key) {
 	for _, key := range keys {
 		valid := false
 		switch key.Provider {
 		case "gcp":
 			valid = validGcpKey(key)
 		case "aws":
-			valid = validAwsKey(key)
+			valid = validAwsKey(key, spec)
 		}
 		if valid {
 			filteredKeys = append(filteredKeys, key)
@@ -70,9 +80,14 @@ func validGcpKey(key keys.Key) (valid bool) {
 	return
 }
 
-func validAwsKey(key keys.Key) (valid bool) {
-	match, _ := regexp.MatchString("^[a-zA-Z]+$\\.^[a-zA-Z]+$", key.Name)
-	valid = !match
+func validAwsKey(key keys.Key, spec Specification) (valid bool) {
+	if spec.IncludeAwsUserKeys {
+		valid = true
+	} else {
+		match, _ := regexp.MatchString("[a-zA-Z]\\.[a-zA-Z]", key.Name)
+		valid = !match
+	}
+
 	return
 }
 
@@ -99,7 +114,7 @@ func postMetric(keys []keys.Key, spec Specification) {
 				strconv.FormatInt(time.Now().Unix(), 10) +
 				`, ` + strconv.FormatFloat(key.Age, 'f', 2, 64) +
 				`]],"type":"count","tags":["team:cepheus","environment:prod","key:` +
-				key.Name + `","id:` + key.ID + `"]}]}`)
+				key.Name + `","id:` + key.ID + `","provider:` + key.Provider + `"]}]}`)
 		req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonString))
 		check(err)
 		req.Header.Set("Content-type", "application/json")
