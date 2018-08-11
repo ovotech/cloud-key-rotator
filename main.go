@@ -45,6 +45,8 @@ func main() {
 	postMetric(keySlice, spec)
 }
 
+//adjustAges returns a keys.Key slice containing the same keys but with keyAge
+// changed to whatever's been configured (min/day/hour)
 func adjustAges(keys []keys.Key, spec Specification) (adjustedKeys []keys.Key) {
 	for _, key := range keys {
 		key.Age = adjustAgeScale(key.Age, spec)
@@ -53,6 +55,8 @@ func adjustAges(keys []keys.Key, spec Specification) (adjustedKeys []keys.Key) {
 	return adjustedKeys
 }
 
+//filterKeys returns a keys.Key slice created by filtering the provided
+// keys.Key slice based on specific rules for each provider
 func filterKeys(keys []keys.Key, spec Specification) (filteredKeys []keys.Key) {
 	for _, key := range keys {
 		valid := false
@@ -69,6 +73,8 @@ func filterKeys(keys []keys.Key, spec Specification) (filteredKeys []keys.Key) {
 	return
 }
 
+//validGcpKey returns a bool that reflects whether the provided keys.Key is
+// valid, based on gcp-specific rules
 func validGcpKey(key keys.Key) (valid bool) {
 	// GCP managed keys should have roughly a week of life remaining.
 	// User mnaaged keys by default have a lifetime of 10 years.
@@ -80,6 +86,8 @@ func validGcpKey(key keys.Key) (valid bool) {
 	return
 }
 
+//validAwsKey returns a bool that reflects whether the provided keys.Key is
+// valid, based on aws-specific rules
 func validAwsKey(key keys.Key, spec Specification) (valid bool) {
 	if spec.IncludeAwsUserKeys {
 		valid = true
@@ -91,6 +99,9 @@ func validAwsKey(key keys.Key, spec Specification) (valid bool) {
 	return
 }
 
+//adjustAgeScale converts the provided keyAge into the desired age
+// granularity, based on the 'AgeMetricGranularity' in the provided
+// Specification
 func adjustAgeScale(keyAge float64, spec Specification) (adjustedAge float64) {
 	switch spec.AgeMetricGranularity {
 	case "day":
@@ -106,6 +117,7 @@ func adjustAgeScale(keyAge float64, spec Specification) (adjustedAge float64) {
 	return
 }
 
+//postMetric posts details of each keys.Key to a metrics api
 func postMetric(keys []keys.Key, spec Specification) {
 	url := strings.Join([]string{datadogURL, spec.DatadogAPIKey}, "")
 	for _, key := range keys {
