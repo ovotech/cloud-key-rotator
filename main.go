@@ -27,7 +27,9 @@ type Specification struct {
 	AwsRegions           string
 	GcpProject           string
 	IncludeAwsUserKeys   bool
-	DatadogAPIKey        string `required:"true"`
+	DatadogAPIKey        string
+	RotationMode         bool
+	Providers            []string
 }
 
 func main() {
@@ -35,14 +37,24 @@ func main() {
 	err := envconfig.Process(envConfigPrefix, &spec)
 	check(err)
 	providers := make([]keys.Provider, 0)
-	providers = append(providers, keys.Provider{GcpProject: spec.GcpProject,
-		Provider: "gcp"})
-	providers = append(providers, keys.Provider{GcpProject: "",
-		Provider: "aws"})
+	for _, provider := range spec.Providers {
+		if strings.HasPrefix(provider, "gcp") && strings.Contains(provider, ":") {
+			gcpProject := strings.Split(provider, ":")[1]
+			providers = append(providers, keys.Provider{GcpProject: gcpProject,
+				Provider: "gcp"})
+		} else if provider == "aws" {
+			providers = append(providers, keys.Provider{GcpProject: "",
+				Provider: "aws"})
+		}
+	}
 	keySlice := keys.Keys(providers)
 	keySlice = filterKeys(keySlice, spec)
 	keySlice = adjustAges(keySlice, spec)
-	postMetric(keySlice, spec)
+	if spec.RotationMode {
+		//rotate keys
+	} else {
+		postMetric(keySlice, spec)
+	}
 }
 
 //adjustAges returns a keys.Key slice containing the same keys but with keyAge
