@@ -17,7 +17,7 @@ import (
 
 const (
 	datadogURL          = "https://api.datadoghq.com/api/v1/series?api_key="
-	envConfigPrefix     = "kd"
+	envConfigPrefix     = "ckr"
 	gcpAgeThresholdMins = 43200 //30 days
 )
 
