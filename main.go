@@ -29,7 +29,7 @@ type Specification struct {
 	IncludeAwsUserKeys   bool
 	DatadogAPIKey        string
 	RotationMode         bool
-	Providers            []string
+	Providers            []string `required:"true"`
 }
 
 func main() {
