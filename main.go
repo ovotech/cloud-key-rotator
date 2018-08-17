@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/eversc/cloud-key-client"
 	"github.com/kelseyhightower/envconfig"
-	"github.com/ovotech/cloud-key-client"
 )
 
 const (
