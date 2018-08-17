@@ -8,4 +8,6 @@ RUN addgroup -S ckrgroup && adduser -S ckruser -G ckrgroup
 
 USER ckruser
 
+RUN mkdir ~/.aws
+
 ENTRYPOINT /go/bin/cloud-key-rotator
