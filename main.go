@@ -24,8 +24,6 @@ const (
 //Specification struct for keylseyhightower's envconfigs
 type Specification struct {
 	AgeMetricGranularity string `default:"day"`
-	AwsRegions           string
-	GcpProject           string
 	IncludeAwsUserKeys   bool
 	DatadogAPIKey        string
 	RotationMode         bool
