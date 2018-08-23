@@ -23,7 +23,7 @@ const (
 
 //Specification struct for keylseyhightower's envconfigs
 type Specification struct {
-	AgeMetricGranularity string `default:"day"`
+	AgeMetricGranularity string `default:"min"`
 	IncludeAwsUserKeys   bool
 	DatadogAPIKey        string
 	RotationMode         bool
