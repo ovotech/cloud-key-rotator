@@ -119,7 +119,7 @@ func adjustAgeScale(keyAge float64, spec Specification) (adjustedAge float64) {
 	case "hour":
 		adjustedAge = keyAge / 60
 	case "min":
-		//do nothing, already in mins
+		adjustedAge = keyAge
 	default:
 		panic("Unsupported age metric granularity: " +
 			spec.AgeMetricGranularity)
