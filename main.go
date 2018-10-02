@@ -12,30 +12,44 @@ import (
 	"time"
 
 	"github.com/eversc/cloud-key-client"
-	"github.com/kelseyhightower/envconfig"
+	"github.com/spf13/viper"
 )
 
 const (
 	datadogURL          = "https://api.datadoghq.com/api/v1/series?api_key="
-	envConfigPrefix     = "ckr"
 	gcpAgeThresholdMins = 43200 //30 days
+	envVarPrefix        = "ckr"
 )
 
-//Specification struct for keylseyhightower's envconfigs
-type Specification struct {
-	AgeMetricGranularity string `default:"min"`
+type config struct {
+	AgeMetricGranularity string
 	IncludeAwsUserKeys   bool
 	DatadogAPIKey        string
 	RotationMode         bool
-	Providers            []string `required:"true"`
+	Providers            []string
+}
+
+//getConfig returns the application config
+func getConfig() (c config) {
+	viper.AutomaticEnv()
+	viper.SetEnvPrefix(envVarPrefix)
+	viper.SetDefault("agemetricgranularity", "min")
+	viper.SetDefault("envconfigpath", ".")
+	viper.SetDefault("envconfigname", "ckr")
+	viper.SetConfigName(viper.GetString("envconfigname"))
+	viper.AddConfigPath(viper.GetString("envconfigpath"))
+	check(viper.ReadInConfig())
+	check(viper.Unmarshal(&c))
+	if !viper.IsSet("Providers") {
+		panic("Providers is not set")
+	}
+	return
 }
 
 func main() {
-	var spec Specification
-	err := envconfig.Process(envConfigPrefix, &spec)
-	check(err)
+	c := getConfig()
 	providers := make([]keys.Provider, 0)
-	for _, provider := range spec.Providers {
+	for _, provider := range c.Providers {
 		if strings.HasPrefix(provider, "gcp") && strings.Contains(provider, ":") {
 			gcpProject := strings.Split(provider, ":")[1]
 			providers = append(providers, keys.Provider{GcpProject: gcpProject,
@@ -46,20 +60,20 @@ func main() {
 		}
 	}
 	keySlice := keys.Keys(providers)
-	keySlice = filterKeys(keySlice, spec)
-	keySlice = adjustAges(keySlice, spec)
-	if spec.RotationMode {
+	keySlice = filterKeys(keySlice, c)
+	keySlice = adjustAges(keySlice, c)
+	if c.RotationMode {
 		//rotate keys
 	} else {
-		postMetric(keySlice, spec)
+		postMetric(keySlice, c)
 	}
 }
 
 //adjustAges returns a keys.Key slice containing the same keys but with keyAge
 // changed to whatever's been configured (min/day/hour)
-func adjustAges(keys []keys.Key, spec Specification) (adjustedKeys []keys.Key) {
+func adjustAges(keys []keys.Key, config config) (adjustedKeys []keys.Key) {
 	for _, key := range keys {
-		key.Age = adjustAgeScale(key.Age, spec)
+		key.Age = adjustAgeScale(key.Age, config)
 		adjustedKeys = append(adjustedKeys, key)
 	}
 	return adjustedKeys
@@ -67,14 +81,14 @@ func adjustAges(keys []keys.Key, spec Specification) (adjustedKeys []keys.Key) {
 
 //filterKeys returns a keys.Key slice created by filtering the provided
 // keys.Key slice based on specific rules for each provider
-func filterKeys(keys []keys.Key, spec Specification) (filteredKeys []keys.Key) {
+func filterKeys(keys []keys.Key, config config) (filteredKeys []keys.Key) {
 	for _, key := range keys {
 		valid := false
 		switch key.Provider {
 		case "gcp":
 			valid = validGcpKey(key)
 		case "aws":
-			valid = validAwsKey(key, spec)
+			valid = validAwsKey(key, config)
 		}
 		if valid {
 			filteredKeys = append(filteredKeys, key)
@@ -98,8 +112,8 @@ func validGcpKey(key keys.Key) (valid bool) {
 
 //validAwsKey returns a bool that reflects whether the provided keys.Key is
 // valid, based on aws-specific rules
-func validAwsKey(key keys.Key, spec Specification) (valid bool) {
-	if spec.IncludeAwsUserKeys {
+func validAwsKey(key keys.Key, config config) (valid bool) {
+	if config.IncludeAwsUserKeys {
 		valid = true
 	} else {
 		match, _ := regexp.MatchString("[a-zA-Z]\\.[a-zA-Z]", key.Name)
@@ -112,8 +126,8 @@ func validAwsKey(key keys.Key, spec Specification) (valid bool) {
 //adjustAgeScale converts the provided keyAge into the desired age
 // granularity, based on the 'AgeMetricGranularity' in the provided
 // Specification
-func adjustAgeScale(keyAge float64, spec Specification) (adjustedAge float64) {
-	switch spec.AgeMetricGranularity {
+func adjustAgeScale(keyAge float64, config config) (adjustedAge float64) {
+	switch config.AgeMetricGranularity {
 	case "day":
 		adjustedAge = keyAge / 60 / 24
 	case "hour":
@@ -122,14 +136,14 @@ func adjustAgeScale(keyAge float64, spec Specification) (adjustedAge float64) {
 		adjustedAge = keyAge
 	default:
 		panic("Unsupported age metric granularity: " +
-			spec.AgeMetricGranularity)
+			config.AgeMetricGranularity)
 	}
 	return
 }
 
 //postMetric posts details of each keys.Key to a metrics api
-func postMetric(keys []keys.Key, spec Specification) {
-	url := strings.Join([]string{datadogURL, spec.DatadogAPIKey}, "")
+func postMetric(keys []keys.Key, config config) {
+	url := strings.Join([]string{datadogURL, config.DatadogAPIKey}, "")
 	for _, key := range keys {
 		var jsonString = []byte(
 			`{ "series" :[{"metric":"key-dater.age","points":[[` +
