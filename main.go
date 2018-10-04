@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
-	"math"
+	"log"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -12,54 +12,70 @@ import (
 	"time"
 
 	"github.com/eversc/cloud-key-client"
-	"github.com/kelseyhightower/envconfig"
+	"github.com/spf13/viper"
 )
 
 const (
 	datadogURL          = "https://api.datadoghq.com/api/v1/series?api_key="
-	envConfigPrefix     = "ckr"
 	gcpAgeThresholdMins = 43200 //30 days
+	envVarPrefix        = "ckr"
 )
 
-//Specification struct for keylseyhightower's envconfigs
-type Specification struct {
-	AgeMetricGranularity string `default:"min"`
+type cloudProvider struct {
+	Name    string
+	Project string
+}
+
+type config struct {
+	AgeMetricGranularity string
 	IncludeAwsUserKeys   bool
 	DatadogAPIKey        string
 	RotationMode         bool
-	Providers            []string `required:"true"`
+	CloudProviders       []cloudProvider
+}
+
+//getConfig returns the application config
+func getConfig() (c config) {
+	viper.AutomaticEnv()
+	viper.SetEnvPrefix(envVarPrefix)
+	viper.SetDefault("agemetricgranularity", "min")
+	viper.SetDefault("envconfigpath", "/etc/cloud-key-rotator/")
+	viper.SetDefault("envconfigname", "ckr")
+	viper.SetConfigName(viper.GetString("envconfigname"))
+	viper.AddConfigPath(viper.GetString("envconfigpath"))
+	viper.ReadInConfig()
+	err := viper.Unmarshal(&c)
+	if err != nil {
+		log.Println(err)
+	}
+	if !viper.IsSet("cloudProviders") {
+		panic("cloudProviders is not set")
+	}
+	return
 }
 
 func main() {
-	var spec Specification
-	err := envconfig.Process(envConfigPrefix, &spec)
-	check(err)
+	c := getConfig()
 	providers := make([]keys.Provider, 0)
-	for _, provider := range spec.Providers {
-		if strings.HasPrefix(provider, "gcp") && strings.Contains(provider, ":") {
-			gcpProject := strings.Split(provider, ":")[1]
-			providers = append(providers, keys.Provider{GcpProject: gcpProject,
-				Provider: "gcp"})
-		} else if provider == "aws" {
-			providers = append(providers, keys.Provider{GcpProject: "",
-				Provider: "aws"})
-		}
+	for _, provider := range c.CloudProviders {
+		providers = append(providers, keys.Provider{GcpProject: provider.Project,
+			Provider: provider.Name})
 	}
 	keySlice := keys.Keys(providers)
-	keySlice = filterKeys(keySlice, spec)
-	keySlice = adjustAges(keySlice, spec)
-	if spec.RotationMode {
+	keySlice = filterKeys(keySlice, c)
+	keySlice = adjustAges(keySlice, c)
+	if c.RotationMode {
 		//rotate keys
 	} else {
-		postMetric(keySlice, spec)
+		postMetric(keySlice, c.DatadogAPIKey)
 	}
 }
 
 //adjustAges returns a keys.Key slice containing the same keys but with keyAge
 // changed to whatever's been configured (min/day/hour)
-func adjustAges(keys []keys.Key, spec Specification) (adjustedKeys []keys.Key) {
+func adjustAges(keys []keys.Key, config config) (adjustedKeys []keys.Key) {
 	for _, key := range keys {
-		key.Age = adjustAgeScale(key.Age, spec)
+		key.Age = adjustAgeScale(key.Age, config)
 		adjustedKeys = append(adjustedKeys, key)
 	}
 	return adjustedKeys
@@ -67,14 +83,11 @@ func adjustAges(keys []keys.Key, spec Specification) (adjustedKeys []keys.Key) {
 
 //filterKeys returns a keys.Key slice created by filtering the provided
 // keys.Key slice based on specific rules for each provider
-func filterKeys(keys []keys.Key, spec Specification) (filteredKeys []keys.Key) {
+func filterKeys(keys []keys.Key, config config) (filteredKeys []keys.Key) {
 	for _, key := range keys {
-		valid := false
-		switch key.Provider {
-		case "gcp":
-			valid = validGcpKey(key)
-		case "aws":
-			valid = validAwsKey(key, spec)
+		valid := true
+		if key.Provider == "aws" {
+			valid = validAwsKey(key, config)
 		}
 		if valid {
 			filteredKeys = append(filteredKeys, key)
@@ -83,23 +96,10 @@ func filterKeys(keys []keys.Key, spec Specification) (filteredKeys []keys.Key) {
 	return
 }
 
-//validGcpKey returns a bool that reflects whether the provided keys.Key is
-// valid, based on gcp-specific rules
-func validGcpKey(key keys.Key) (valid bool) {
-	// GCP managed keys should have roughly a week of life remaining.
-	// User mnaaged keys by default have a lifetime of 10 years.
-	// ...so this is a hack to split the GCP managed (which we don't care about)
-	// from User managed keys (the latter should always pass on the first
-	// condition)
-	valid = math.Abs(key.LifeRemaining) > gcpAgeThresholdMins ||
-		key.Age > gcpAgeThresholdMins
-	return
-}
-
 //validAwsKey returns a bool that reflects whether the provided keys.Key is
 // valid, based on aws-specific rules
-func validAwsKey(key keys.Key, spec Specification) (valid bool) {
-	if spec.IncludeAwsUserKeys {
+func validAwsKey(key keys.Key, config config) (valid bool) {
+	if config.IncludeAwsUserKeys {
 		valid = true
 	} else {
 		match, _ := regexp.MatchString("[a-zA-Z]\\.[a-zA-Z]", key.Name)
@@ -112,8 +112,8 @@ func validAwsKey(key keys.Key, spec Specification) (valid bool) {
 //adjustAgeScale converts the provided keyAge into the desired age
 // granularity, based on the 'AgeMetricGranularity' in the provided
 // Specification
-func adjustAgeScale(keyAge float64, spec Specification) (adjustedAge float64) {
-	switch spec.AgeMetricGranularity {
+func adjustAgeScale(keyAge float64, config config) (adjustedAge float64) {
+	switch config.AgeMetricGranularity {
 	case "day":
 		adjustedAge = keyAge / 60 / 24
 	case "hour":
@@ -122,35 +122,37 @@ func adjustAgeScale(keyAge float64, spec Specification) (adjustedAge float64) {
 		adjustedAge = keyAge
 	default:
 		panic("Unsupported age metric granularity: " +
-			spec.AgeMetricGranularity)
+			config.AgeMetricGranularity)
 	}
 	return
 }
 
 //postMetric posts details of each keys.Key to a metrics api
-func postMetric(keys []keys.Key, spec Specification) {
-	url := strings.Join([]string{datadogURL, spec.DatadogAPIKey}, "")
-	for _, key := range keys {
-		var jsonString = []byte(
-			`{ "series" :[{"metric":"key-dater.age","points":[[` +
-				strconv.FormatInt(time.Now().Unix(), 10) +
-				`, ` + strconv.FormatFloat(key.Age, 'f', 2, 64) +
-				`]],"type":"count","tags":["team:cepheus","environment:prod","key:` +
-				key.Name + `","id:` + key.ID + `","provider:` + key.Provider + `"]}]}`)
-		req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonString))
-		check(err)
-		req.Header.Set("Content-type", "application/json")
-		client := &http.Client{}
-		resp, err := client.Do(req)
-		check(err)
-		defer resp.Body.Close()
-		if resp.StatusCode != 202 {
-			body, err := ioutil.ReadAll(resp.Body)
+func postMetric(keys []keys.Key, apiKey string) {
+	if len(apiKey) > 0 {
+		url := strings.Join([]string{datadogURL, apiKey}, "")
+		for _, key := range keys {
+			var jsonString = []byte(
+				`{ "series" :[{"metric":"key-dater.age","points":[[` +
+					strconv.FormatInt(time.Now().Unix(), 10) +
+					`, ` + strconv.FormatFloat(key.Age, 'f', 2, 64) +
+					`]],"type":"count","tags":["team:cepheus","environment:prod","key:` +
+					key.Name + `","provider:` + key.Provider + `"]}]}`)
+			req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonString))
 			check(err)
-			bodyString := string(body)
-			fmt.Println(string(bodyString))
-			panic("non-202 status code (" + strconv.Itoa(resp.StatusCode) +
-				") returned by Datadog")
+			req.Header.Set("Content-type", "application/json")
+			client := &http.Client{}
+			resp, err := client.Do(req)
+			check(err)
+			defer resp.Body.Close()
+			if resp.StatusCode != 202 {
+				body, err := ioutil.ReadAll(resp.Body)
+				check(err)
+				bodyString := string(body)
+				fmt.Println(string(bodyString))
+				panic("non-202 status code (" + strconv.Itoa(resp.StatusCode) +
+					") returned by Datadog")
+			}
 		}
 	}
 }
