@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"math"
 	"net/http"
 	"regexp"
@@ -21,12 +22,17 @@ const (
 	envVarPrefix        = "ckr"
 )
 
+type cloudProvider struct {
+	Name    string
+	Project string
+}
+
 type config struct {
 	AgeMetricGranularity string
 	IncludeAwsUserKeys   bool
 	DatadogAPIKey        string
 	RotationMode         bool
-	Providers            []string
+	CloudProviders       []cloudProvider
 }
 
 //getConfig returns the application config
@@ -34,14 +40,17 @@ func getConfig() (c config) {
 	viper.AutomaticEnv()
 	viper.SetEnvPrefix(envVarPrefix)
 	viper.SetDefault("agemetricgranularity", "min")
-	viper.SetDefault("envconfigpath", ".")
+	viper.SetDefault("envconfigpath", "/etc/cloud-key-rotator/")
 	viper.SetDefault("envconfigname", "ckr")
 	viper.SetConfigName(viper.GetString("envconfigname"))
 	viper.AddConfigPath(viper.GetString("envconfigpath"))
-	check(viper.ReadInConfig())
-	check(viper.Unmarshal(&c))
-	if !viper.IsSet("Providers") {
-		panic("Providers is not set")
+	viper.ReadInConfig()
+	err := viper.Unmarshal(&c)
+	if err != nil {
+		log.Println(err)
+	}
+	if !viper.IsSet("cloudProviders") {
+		panic("cloudProviders is not set")
 	}
 	return
 }
@@ -49,15 +58,9 @@ func getConfig() (c config) {
 func main() {
 	c := getConfig()
 	providers := make([]keys.Provider, 0)
-	for _, provider := range c.Providers {
-		if strings.HasPrefix(provider, "gcp") && strings.Contains(provider, ":") {
-			gcpProject := strings.Split(provider, ":")[1]
-			providers = append(providers, keys.Provider{GcpProject: gcpProject,
-				Provider: "gcp"})
-		} else if provider == "aws" {
-			providers = append(providers, keys.Provider{GcpProject: "",
-				Provider: "aws"})
-		}
+	for _, provider := range c.CloudProviders {
+		providers = append(providers, keys.Provider{GcpProject: provider.Project,
+			Provider: provider.Name})
 	}
 	keySlice := keys.Keys(providers)
 	keySlice = filterKeys(keySlice, c)
@@ -65,7 +68,7 @@ func main() {
 	if c.RotationMode {
 		//rotate keys
 	} else {
-		postMetric(keySlice, c)
+		postMetric(keySlice, c.DatadogAPIKey)
 	}
 }
 
@@ -142,29 +145,31 @@ func adjustAgeScale(keyAge float64, config config) (adjustedAge float64) {
 }
 
 //postMetric posts details of each keys.Key to a metrics api
-func postMetric(keys []keys.Key, config config) {
-	url := strings.Join([]string{datadogURL, config.DatadogAPIKey}, "")
-	for _, key := range keys {
-		var jsonString = []byte(
-			`{ "series" :[{"metric":"key-dater.age","points":[[` +
-				strconv.FormatInt(time.Now().Unix(), 10) +
-				`, ` + strconv.FormatFloat(key.Age, 'f', 2, 64) +
-				`]],"type":"count","tags":["team:cepheus","environment:prod","key:` +
-				key.Name + `","id:` + key.ID + `","provider:` + key.Provider + `"]}]}`)
-		req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonString))
-		check(err)
-		req.Header.Set("Content-type", "application/json")
-		client := &http.Client{}
-		resp, err := client.Do(req)
-		check(err)
-		defer resp.Body.Close()
-		if resp.StatusCode != 202 {
-			body, err := ioutil.ReadAll(resp.Body)
+func postMetric(keys []keys.Key, apiKey string) {
+	if len(apiKey) > 0 {
+		url := strings.Join([]string{datadogURL, apiKey}, "")
+		for _, key := range keys {
+			var jsonString = []byte(
+				`{ "series" :[{"metric":"key-dater.age","points":[[` +
+					strconv.FormatInt(time.Now().Unix(), 10) +
+					`, ` + strconv.FormatFloat(key.Age, 'f', 2, 64) +
+					`]],"type":"count","tags":["team:cepheus","environment:prod","key:` +
+					key.Name + `","provider:` + key.Provider + `"]}]}`)
+			req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonString))
 			check(err)
-			bodyString := string(body)
-			fmt.Println(string(bodyString))
-			panic("non-202 status code (" + strconv.Itoa(resp.StatusCode) +
-				") returned by Datadog")
+			req.Header.Set("Content-type", "application/json")
+			client := &http.Client{}
+			resp, err := client.Do(req)
+			check(err)
+			defer resp.Body.Close()
+			if resp.StatusCode != 202 {
+				body, err := ioutil.ReadAll(resp.Body)
+				check(err)
+				bodyString := string(body)
+				fmt.Println(string(bodyString))
+				panic("non-202 status code (" + strconv.Itoa(resp.StatusCode) +
+					") returned by Datadog")
+			}
 		}
 	}
 }
