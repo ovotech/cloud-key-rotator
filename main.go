@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"math"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -86,30 +85,14 @@ func adjustAges(keys []keys.Key, config config) (adjustedKeys []keys.Key) {
 // keys.Key slice based on specific rules for each provider
 func filterKeys(keys []keys.Key, config config) (filteredKeys []keys.Key) {
 	for _, key := range keys {
-		valid := false
-		switch key.Provider {
-		case "gcp":
-			valid = validGcpKey(key)
-		case "aws":
+		valid := true
+		if key.Provider == "aws" {
 			valid = validAwsKey(key, config)
 		}
 		if valid {
 			filteredKeys = append(filteredKeys, key)
 		}
 	}
-	return
-}
-
-//validGcpKey returns a bool that reflects whether the provided keys.Key is
-// valid, based on gcp-specific rules
-func validGcpKey(key keys.Key) (valid bool) {
-	// GCP managed keys should have roughly a week of life remaining.
-	// User mnaaged keys by default have a lifetime of 10 years.
-	// ...so this is a hack to split the GCP managed (which we don't care about)
-	// from User managed keys (the latter should always pass on the first
-	// condition)
-	valid = math.Abs(key.LifeRemaining) > gcpAgeThresholdMins ||
-		key.Age > gcpAgeThresholdMins
 	return
 }
 
