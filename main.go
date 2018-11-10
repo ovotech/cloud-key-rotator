@@ -9,13 +9,19 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
 	keys "github.com/eversc/cloud-key-client"
+	enc "github.com/ovotech/mantle/crypt"
 	"github.com/spf13/viper"
+	"golang.org/x/crypto/openpgp"
+	git "gopkg.in/src-d/go-git.v4"
+	"gopkg.in/src-d/go-git.v4/plumbing/object"
+	gitHttp "gopkg.in/src-d/go-git.v4/plumbing/transport/http"
 )
 
 const (
@@ -40,11 +46,12 @@ type cloudProvider struct {
 }
 
 type circleCI struct {
-	apiToken                 string
 	usernameProjectEnvVarMap map[string]string
 }
 
 type gitHub struct {
+	filepath string
+	orgRepo  string
 }
 
 type keySource struct {
@@ -54,13 +61,18 @@ type keySource struct {
 }
 
 type config struct {
-	AgeMetricGranularity string
-	IncludeAwsUserKeys   bool
-	DatadogAPIKey        string
-	RotationMode         bool
-	CloudProviders       []cloudProvider
-	IgnoreAccounts       []string
-	KeySources           []keySource
+	AgeMetricGranularity  string
+	IncludeAwsUserKeys    bool
+	verifyCircleCISuccess bool
+	DatadogAPIKey         string
+	RotationMode          bool
+	CloudProviders        []cloudProvider
+	IgnoreAccounts        []string
+	KeySources            []keySource
+	CircleCIAPIToken      string
+	GitHubAccessToken     string
+	GitName               string
+	GitEmail              string
 }
 
 //getConfig returns the application config
@@ -94,13 +106,15 @@ func main() {
 	keySlice = filterKeys(keySlice, c)
 	keySlice = adjustAges(keySlice, c)
 	if c.RotationMode {
-		rotateKeys(keySlice, c.KeySources)
+		rotateKeys(keySlice, c.KeySources, c.CircleCIAPIToken, c.GitHubAccessToken,
+			c.GitName, c.GitEmail, c.verifyCircleCISuccess)
 	} else {
 		postMetric(keySlice, c.DatadogAPIKey)
 	}
 }
 
-func rotateKeys(keySlice []keys.Key, keySources []keySource) {
+func rotateKeys(keySlice []keys.Key, keySources []keySource, circleCIAPIToken,
+	gitHubAccessToken, gitName, gitEmail string, verifyCircleCISuccess bool) {
 	//for each key:
 
 	//if above a certain age threshold:
@@ -124,15 +138,17 @@ func rotateKeys(keySlice []keys.Key, keySources []keySource) {
 			//TODO: alert
 			privateKey, err := keys.CreateKey(key)
 			check(err)
-			updateKeySources(accountKeySources, privateKey)
-			err = keys.DeleteKey(key)
-			check(err)
+			updateKeySources(accountKeySources, privateKey, circleCIAPIToken,
+				gitHubAccessToken, gitName, gitEmail, verifyCircleCISuccess)
+			//TODO: don't delete the old key yet..needs proper testing first..
+			//check(keys.DeleteKey(key))
 			//TODO: alert
 		}
 	}
 }
 
-func accountKeySources(account string, keySources []keySource) (accountKeySources []keySource, err error) {
+func accountKeySources(account string, keySources []keySource) (accountKeySources []keySource,
+	err error) {
 	err = errors.New("")
 	for _, keySource := range keySources {
 		if account == keySource.serviceAccountName {
@@ -143,16 +159,114 @@ func accountKeySources(account string, keySources []keySource) (accountKeySource
 	return
 }
 
-func updateKeySources(keySources []keySource, newKey string) {
+func updateKeySources(keySources []keySource, newKey, circleCIAPIToken,
+	gitHubAccessToken, gitName, gitEmail string, verifyCircleCISuccess bool) {
+	repoSourceStructMap := make(map[string][]keySource)
 	for _, keySource := range keySources {
 		log.Println(keySource)
-		rotateKeyInCircleCI(keySource.circleCI, newKey)
+		if &keySource.circleCI != nil {
+			rotateKeyInCircleCI(keySource.circleCI, newKey, circleCIAPIToken)
+		}
+		if &keySource.gitHub != nil {
+			orgRepo := keySource.gitHub.orgRepo
+			//group gitHub sources together so multiple keys can be updated in a single commit
+			repoSourceStructMap[orgRepo] = append(repoSourceStructMap[orgRepo], keySource)
+		}
+	}
+	singleLine := false
+	encKey := enc.CipherBytes([]byte(newKey), singleLine)
+	for orgRepo, gitHubSources := range repoSourceStructMap {
+		updateGitHubRepo(gitHubSources, orgRepo, gitHubAccessToken,
+			gitName, gitEmail, encKey, verifyCircleCISuccess)
 	}
 }
 
-func rotateKeyInCircleCI(circleci circleCI, newKey string) {
+func updateGitHubRepo(gitHubSources []keySource, orgRepo,
+	gitHubAccessToken, gitName, gitEmail string, encKey []byte,
+	verifyCircleCISuccess bool) {
+	keyNum := len(gitHubSources)
+	if keyNum > 0 {
+		//TODO: fix localDir
+		localDir := ""
+		repo := cloneGitRepo(localDir, orgRepo, gitHubAccessToken)
+		var gitCommentBuff bytes.Buffer
+		gitCommentBuff.WriteString("CKR updating ")
+
+		if keyNum > 1 {
+			gitCommentBuff.WriteString(strconv.Itoa(keyNum))
+			gitCommentBuff.WriteString(" service-account keys")
+			//iterate over sources, update each key/file
+			for _, gitHubSource := range gitHubSources {
+				gitCommentBuff.WriteString("\n")
+				gitCommentBuff.WriteString(gitHubSource.serviceAccountName)
+				writeBytesToFile(encKey, gitHubSource.gitHub.filepath)
+			}
+		} else {
+			gitHubSource := gitHubSources[0]
+			gitCommentBuff.WriteString(gitHubSource.serviceAccountName)
+			writeBytesToFile(encKey, gitHubSource.gitHub.filepath)
+		}
+		check(repo.Push(&git.PushOptions{}))
+		if verifyCircleCISuccess {
+			verifyCircleCIJobSuccess(orgRepo)
+		}
+	}
+}
+
+func verifyCircleCIJobSuccess(orgRepo string) {
+	//get list of currently running builds
+	//https://circleci.com/docs/api/#recent-builds-for-a-single-project
+
+	//iterate over the list, only match on a build which has the desired git commit hash
+
+	//grab the buildNum
+
+	//poll https://circleci.com/docs/api/#single-job until it has a status of success
+}
+
+func commitToGitRepo(repo *git.Repository, gitName, gitEmail, commitComment string) {
+	worktree, err := repo.Worktree()
+	check(err)
+	signKey, err := commitSignKey("", gitName, gitEmail, "")
+	check(err)
+
+	commit, err := worktree.Commit(commitComment, &git.CommitOptions{
+		Author: &object.Signature{
+			Name:  gitName,
+			Email: gitEmail,
+			When:  time.Now(),
+		},
+		SignKey: signKey,
+	})
+	check(err)
+	_, err = repo.CommitObject(commit)
+	check(err)
+}
+
+func writeBytesToFile(encKey []byte, filepath string) {
+	err := ioutil.WriteFile(filepath, encKey, 0644)
+	check(err)
+}
+
+func cloneGitRepo(localDir, orgRepo, token string) (repo *git.Repository) {
+	url := strings.Join([]string{"https://github.com/", orgRepo, ".git"}, "")
+	repo, err := git.PlainClone(localDir, false, &git.CloneOptions{
+		// The intended use of a GitHub personal access token is in replace of your password
+		// because access tokens can easily be revoked.
+		// https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/
+		Auth: &gitHttp.BasicAuth{
+			Username: "abc123", // yes, this can be anything except an empty string
+			Password: token,
+		},
+		URL:      url,
+		Progress: os.Stdout,
+	})
+	check(err)
+	return
+}
+
+func rotateKeyInCircleCI(circleci circleCI, newKey, circleCIAPIToken string) {
 	base64Key := b64.StdEncoding.EncodeToString([]byte(newKey))
-	apiToken := circleci.apiToken
 	for usernameProject, envVarName := range circleci.usernameProjectEnvVarMap {
 		postURL := circleCIURL(usernameProject)
 		envVarURL := postURL + "/" + envVarName
@@ -161,8 +275,8 @@ func rotateKeyInCircleCI(circleci circleCI, newKey string) {
 		client := &http.Client{}
 
 		//Delete existing circleCI env var
-		postHTTPRequest("DELETE", postURL, apiToken, circleciDeleteBytes, nil, 200,
-			client)
+		postHTTPRequest("DELETE", postURL, circleCIAPIToken, circleciDeleteBytes,
+			nil, 200, client)
 
 		//Construct payload and expected response, and post new env var to circleCI
 		circleciPostBytes, err := json.Marshal(&circleCIUpdate{Name: envVarName,
@@ -171,15 +285,15 @@ func rotateKeyInCircleCI(circleci circleCI, newKey string) {
 		circleciGetBytes, err := json.Marshal(&circleCIUpdate{Name: envVarName,
 			Value: hiddenCircleValue(base64Key)})
 		check(err)
-		postHTTPRequest("POST", envVarURL, apiToken, circleciGetBytes,
+		postHTTPRequest("POST", envVarURL, circleCIAPIToken, circleciGetBytes,
 			circleciPostBytes, 201, client)
 
 		//sleep for 10s, to protect against any replication delay
 		time.Sleep(time.Duration(10) * time.Second)
 
 		//Check the new env var is still returned
-		postHTTPRequest("GET", envVarURL, apiToken, circleciGetBytes, nil, 200,
-			client)
+		postHTTPRequest("GET", envVarURL, circleCIAPIToken, circleciGetBytes,
+			nil, 200, client)
 	}
 }
 
@@ -319,4 +433,17 @@ func check(e error) {
 	if e != nil {
 		panic(e.Error())
 	}
+}
+
+func commitSignKey(armoredKeyRing, name, email, passphrase string) (entity *openpgp.Entity, err error) {
+	reader := strings.NewReader(armoredKeyRing)
+	entityList, err := openpgp.ReadArmoredKeyRing(reader)
+	check(err)
+	_, ok := entityList[0].Identities[strings.Join([]string{name, " <", email, ">"}, "")]
+	if !ok {
+		err = errors.New("Failed to add Identity to EntityList")
+	}
+	check(entityList[0].PrivateKey.Decrypt([]byte(passphrase)))
+	entity = entityList[0]
+	return
 }
