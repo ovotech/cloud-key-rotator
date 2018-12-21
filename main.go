@@ -28,7 +28,7 @@ const (
 	datadogURL               = "https://api.datadoghq.com/api/v1/series?api_key="
 	gcpAgeThresholdMins      = 43200 //30 days
 	envVarPrefix             = "ckr"
-	rotationAgeThresholdMins = 1000000000
+	rotationAgeThresholdMins = 53
 )
 
 type circleCIDeleteResp struct {
@@ -38,6 +38,40 @@ type circleCIDeleteResp struct {
 type circleCIUpdate struct {
 	Name  string
 	Value string
+}
+
+type circleCIBuildSummaries struct {
+	buildSummaries []circleCIBuildSummary
+}
+
+type circleCIBuildSummary struct {
+	VcsURL          string `json:"vcs_url"`
+	BuildURL        string `json:"build_url"`
+	BuildNum        int    `json:"build_num"`
+	Branch          string
+	VCSRevision     string `json:"vcs_revision"`
+	CommitterName   string `json:"committer_name"`
+	CommitterEmail  string `json:"committer_email"`
+	Subject         string
+	Body            string
+	Why             string
+	DontBuild       string `json:"dont_build"`
+	QueuedAt        string `json:"queued_at"`
+	StartTime       string `json:"start_time"`
+	StopTime        string `json:"stop_time"`
+	BuildTimeMillis int    `json:"build_time_millis"`
+	Username        string
+	RepoName        string
+	Lifecycle       string
+	Outcome         string
+	Status          string
+	RetryOf         int `json:"retry_of"`
+	Previous        Previous
+}
+
+type Previous struct {
+	Status   string
+	BuildNum int `json:"build_num"`
 }
 
 type cloudProvider struct {
@@ -50,14 +84,14 @@ type circleCI struct {
 }
 
 type gitHub struct {
-	filepath string
-	orgRepo  string
+	Filepath string
+	OrgRepo  string
 }
 
 type keySource struct {
-	serviceAccountName string
-	circleCI           circleCI
-	gitHub             gitHub
+	ServiceAccountName string
+	CircleCI           circleCI
+	GitHub             gitHub
 }
 
 type config struct {
@@ -67,7 +101,10 @@ type config struct {
 	DatadogAPIKey         string
 	RotationMode          bool
 	CloudProviders        []cloudProvider
-	IgnoreAccounts        []string
+	ExcludeSAs            []string
+	IncludeSAs            []string
+	Blacklist             []string
+	Whitelist             []string
 	KeySources            []keySource
 	CircleCIAPIToken      string
 	GitHubAccessToken     string
@@ -82,8 +119,10 @@ func getConfig() (c config) {
 	viper.SetDefault("agemetricgranularity", "min")
 	viper.SetDefault("envconfigpath", "/etc/cloud-key-rotator/")
 	viper.SetDefault("envconfigname", "ckr")
-	viper.SetConfigName(viper.GetString("envconfigname"))
-	viper.AddConfigPath(viper.GetString("envconfigpath"))
+	// viper.SetConfigName(viper.GetString("envconfigname"))
+	// viper.AddConfigPath(viper.GetString("envconfigpath"))
+	viper.SetConfigName("config")
+	viper.AddConfigPath(".")
 	viper.ReadInConfig()
 	err := viper.Unmarshal(&c)
 	if err != nil {
@@ -105,6 +144,7 @@ func main() {
 	keySlice := keys.Keys(providers)
 	keySlice = filterKeys(keySlice, c)
 	keySlice = adjustAges(keySlice, c)
+	fmt.Println(keySlice)
 	if c.RotationMode {
 		rotateKeys(keySlice, c.KeySources, c.CircleCIAPIToken, c.GitHubAccessToken,
 			c.GitName, c.GitEmail, c.verifyCircleCISuccess)
@@ -138,24 +178,31 @@ func rotateKeys(keySlice []keys.Key, keySources []keySource, circleCIAPIToken,
 			//TODO: alert
 			privateKey, err := keys.CreateKey(key)
 			check(err)
+			fmt.Println("created new key")
 			updateKeySources(accountKeySources, privateKey, circleCIAPIToken,
 				gitHubAccessToken, gitName, gitEmail, verifyCircleCISuccess)
 			//TODO: don't delete the old key yet..needs proper testing first..
 			//check(keys.DeleteKey(key))
 			//TODO: alert
+		} else {
+			fmt.Println("Skipping SA: " + key.Account + ", key: " + key.ID + " as it's only " + fmt.Sprintf("%f", key.Age) + " minutes old.")
 		}
 	}
 }
 
 func accountKeySources(account string, keySources []keySource) (accountKeySources []keySource,
 	err error) {
-	err = errors.New("")
+	err = errors.New("No account key sources (in config) mapped to SA: " + account)
 	for _, keySource := range keySources {
-		if account == keySource.serviceAccountName {
+		fmt.Println(account)
+		fmt.Println(keySource.ServiceAccountName)
+		if account == keySource.ServiceAccountName {
+			fmt.Println(keySource)
 			err = nil
 			accountKeySources = append(accountKeySources, keySource)
 		}
 	}
+	fmt.Println(accountKeySources)
 	return
 }
 
@@ -164,31 +211,36 @@ func updateKeySources(keySources []keySource, newKey, circleCIAPIToken,
 	repoSourceStructMap := make(map[string][]keySource)
 	for _, keySource := range keySources {
 		log.Println(keySource)
-		if &keySource.circleCI != nil {
-			rotateKeyInCircleCI(keySource.circleCI, newKey, circleCIAPIToken)
+		if &keySource.CircleCI != nil {
+			rotateKeyInCircleCI(keySource.CircleCI, newKey, circleCIAPIToken)
 		}
-		if &keySource.gitHub != nil {
-			orgRepo := keySource.gitHub.orgRepo
+		if &keySource.GitHub != nil {
+			orgRepo := keySource.GitHub.OrgRepo
+			fmt.Println(orgRepo)
 			//group gitHub sources together so multiple keys can be updated in a single commit
 			repoSourceStructMap[orgRepo] = append(repoSourceStructMap[orgRepo], keySource)
 		}
 	}
 	singleLine := false
-	encKey := enc.CipherBytes([]byte(newKey), singleLine)
+	//TODO: Get the last string from config (it's Mantle's -n flag)
+	encKey := enc.CipherBytesFromPrimitives([]byte(newKey), singleLine, "", "",
+		"", "", "")
 	for orgRepo, gitHubSources := range repoSourceStructMap {
 		updateGitHubRepo(gitHubSources, orgRepo, gitHubAccessToken,
-			gitName, gitEmail, encKey, verifyCircleCISuccess)
+			gitName, gitEmail, circleCIAPIToken, encKey, verifyCircleCISuccess)
 	}
 }
 
 func updateGitHubRepo(gitHubSources []keySource, orgRepo,
-	gitHubAccessToken, gitName, gitEmail string, encKey []byte,
+	gitHubAccessToken, gitName, gitEmail, circleCIAPIToken string, encKey []byte,
 	verifyCircleCISuccess bool) {
 	keyNum := len(gitHubSources)
 	if keyNum > 0 {
 		//TODO: fix localDir
-		localDir := ""
+		localDir := "cloud-key-rotator-tmp-repo"
+		fmt.Println(orgRepo)
 		repo := cloneGitRepo(localDir, orgRepo, gitHubAccessToken)
+		fmt.Println("cloned git repo")
 		var gitCommentBuff bytes.Buffer
 		gitCommentBuff.WriteString("CKR updating ")
 
@@ -198,49 +250,45 @@ func updateGitHubRepo(gitHubSources []keySource, orgRepo,
 			//iterate over sources, update each key/file
 			for _, gitHubSource := range gitHubSources {
 				gitCommentBuff.WriteString("\n")
-				gitCommentBuff.WriteString(gitHubSource.serviceAccountName)
-				writeBytesToFile(encKey, gitHubSource.gitHub.filepath)
+				gitCommentBuff.WriteString(gitHubSource.ServiceAccountName)
+				// writeBytesToFile(encKey, gitHubSource.GitHub.Filepath)
 			}
 		} else {
 			gitHubSource := gitHubSources[0]
-			gitCommentBuff.WriteString(gitHubSource.serviceAccountName)
-			writeBytesToFile(encKey, gitHubSource.gitHub.filepath)
+			gitCommentBuff.WriteString(gitHubSource.ServiceAccountName)
+			// writeBytesToFile(encKey, gitHubSource.GitHub.Filepath)
 		}
-		check(repo.Push(&git.PushOptions{}))
+		w, err := repo.Worktree()
+		check(err)
+		fmt.Println(gitHubSources[0].GitHub.Filepath)
+		check(ioutil.WriteFile(localDir+"/"+gitHubSources[0].GitHub.Filepath, encKey, 0644))
+		w.Add(localDir + "/" + gitHubSources[0].GitHub.Filepath)
+		signKey, err := commitSignKey("", gitName, gitEmail, "")
+		check(err)
+		commit, err := w.Commit(gitCommentBuff.String(), &git.CommitOptions{
+			Author: &object.Signature{
+				Name:  gitName,
+				Email: gitEmail,
+				When:  time.Now(),
+			},
+			All:     true,
+			SignKey: signKey,
+		})
+		check(err)
+		_, err = repo.CommitObject(commit)
+		check(err)
+
+		fmt.Println("committed to local git repo")
+		check(repo.Push(&git.PushOptions{Auth: &gitHttp.BasicAuth{
+			Username: "abc123", // yes, this can be anything except an empty string
+			Password: gitHubAccessToken,
+		},
+			Progress: os.Stdout}))
+		fmt.Println("pushed to remote git repo")
 		if verifyCircleCISuccess {
-			verifyCircleCIJobSuccess(orgRepo)
+			verifyCircleCIJobSuccess(orgRepo, circleCIAPIToken)
 		}
 	}
-}
-
-func verifyCircleCIJobSuccess(orgRepo string) {
-	//get list of currently running builds
-	//https://circleci.com/docs/api/#recent-builds-for-a-single-project
-
-	//iterate over the list, only match on a build which has the desired git commit hash
-
-	//grab the buildNum
-
-	//poll https://circleci.com/docs/api/#single-job until it has a status of success
-}
-
-func commitToGitRepo(repo *git.Repository, gitName, gitEmail, commitComment string) {
-	worktree, err := repo.Worktree()
-	check(err)
-	signKey, err := commitSignKey("", gitName, gitEmail, "")
-	check(err)
-
-	commit, err := worktree.Commit(commitComment, &git.CommitOptions{
-		Author: &object.Signature{
-			Name:  gitName,
-			Email: gitEmail,
-			When:  time.Now(),
-		},
-		SignKey: signKey,
-	})
-	check(err)
-	_, err = repo.CommitObject(commit)
-	check(err)
 }
 
 func writeBytesToFile(encKey []byte, filepath string) {
@@ -265,10 +313,33 @@ func cloneGitRepo(localDir, orgRepo, token string) (repo *git.Repository) {
 	return
 }
 
+func verifyCircleCIJobSuccess(orgRepo, circleCIAPIToken string) {
+	//get list of currently running builds
+	//https://circleci.com/docs/api/#recent-builds-for-a-single-project
+
+	client := &http.Client{}
+	postURL := circleCIURL(orgRepo, "")
+	respBytes := postHTTPRequest("GET", postURL, circleCIAPIToken, nil, nil, 200, client)
+	var buildSummaries circleCIBuildSummaries
+	err := json.Unmarshal(respBytes, &buildSummaries)
+	check(err)
+
+	//iterate over the list, only match on a build which has the desired git commit hash
+	// for buildSummary := range buildSummaries.buildSummaries {
+	// 	// buikld
+	// }
+
+	//grab the buildNum
+
+	//poll https://circleci.com/docs/api/#single-job until it has a status of success
+}
+
 func rotateKeyInCircleCI(circleci circleCI, newKey, circleCIAPIToken string) {
+	fmt.Println("starting cirlceci key rotate process")
 	base64Key := b64.StdEncoding.EncodeToString([]byte(newKey))
+	fmt.Println("base64 encoded key")
 	for usernameProject, envVarName := range circleci.usernameProjectEnvVarMap {
-		postURL := circleCIURL(usernameProject)
+		postURL := circleCIURL(usernameProject, "/envvar")
 		envVarURL := postURL + "/" + envVarName
 		circleciDeleteBytes, err := json.Marshal(&circleCIDeleteResp{Message: "ok"})
 		check(err)
@@ -277,6 +348,7 @@ func rotateKeyInCircleCI(circleci circleCI, newKey, circleCIAPIToken string) {
 		//Delete existing circleCI env var
 		postHTTPRequest("DELETE", postURL, circleCIAPIToken, circleciDeleteBytes,
 			nil, 200, client)
+		fmt.Println("deleted var in circleci")
 
 		//Construct payload and expected response, and post new env var to circleCI
 		circleciPostBytes, err := json.Marshal(&circleCIUpdate{Name: envVarName,
@@ -287,6 +359,7 @@ func rotateKeyInCircleCI(circleci circleCI, newKey, circleCIAPIToken string) {
 		check(err)
 		postHTTPRequest("POST", envVarURL, circleCIAPIToken, circleciGetBytes,
 			circleciPostBytes, 201, client)
+		fmt.Println("created new var in circleci")
 
 		//sleep for 10s, to protect against any replication delay
 		time.Sleep(time.Duration(10) * time.Second)
@@ -294,6 +367,7 @@ func rotateKeyInCircleCI(circleci circleCI, newKey, circleCIAPIToken string) {
 		//Check the new env var is still returned
 		postHTTPRequest("GET", envVarURL, circleCIAPIToken, circleciGetBytes,
 			nil, 200, client)
+		fmt.Println("verified new var exists in circleci")
 	}
 }
 
@@ -302,14 +376,14 @@ func hiddenCircleValue(value string) (hiddenValue string) {
 	return
 }
 
-func circleCIURL(usernameProject string) (url string) {
+func circleCIURL(usernameProject, suffix string) (url string) {
 	url = strings.Join([]string{"https://circleci.com/api/v1.1/project/github/",
-		usernameProject, "/envvar"}, "")
+		usernameProject, suffix}, "")
 	return
 }
 
 func postHTTPRequest(method, url, apiToken string, expectedRespBody,
-	postBody []byte, expectedStatusCode int, client *http.Client) {
+	postBody []byte, expectedStatusCode int, client *http.Client) (responseBody []byte) {
 	req, err := http.NewRequest(method, url, bytes.NewReader(postBody))
 	check(err)
 	req.Header.Set("Content-Type", "application/json")
@@ -326,15 +400,16 @@ func postHTTPRequest(method, url, apiToken string, expectedRespBody,
 			", Got: ", strconv.Itoa(resp.StatusCode),
 			". method: ", method, ", URL: ", url}, ""))
 	}
-	responseBody, err := ioutil.ReadAll(resp.Body)
+	responseBody, err = ioutil.ReadAll(resp.Body)
 	check(err)
-	if string(responseBody) != string(expectedRespBody) {
+	if expectedRespBody != nil && len(expectedRespBody) > 0 &&
+		string(responseBody) != string(expectedRespBody) {
 		panic(strings.Join([]string{
 			"Unexpected response body returned by the circleCI API. Want: ",
 			string(expectedRespBody),
 			", Got: ", string(responseBody)}, ""))
 	}
-
+	return
 }
 
 func rotateKeyInGithub(keySource keySource) (err error) {
@@ -360,11 +435,20 @@ func filterKeys(keys []keys.Key, config config) (filteredKeys []keys.Key) {
 		if key.Provider.Provider == "aws" {
 			valid = validAwsKey(key, config)
 		}
-		if valid {
+		if valid && contains(config.IncludeSAs, key.Account) {
 			filteredKeys = append(filteredKeys, key)
 		}
 	}
 	return
+}
+
+func contains(s []string, e string) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
 }
 
 //validAwsKey returns a bool that reflects whether the provided keys.Key is
