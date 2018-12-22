@@ -95,6 +95,7 @@ type keySource struct {
 }
 
 type config struct {
+	AkrPass               string
 	AgeMetricGranularity  string
 	IncludeAwsUserKeys    bool
 	verifyCircleCISuccess bool
@@ -110,6 +111,7 @@ type config struct {
 	GitHubAccessToken     string
 	GitName               string
 	GitEmail              string
+	KmsKey                string
 }
 
 //getConfig returns the application config
@@ -147,14 +149,14 @@ func main() {
 	fmt.Println(keySlice)
 	if c.RotationMode {
 		rotateKeys(keySlice, c.KeySources, c.CircleCIAPIToken, c.GitHubAccessToken,
-			c.GitName, c.GitEmail, c.verifyCircleCISuccess)
+			c.GitName, c.GitEmail, c.KmsKey, c.AkrPass, c.verifyCircleCISuccess)
 	} else {
 		postMetric(keySlice, c.DatadogAPIKey)
 	}
 }
 
 func rotateKeys(keySlice []keys.Key, keySources []keySource, circleCIAPIToken,
-	gitHubAccessToken, gitName, gitEmail string, verifyCircleCISuccess bool) {
+	gitHubAccessToken, gitName, gitEmail, kmsKey, akrPass string, verifyCircleCISuccess bool) {
 	//for each key:
 
 	//if above a certain age threshold:
@@ -176,16 +178,17 @@ func rotateKeys(keySlice []keys.Key, keySources []keySource, circleCIAPIToken,
 		check(err)
 		if key.Age > rotationAgeThresholdMins {
 			//TODO: alert
-			privateKey, err := keys.CreateKey(key)
+			newKey, err := keys.CreateKey(key)
 			check(err)
 			fmt.Println("created new key")
-			updateKeySources(accountKeySources, privateKey, circleCIAPIToken,
-				gitHubAccessToken, gitName, gitEmail, verifyCircleCISuccess)
+			updateKeySources(accountKeySources, newKey, circleCIAPIToken,
+				gitHubAccessToken, gitName, gitEmail, kmsKey, akrPass, verifyCircleCISuccess)
 			//TODO: don't delete the old key yet..needs proper testing first..
 			//check(keys.DeleteKey(key))
 			//TODO: alert
 		} else {
-			fmt.Println("Skipping SA: " + key.Account + ", key: " + key.ID + " as it's only " + fmt.Sprintf("%f", key.Age) + " minutes old.")
+			fmt.Println("Skipping SA: " + key.Account + ", key: " + key.ID +
+				" as it's only " + fmt.Sprintf("%f", key.Age) + " minutes old.")
 		}
 	}
 }
@@ -207,93 +210,64 @@ func accountKeySources(account string, keySources []keySource) (accountKeySource
 }
 
 func updateKeySources(keySources []keySource, newKey, circleCIAPIToken,
-	gitHubAccessToken, gitName, gitEmail string, verifyCircleCISuccess bool) {
-	repoSourceStructMap := make(map[string][]keySource)
+	gitHubAccessToken, gitName, gitEmail, kmsKey, akrPass string, verifyCircleCISuccess bool) {
 	for _, keySource := range keySources {
 		log.Println(keySource)
-		if &keySource.CircleCI != nil {
-			rotateKeyInCircleCI(keySource.CircleCI, newKey, circleCIAPIToken)
-		}
+		// if &keySource.CircleCI != nil {
+		// 	rotateKeyInCircleCI(keySource.CircleCI, newKey, circleCIAPIToken)
+		// }
 		if &keySource.GitHub != nil {
 			orgRepo := keySource.GitHub.OrgRepo
 			fmt.Println(orgRepo)
-			//group gitHub sources together so multiple keys can be updated in a single commit
-			repoSourceStructMap[orgRepo] = append(repoSourceStructMap[orgRepo], keySource)
+			updateGitHubRepo(keySource, gitHubAccessToken, gitName, gitEmail,
+				circleCIAPIToken, newKey, kmsKey, akrPass, verifyCircleCISuccess)
 		}
 	}
+}
+
+func updateGitHubRepo(gitHubSource keySource,
+	gitHubAccessToken, gitName, gitEmail, circleCIAPIToken, newKey, kmsKey, akrPass string,
+	verifyCircleCISuccess bool) {
 	singleLine := false
 	//TODO: Get the last string from config (it's Mantle's -n flag)
 	encKey := enc.CipherBytesFromPrimitives([]byte(newKey), singleLine, "", "",
-		"", "", "")
-	for orgRepo, gitHubSources := range repoSourceStructMap {
-		updateGitHubRepo(gitHubSources, orgRepo, gitHubAccessToken,
-			gitName, gitEmail, circleCIAPIToken, encKey, verifyCircleCISuccess)
-	}
-}
-
-func updateGitHubRepo(gitHubSources []keySource, orgRepo,
-	gitHubAccessToken, gitName, gitEmail, circleCIAPIToken string, encKey []byte,
-	verifyCircleCISuccess bool) {
-	keyNum := len(gitHubSources)
-	if keyNum > 0 {
-		//TODO: fix localDir
-		localDir := "cloud-key-rotator-tmp-repo"
-		fmt.Println(orgRepo)
-		repo := cloneGitRepo(localDir, orgRepo, gitHubAccessToken)
-		fmt.Println("cloned git repo")
-		var gitCommentBuff bytes.Buffer
-		gitCommentBuff.WriteString("CKR updating ")
-
-		if keyNum > 1 {
-			gitCommentBuff.WriteString(strconv.Itoa(keyNum))
-			gitCommentBuff.WriteString(" service-account keys")
-			//iterate over sources, update each key/file
-			for _, gitHubSource := range gitHubSources {
-				gitCommentBuff.WriteString("\n")
-				gitCommentBuff.WriteString(gitHubSource.ServiceAccountName)
-				// writeBytesToFile(encKey, gitHubSource.GitHub.Filepath)
-			}
-		} else {
-			gitHubSource := gitHubSources[0]
-			gitCommentBuff.WriteString(gitHubSource.ServiceAccountName)
-			// writeBytesToFile(encKey, gitHubSource.GitHub.Filepath)
-		}
-		w, err := repo.Worktree()
-		check(err)
-		fmt.Println(gitHubSources[0].GitHub.Filepath)
-		check(ioutil.WriteFile(localDir+"/"+gitHubSources[0].GitHub.Filepath, encKey, 0644))
-		w.Add(localDir + "/" + gitHubSources[0].GitHub.Filepath)
-		signKey, err := commitSignKey("", gitName, gitEmail, "")
-		check(err)
-		commit, err := w.Commit(gitCommentBuff.String(), &git.CommitOptions{
-			Author: &object.Signature{
-				Name:  gitName,
-				Email: gitEmail,
-				When:  time.Now(),
-			},
-			All:     true,
-			SignKey: signKey,
-		})
-		check(err)
-		_, err = repo.CommitObject(commit)
-		check(err)
-
-		fmt.Println("committed to local git repo")
-		check(repo.Push(&git.PushOptions{Auth: &gitHttp.BasicAuth{
-			Username: "abc123", // yes, this can be anything except an empty string
-			Password: gitHubAccessToken,
-		},
-			Progress: os.Stdout}))
-		fmt.Println("pushed to remote git repo")
-		if verifyCircleCISuccess {
-			verifyCircleCIJobSuccess(orgRepo, circleCIAPIToken)
-		}
-	}
-}
-
-func writeBytesToFile(encKey []byte, filepath string) {
-	err := ioutil.WriteFile(filepath, encKey, 0644)
+		"", "", kmsKey)
+	localDir := "cloud-key-rotator-tmp-repo"
+	orgRepo := gitHubSource.GitHub.OrgRepo
+	repo := cloneGitRepo(localDir, orgRepo, gitHubAccessToken)
+	fmt.Println("cloned git repo: " + orgRepo)
+	var gitCommentBuff bytes.Buffer
+	gitCommentBuff.WriteString("CKR updating ")
+	gitCommentBuff.WriteString(gitHubSource.ServiceAccountName)
+	w, err := repo.Worktree()
 	check(err)
+	fullFilePath := localDir + "/" + gitHubSource.GitHub.Filepath
+	check(ioutil.WriteFile(fullFilePath, encKey, 0644))
+	w.Add(fullFilePath)
+	signKey, err := commitSignKey(gitName, gitEmail, akrPass)
+	check(err)
+	commit, err := w.Commit(gitCommentBuff.String(), &git.CommitOptions{
+		Author: &object.Signature{
+			Name:  gitName,
+			Email: gitEmail,
+			When:  time.Now(),
+		},
+		All:     true,
+		SignKey: signKey,
+	})
+	check(err)
+	_, err = repo.CommitObject(commit)
+	check(err)
+	fmt.Println("committed to local git repo: " + orgRepo)
+	check(repo.Push(&git.PushOptions{Auth: &gitHttp.BasicAuth{
+		Username: "abc123", // yes, this can be anything except an empty string
+		Password: gitHubAccessToken,
+	},
+		Progress: os.Stdout}))
+	fmt.Println("pushed to remote git repo: " + orgRepo)
+	if verifyCircleCISuccess {
+		verifyCircleCIJobSuccess(gitHubSource.GitHub.OrgRepo, circleCIAPIToken)
+	}
 }
 
 func cloneGitRepo(localDir, orgRepo, token string) (repo *git.Repository) {
@@ -519,8 +493,9 @@ func check(e error) {
 	}
 }
 
-func commitSignKey(armoredKeyRing, name, email, passphrase string) (entity *openpgp.Entity, err error) {
-	reader := strings.NewReader(armoredKeyRing)
+func commitSignKey(name, email, passphrase string) (entity *openpgp.Entity, err error) {
+	reader, err := os.Open("akr.asc")
+	check(err)
 	entityList, err := openpgp.ReadArmoredKeyRing(reader)
 	check(err)
 	_, ok := entityList[0].Identities[strings.Join([]string{name, " <", email, ">"}, "")]
