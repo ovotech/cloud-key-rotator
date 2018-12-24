@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	b64 "encoding/base64"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -52,7 +51,8 @@ type cloudProvider struct {
 }
 
 type circleCI struct {
-	usernameProjectEnvVarMap map[string]string
+	UsernameProject string
+	EnvVar          string
 }
 
 type gitHub struct {
@@ -64,7 +64,7 @@ type gitHub struct {
 
 type keySource struct {
 	ServiceAccountName string
-	CircleCI           circleCI
+	CircleCI           []circleCI
 	GitHub             gitHub
 }
 
@@ -130,21 +130,6 @@ func main() {
 
 func rotateKeys(keySlice []keys.Key, keySources []keySource, circleCIAPIToken,
 	gitHubAccessToken, gitName, gitEmail, kmsKey, akrPass string) {
-	//for each key:
-
-	//if above a certain age threshold:
-
-	//alert that process has started
-
-	//create new key
-
-	//update the source(s)
-
-	//verify the source update(s) has worked?
-
-	//delete the key
-
-	//alert that key has been deleted
 	processedItems := make([]string, 0)
 	for _, key := range keySlice {
 		if !contains(processedItems, key.Account) {
@@ -154,10 +139,12 @@ func rotateKeys(keySlice []keys.Key, keySources []keySource, circleCIAPIToken,
 			if key.Age > rotationAgeThresholdMins {
 				//TODO: alert
 				newKey, err := keys.CreateKey(key)
+				//TODO: alert
 				check(err)
 				fmt.Println("created new key")
 				updateKeySources(accountKeySources, newKey, circleCIAPIToken,
 					gitHubAccessToken, gitName, gitEmail, kmsKey, akrPass)
+				//TODO: alert
 				//TODO: don't delete the old key yet..needs proper testing first..
 				//check(keys.DeleteKey(key))
 				//TODO: alert
@@ -189,10 +176,10 @@ func updateKeySources(keySources []keySource, newKey, circleCIAPIToken,
 	gitHubAccessToken, gitName, gitEmail, kmsKey, akrPass string) {
 	for _, keySource := range keySources {
 		log.Println(keySource)
-		// if &keySource.CircleCI != nil {
-		// 	rotateKeyInCircleCI(keySource.CircleCI, newKey, circleCIAPIToken)
-		// }
-		if &keySource.GitHub != nil {
+		for _, circleCI := range keySource.CircleCI {
+			updateCircleCI(circleCI, newKey, circleCIAPIToken)
+		}
+		if keySource.GitHub.OrgRepo != "" {
 			orgRepo := keySource.GitHub.OrgRepo
 			fmt.Println(orgRepo)
 			updateGitHubRepo(keySource, gitHubAccessToken, gitName, gitEmail,
@@ -324,79 +311,43 @@ func obtainBuildNum(org, repo, gitHash, circleCIDeployJobName string, client *ci
 	return
 }
 
-func rotateKeyInCircleCI(circleci circleCI, newKey, circleCIAPIToken string) {
+func updateCircleCI(circleCISource circleCI, newKey, circleCIAPIToken string) {
 	fmt.Println("starting cirlceci key rotate process")
-	for usernameProject, envVarName := range circleci.usernameProjectEnvVarMap {
-		postURL := circleCIURL(usernameProject, "/envvar")
-		envVarURL := postURL + "/" + envVarName
-		circleciDeleteBytes, err := json.Marshal(&circleCIDeleteResp{Message: "ok"})
+	client := &circleci.Client{Token: circleCIAPIToken}
+	usernameProject := circleCISource.UsernameProject
+	envVarName := circleCISource.EnvVar
+	splitUsernameProject := strings.Split(usernameProject, "/")
+	username := splitUsernameProject[0]
+	project := splitUsernameProject[1]
+	if verifyCircleCiEnvVar(username, project, envVarName, client) {
+		check(client.DeleteEnvVar(username, project, envVarName))
+		fmt.Println("Deleted env var: " + envVarName + " from: " + usernameProject)
+		if !verifyCircleCiEnvVar(username, project, envVarName, client) {
+			fmt.Println("Verified env var: " + envVarName + " deletion on: " + usernameProject)
+		} else {
+			panic("Env var: " + envVarName +
+				" deletion failed on username/project: " + usernameProject)
+		}
+		_, err := client.AddEnvVar(username, project, envVarName, newKey)
 		check(err)
-		client := &http.Client{}
-
-		//Delete existing circleCI env var
-		postCircleHTTPRequest("DELETE", postURL, circleCIAPIToken, circleciDeleteBytes,
-			nil, 200, client)
-		fmt.Println("deleted var in circleci")
-
-		//Construct payload and expected response, and post new env var to circleCI
-		circleciPostBytes, err := json.Marshal(&circleCIUpdate{Name: envVarName,
-			Value: newKey})
-		check(err)
-		circleciGetBytes, err := json.Marshal(&circleCIUpdate{Name: envVarName,
-			Value: hiddenCircleValue(newKey)})
-		check(err)
-		postCircleHTTPRequest("POST", envVarURL, circleCIAPIToken, circleciGetBytes,
-			circleciPostBytes, 201, client)
-		fmt.Println("created new var in circleci")
-
-		//sleep for 10s, to protect against any replication delay
-		time.Sleep(time.Duration(10) * time.Second)
-
-		//Check the new env var is still returned
-		postCircleHTTPRequest("GET", envVarURL, circleCIAPIToken, circleciGetBytes,
-			nil, 200, client)
-		fmt.Println("verified new var exists in circleci")
+		fmt.Println("Added env var: " + envVarName + " to: " + usernameProject)
+		if verifyCircleCiEnvVar(username, project, envVarName, client) {
+			fmt.Println("Verified new env var: " + envVarName + " on: " + usernameProject)
+		} else {
+			panic("New env var: " + envVarName +
+				" not detected on username/project: " + usernameProject)
+		}
 	}
 }
 
-func hiddenCircleValue(value string) (hiddenValue string) {
-	hiddenValue = strings.Join([]string{"xxxx", value[len(value)-4:]}, "")
-	return
-}
-
-func circleCIURL(usernameProject, suffix string) (url string) {
-	url = strings.Join([]string{"https://circleci.com/api/v1.1/project/github/",
-		usernameProject, suffix}, "")
-	return
-}
-
-func postCircleHTTPRequest(method, url, apiToken string, expectedRespBody,
-	postBody []byte, expectedStatusCode int, client *http.Client) (responseBody []byte) {
-	req, err := http.NewRequest(method, url, bytes.NewReader(postBody))
+func verifyCircleCiEnvVar(username, project, envVarName string, client *circleci.Client) (exists bool) {
+	envVars, err := client.ListEnvVars(username, project)
 	check(err)
-	req.Header.Set("Content-Type", "application/json")
-	queryParams := req.URL.Query()
-	queryParams.Add("circle-token", apiToken)
-	queryParams.Add("limit", "1")
-	req.URL.RawQuery = queryParams.Encode()
-	resp, err := client.Do(req)
-	check(err)
-	defer resp.Body.Close()
-	if resp.StatusCode != expectedStatusCode {
-		panic(strings.Join([]string{
-			"Unexpected status code returned from the circleCI API. Want: ",
-			strconv.Itoa(expectedStatusCode),
-			", Got: ", strconv.Itoa(resp.StatusCode),
-			". method: ", method, ", URL: ", url}, ""))
-	}
-	responseBody, err = ioutil.ReadAll(resp.Body)
-	check(err)
-	if expectedRespBody != nil && len(expectedRespBody) > 0 &&
-		string(responseBody) != string(expectedRespBody) {
-		panic(strings.Join([]string{
-			"Unexpected response body returned by the circleCI API. Want: ",
-			string(expectedRespBody),
-			", Got: ", string(responseBody)}, ""))
+	for _, envVar := range envVars {
+		if envVar.Name == envVarName {
+			exists = true
+			break
+		}
 	}
 	return
 }
