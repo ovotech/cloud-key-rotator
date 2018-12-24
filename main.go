@@ -56,8 +56,10 @@ type circleCI struct {
 }
 
 type gitHub struct {
-	Filepath string
-	OrgRepo  string
+	Filepath              string
+	OrgRepo               string
+	VerifyCircleCISuccess bool
+	CircleCIDeployJobName string
 }
 
 type keySource struct {
@@ -67,23 +69,22 @@ type keySource struct {
 }
 
 type config struct {
-	AkrPass               string
-	AgeMetricGranularity  string
-	IncludeAwsUserKeys    bool
-	VerifyCircleCISuccess bool
-	DatadogAPIKey         string
-	RotationMode          bool
-	CloudProviders        []cloudProvider
-	ExcludeSAs            []string
-	IncludeSAs            []string
-	Blacklist             []string
-	Whitelist             []string
-	KeySources            []keySource
-	CircleCIAPIToken      string
-	GitHubAccessToken     string
-	GitName               string
-	GitEmail              string
-	KmsKey                string
+	AkrPass              string
+	AgeMetricGranularity string
+	IncludeAwsUserKeys   bool
+	DatadogAPIKey        string
+	RotationMode         bool
+	CloudProviders       []cloudProvider
+	ExcludeSAs           []string
+	IncludeSAs           []string
+	Blacklist            []string
+	Whitelist            []string
+	KeySources           []keySource
+	CircleCIAPIToken     string
+	GitHubAccessToken    string
+	GitName              string
+	GitEmail             string
+	KmsKey               string
 }
 
 //getConfig returns the application config
@@ -121,14 +122,14 @@ func main() {
 	fmt.Println(keySlice)
 	if c.RotationMode {
 		rotateKeys(keySlice, c.KeySources, c.CircleCIAPIToken, c.GitHubAccessToken,
-			c.GitName, c.GitEmail, c.KmsKey, c.AkrPass, c.VerifyCircleCISuccess)
+			c.GitName, c.GitEmail, c.KmsKey, c.AkrPass)
 	} else {
 		postMetric(keySlice, c.DatadogAPIKey)
 	}
 }
 
 func rotateKeys(keySlice []keys.Key, keySources []keySource, circleCIAPIToken,
-	gitHubAccessToken, gitName, gitEmail, kmsKey, akrPass string, verifyCircleCISuccess bool) {
+	gitHubAccessToken, gitName, gitEmail, kmsKey, akrPass string) {
 	//for each key:
 
 	//if above a certain age threshold:
@@ -144,23 +145,26 @@ func rotateKeys(keySlice []keys.Key, keySources []keySource, circleCIAPIToken,
 	//delete the key
 
 	//alert that key has been deleted
-
+	processedItems := make([]string, 0)
 	for _, key := range keySlice {
-		accountKeySources, err := accountKeySources(key.Account, keySources)
-		check(err)
-		if key.Age > rotationAgeThresholdMins {
-			//TODO: alert
-			newKey, err := keys.CreateKey(key)
+		if !contains(processedItems, key.Account) {
+			accountKeySources, err := accountKeySources(key.Account, keySources)
 			check(err)
-			fmt.Println("created new key")
-			updateKeySources(accountKeySources, newKey, circleCIAPIToken,
-				gitHubAccessToken, gitName, gitEmail, kmsKey, akrPass, verifyCircleCISuccess)
-			//TODO: don't delete the old key yet..needs proper testing first..
-			//check(keys.DeleteKey(key))
-			//TODO: alert
-		} else {
-			fmt.Println("Skipping SA: " + key.Account + ", key: " + key.ID +
-				" as it's only " + fmt.Sprintf("%f", key.Age) + " minutes old.")
+			processedItems = append(processedItems, key.Account)
+			if key.Age > rotationAgeThresholdMins {
+				//TODO: alert
+				newKey, err := keys.CreateKey(key)
+				check(err)
+				fmt.Println("created new key")
+				updateKeySources(accountKeySources, newKey, circleCIAPIToken,
+					gitHubAccessToken, gitName, gitEmail, kmsKey, akrPass)
+				//TODO: don't delete the old key yet..needs proper testing first..
+				//check(keys.DeleteKey(key))
+				//TODO: alert
+			} else {
+				fmt.Println("Skipping SA: " + key.Account + ", key: " + key.ID +
+					" as it's only " + fmt.Sprintf("%f", key.Age) + " minutes old.")
+			}
 		}
 	}
 }
@@ -182,7 +186,7 @@ func accountKeySources(account string, keySources []keySource) (accountKeySource
 }
 
 func updateKeySources(keySources []keySource, newKey, circleCIAPIToken,
-	gitHubAccessToken, gitName, gitEmail, kmsKey, akrPass string, verifyCircleCISuccess bool) {
+	gitHubAccessToken, gitName, gitEmail, kmsKey, akrPass string) {
 	for _, keySource := range keySources {
 		log.Println(keySource)
 		// if &keySource.CircleCI != nil {
@@ -192,14 +196,13 @@ func updateKeySources(keySources []keySource, newKey, circleCIAPIToken,
 			orgRepo := keySource.GitHub.OrgRepo
 			fmt.Println(orgRepo)
 			updateGitHubRepo(keySource, gitHubAccessToken, gitName, gitEmail,
-				circleCIAPIToken, newKey, kmsKey, akrPass, verifyCircleCISuccess)
+				circleCIAPIToken, newKey, kmsKey, akrPass)
 		}
 	}
 }
 
 func updateGitHubRepo(gitHubSource keySource,
-	gitHubAccessToken, gitName, gitEmail, circleCIAPIToken, newKey, kmsKey, akrPass string,
-	verifyCircleCISuccess bool) {
+	gitHubAccessToken, gitName, gitEmail, circleCIAPIToken, newKey, kmsKey, akrPass string) {
 	singleLine := false
 	//TODO: Get the last string from config (it's Mantle's -n flag)
 	decodedKey, err := b64.StdEncoding.DecodeString(newKey)
@@ -239,9 +242,10 @@ func updateGitHubRepo(gitHubSource keySource,
 	},
 		Progress: os.Stdout}))
 	fmt.Println("pushed to remote git repo: " + orgRepo)
-	if verifyCircleCISuccess {
+	if gitHubSource.GitHub.VerifyCircleCISuccess {
 		verifyCircleCIJobSuccess(gitHubSource.GitHub.OrgRepo,
-			fmt.Sprintf("%s", committed.ID()), circleCIAPIToken)
+			fmt.Sprintf("%s", committed.ID()),
+			gitHubSource.GitHub.CircleCIDeployJobName, circleCIAPIToken)
 	}
 }
 
@@ -262,39 +266,19 @@ func cloneGitRepo(localDir, orgRepo, token string) (repo *git.Repository) {
 	return
 }
 
-func verifyCircleCIJobSuccess(orgRepo, gitHash, circleCIAPIToken string) {
+func verifyCircleCIJobSuccess(orgRepo, gitHash, circleCIDeployJobName, circleCIAPIToken string) {
 	client := &circleci.Client{Token: circleCIAPIToken} // Token not required to query info for public projects
 	splitOrgRepo := strings.Split(orgRepo, "/")
 	org := splitOrgRepo[0]
 	repo := splitOrgRepo[1]
-	fmt.Println(org)
-	fmt.Println(repo)
-	targetBuildNum := 0
-	targetJobName := "dummy_deploy_with_wait"
+	targetBuildNum := obtainBuildNum(org, repo, gitHash, circleCIDeployJobName, client)
+	checkForJobSuccess(org, repo, targetBuildNum, client)
+}
+
+func checkForJobSuccess(org, repo string, targetBuildNum int, client *circleci.Client) {
 	checkAttempts := 0
 	checkLimit := 60
 	checkInterval := 5 * time.Second
-	for {
-		builds, err := client.ListRecentBuildsForProject(org, repo, "master", "running", -1, 0)
-		check(err)
-		for _, build := range builds {
-			fmt.Println("checking for target job in build: " + strconv.Itoa(build.BuildNum))
-			if build.VcsRevision == gitHash && build.BuildParameters["CIRCLE_JOB"] == targetJobName {
-				fmt.Println(build.BuildParameters["CIRCLE_JOB"])
-				targetBuildNum = build.BuildNum
-				break
-			}
-		}
-		if targetBuildNum > 0 {
-			break
-		}
-		checkAttempts++
-		if checkAttempts == checkLimit {
-			panic("Unable to determine CircleCI build number from target job name: " + targetJobName)
-		}
-		time.Sleep(checkInterval)
-	}
-	fmt.Println(targetBuildNum)
 	for {
 		build, err := client.GetBuild(org, repo, targetBuildNum)
 		check(err)
@@ -306,11 +290,38 @@ func verifyCircleCIJobSuccess(orgRepo, gitHash, circleCIAPIToken string) {
 		checkAttempts++
 		if checkAttempts == checkLimit {
 			panic("Unable to verify CircleCI job was a success. You may need to" +
-				" increase the check limit. https://circleci.com/gh/" + orgRepo + "/" +
+				" increase the check limit. https://circleci.com/gh/" + org + "/" + repo + "/" +
 				strconv.Itoa(targetBuildNum))
 		}
 		time.Sleep(checkInterval)
 	}
+}
+
+func obtainBuildNum(org, repo, gitHash, circleCIDeployJobName string, client *circleci.Client) (targetBuildNum int) {
+	checkAttempts := 0
+	checkLimit := 60
+	checkInterval := 5 * time.Second
+	for {
+		builds, err := client.ListRecentBuildsForProject(org, repo, "master", "running", -1, 0)
+		check(err)
+		for _, build := range builds {
+			fmt.Println("checking for target job in build: " + strconv.Itoa(build.BuildNum))
+			if build.VcsRevision == gitHash && build.BuildParameters["CIRCLE_JOB"] == circleCIDeployJobName {
+				fmt.Println(build.BuildParameters["CIRCLE_JOB"])
+				targetBuildNum = build.BuildNum
+				break
+			}
+		}
+		if targetBuildNum > 0 {
+			break
+		}
+		checkAttempts++
+		if checkAttempts == checkLimit {
+			panic("Unable to determine CircleCI build number from target job name: " + circleCIDeployJobName)
+		}
+		time.Sleep(checkInterval)
+	}
+	return
 }
 
 func rotateKeyInCircleCI(circleci circleCI, newKey, circleCIAPIToken string) {
