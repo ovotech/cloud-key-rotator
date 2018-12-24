@@ -16,6 +16,7 @@ import (
 	"time"
 
 	keys "github.com/eversc/cloud-key-client"
+	circleci "github.com/jszwedko/go-circleci"
 	enc "github.com/ovotech/mantle/crypt"
 	"github.com/spf13/viper"
 	"golang.org/x/crypto/openpgp"
@@ -38,35 +39,6 @@ type circleCIDeleteResp struct {
 type circleCIUpdate struct {
 	Name  string
 	Value string
-}
-
-type circleCIBuildSummaries struct {
-	buildSummaries []circleCIBuildSummary
-}
-
-type circleCIBuildSummary struct {
-	VcsURL          string `json:"vcs_url"`
-	BuildURL        string `json:"build_url"`
-	BuildNum        int    `json:"build_num"`
-	Branch          string
-	VCSRevision     string `json:"vcs_revision"`
-	CommitterName   string `json:"committer_name"`
-	CommitterEmail  string `json:"committer_email"`
-	Subject         string
-	Body            string
-	Why             string
-	DontBuild       string `json:"dont_build"`
-	QueuedAt        string `json:"queued_at"`
-	StartTime       string `json:"start_time"`
-	StopTime        string `json:"stop_time"`
-	BuildTimeMillis int    `json:"build_time_millis"`
-	Username        string
-	RepoName        string
-	Lifecycle       string
-	Outcome         string
-	Status          string
-	RetryOf         int `json:"retry_of"`
-	Previous        Previous
 }
 
 type Previous struct {
@@ -98,7 +70,7 @@ type config struct {
 	AkrPass               string
 	AgeMetricGranularity  string
 	IncludeAwsUserKeys    bool
-	verifyCircleCISuccess bool
+	VerifyCircleCISuccess bool
 	DatadogAPIKey         string
 	RotationMode          bool
 	CloudProviders        []cloudProvider
@@ -149,7 +121,7 @@ func main() {
 	fmt.Println(keySlice)
 	if c.RotationMode {
 		rotateKeys(keySlice, c.KeySources, c.CircleCIAPIToken, c.GitHubAccessToken,
-			c.GitName, c.GitEmail, c.KmsKey, c.AkrPass, c.verifyCircleCISuccess)
+			c.GitName, c.GitEmail, c.KmsKey, c.AkrPass, c.VerifyCircleCISuccess)
 	} else {
 		postMetric(keySlice, c.DatadogAPIKey)
 	}
@@ -230,8 +202,10 @@ func updateGitHubRepo(gitHubSource keySource,
 	verifyCircleCISuccess bool) {
 	singleLine := false
 	//TODO: Get the last string from config (it's Mantle's -n flag)
-	encKey := enc.CipherBytesFromPrimitives([]byte(newKey), singleLine, "", "",
-		"", "", kmsKey)
+	decodedKey, err := b64.StdEncoding.DecodeString(newKey)
+	check(err)
+	encKey := enc.CipherBytesFromPrimitives([]byte(decodedKey),
+		singleLine, "", "", "", "", kmsKey)
 	localDir := "cloud-key-rotator-tmp-repo"
 	orgRepo := gitHubSource.GitHub.OrgRepo
 	repo := cloneGitRepo(localDir, orgRepo, gitHubAccessToken)
@@ -256,7 +230,7 @@ func updateGitHubRepo(gitHubSource keySource,
 		SignKey: signKey,
 	})
 	check(err)
-	_, err = repo.CommitObject(commit)
+	committed, err := repo.CommitObject(commit)
 	check(err)
 	fmt.Println("committed to local git repo: " + orgRepo)
 	check(repo.Push(&git.PushOptions{Auth: &gitHttp.BasicAuth{
@@ -266,7 +240,8 @@ func updateGitHubRepo(gitHubSource keySource,
 		Progress: os.Stdout}))
 	fmt.Println("pushed to remote git repo: " + orgRepo)
 	if verifyCircleCISuccess {
-		verifyCircleCIJobSuccess(gitHubSource.GitHub.OrgRepo, circleCIAPIToken)
+		verifyCircleCIJobSuccess(gitHubSource.GitHub.OrgRepo,
+			fmt.Sprintf("%s", committed.ID()), circleCIAPIToken)
 	}
 }
 
@@ -287,31 +262,59 @@ func cloneGitRepo(localDir, orgRepo, token string) (repo *git.Repository) {
 	return
 }
 
-func verifyCircleCIJobSuccess(orgRepo, circleCIAPIToken string) {
-	//get list of currently running builds
-	//https://circleci.com/docs/api/#recent-builds-for-a-single-project
-
-	client := &http.Client{}
-	postURL := circleCIURL(orgRepo, "")
-	respBytes := postHTTPRequest("GET", postURL, circleCIAPIToken, nil, nil, 200, client)
-	var buildSummaries circleCIBuildSummaries
-	err := json.Unmarshal(respBytes, &buildSummaries)
-	check(err)
-
-	//iterate over the list, only match on a build which has the desired git commit hash
-	// for buildSummary := range buildSummaries.buildSummaries {
-	// 	// buikld
-	// }
-
-	//grab the buildNum
-
-	//poll https://circleci.com/docs/api/#single-job until it has a status of success
+func verifyCircleCIJobSuccess(orgRepo, gitHash, circleCIAPIToken string) {
+	client := &circleci.Client{Token: circleCIAPIToken} // Token not required to query info for public projects
+	splitOrgRepo := strings.Split(orgRepo, "/")
+	org := splitOrgRepo[0]
+	repo := splitOrgRepo[1]
+	fmt.Println(org)
+	fmt.Println(repo)
+	targetBuildNum := 0
+	targetJobName := "dummy_deploy_with_wait"
+	checkAttempts := 0
+	checkLimit := 60
+	checkInterval := 5 * time.Second
+	for {
+		builds, err := client.ListRecentBuildsForProject(org, repo, "master", "running", -1, 0)
+		check(err)
+		for _, build := range builds {
+			fmt.Println("checking for target job in build: " + strconv.Itoa(build.BuildNum))
+			if build.VcsRevision == gitHash && build.BuildParameters["CIRCLE_JOB"] == targetJobName {
+				fmt.Println(build.BuildParameters["CIRCLE_JOB"])
+				targetBuildNum = build.BuildNum
+				break
+			}
+		}
+		if targetBuildNum > 0 {
+			break
+		}
+		checkAttempts++
+		if checkAttempts == checkLimit {
+			panic("Unable to determine CircleCI build number from target job name: " + targetJobName)
+		}
+		time.Sleep(checkInterval)
+	}
+	fmt.Println(targetBuildNum)
+	for {
+		build, err := client.GetBuild(org, repo, targetBuildNum)
+		check(err)
+		fmt.Println("checking status of build")
+		if build.Status == "success" {
+			fmt.Println("detected build success")
+			break
+		}
+		checkAttempts++
+		if checkAttempts == checkLimit {
+			panic("Unable to verify CircleCI job was a success. You may need to" +
+				" increase the check limit. https://circleci.com/gh/" + orgRepo + "/" +
+				strconv.Itoa(targetBuildNum))
+		}
+		time.Sleep(checkInterval)
+	}
 }
 
 func rotateKeyInCircleCI(circleci circleCI, newKey, circleCIAPIToken string) {
 	fmt.Println("starting cirlceci key rotate process")
-	base64Key := b64.StdEncoding.EncodeToString([]byte(newKey))
-	fmt.Println("base64 encoded key")
 	for usernameProject, envVarName := range circleci.usernameProjectEnvVarMap {
 		postURL := circleCIURL(usernameProject, "/envvar")
 		envVarURL := postURL + "/" + envVarName
@@ -320,18 +323,18 @@ func rotateKeyInCircleCI(circleci circleCI, newKey, circleCIAPIToken string) {
 		client := &http.Client{}
 
 		//Delete existing circleCI env var
-		postHTTPRequest("DELETE", postURL, circleCIAPIToken, circleciDeleteBytes,
+		postCircleHTTPRequest("DELETE", postURL, circleCIAPIToken, circleciDeleteBytes,
 			nil, 200, client)
 		fmt.Println("deleted var in circleci")
 
 		//Construct payload and expected response, and post new env var to circleCI
 		circleciPostBytes, err := json.Marshal(&circleCIUpdate{Name: envVarName,
-			Value: base64Key})
+			Value: newKey})
 		check(err)
 		circleciGetBytes, err := json.Marshal(&circleCIUpdate{Name: envVarName,
-			Value: hiddenCircleValue(base64Key)})
+			Value: hiddenCircleValue(newKey)})
 		check(err)
-		postHTTPRequest("POST", envVarURL, circleCIAPIToken, circleciGetBytes,
+		postCircleHTTPRequest("POST", envVarURL, circleCIAPIToken, circleciGetBytes,
 			circleciPostBytes, 201, client)
 		fmt.Println("created new var in circleci")
 
@@ -339,7 +342,7 @@ func rotateKeyInCircleCI(circleci circleCI, newKey, circleCIAPIToken string) {
 		time.Sleep(time.Duration(10) * time.Second)
 
 		//Check the new env var is still returned
-		postHTTPRequest("GET", envVarURL, circleCIAPIToken, circleciGetBytes,
+		postCircleHTTPRequest("GET", envVarURL, circleCIAPIToken, circleciGetBytes,
 			nil, 200, client)
 		fmt.Println("verified new var exists in circleci")
 	}
@@ -356,13 +359,14 @@ func circleCIURL(usernameProject, suffix string) (url string) {
 	return
 }
 
-func postHTTPRequest(method, url, apiToken string, expectedRespBody,
+func postCircleHTTPRequest(method, url, apiToken string, expectedRespBody,
 	postBody []byte, expectedStatusCode int, client *http.Client) (responseBody []byte) {
 	req, err := http.NewRequest(method, url, bytes.NewReader(postBody))
 	check(err)
 	req.Header.Set("Content-Type", "application/json")
 	queryParams := req.URL.Query()
 	queryParams.Add("circle-token", apiToken)
+	queryParams.Add("limit", "1")
 	req.URL.RawQuery = queryParams.Encode()
 	resp, err := client.Do(req)
 	check(err)
@@ -383,11 +387,6 @@ func postHTTPRequest(method, url, apiToken string, expectedRespBody,
 			string(expectedRespBody),
 			", Got: ", string(responseBody)}, ""))
 	}
-	return
-}
-
-func rotateKeyInGithub(keySource keySource) (err error) {
-
 	return
 }
 
