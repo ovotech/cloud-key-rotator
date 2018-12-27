@@ -25,10 +25,8 @@ import (
 )
 
 const (
-	datadogURL               = "https://api.datadoghq.com/api/v1/series?api_key="
-	gcpAgeThresholdMins      = 43200 //30 days
-	envVarPrefix             = "ckr"
-	rotationAgeThresholdMins = 53
+	datadogURL   = "https://api.datadoghq.com/api/v1/series?api_key="
+	envVarPrefix = "ckr"
 )
 
 //cloudProvider type
@@ -60,34 +58,31 @@ type keySource struct {
 
 //config type
 type config struct {
-	AkrPass              string
-	AgeMetricGranularity string
-	IncludeAwsUserKeys   bool
-	DatadogAPIKey        string
-	RotationMode         bool
-	CloudProviders       []cloudProvider
-	ExcludeSAs           []string
-	IncludeSAs           []string
-	Blacklist            []string
-	Whitelist            []string
-	KeySources           []keySource
-	CircleCIAPIToken     string
-	GitHubAccessToken    string
-	GitName              string
-	GitEmail             string
-	KmsKey               string
-	SlackWebhook         string
+	AkrPass                  string
+	IncludeAwsUserKeys       bool
+	DatadogAPIKey            string
+	RotationMode             bool
+	CloudProviders           []cloudProvider
+	ExcludeSAs               []string
+	IncludeSAs               []string
+	Blacklist                []string
+	Whitelist                []string
+	KeySources               []keySource
+	CircleCIAPIToken         string
+	GitHubAccessToken        string
+	GitName                  string
+	GitEmail                 string
+	KmsKey                   string
+	SlackWebhook             string
+	RotationAgeThresholdMins int
 }
 
 //getConfig returns the application config
 func getConfig() (c config) {
 	viper.AutomaticEnv()
 	viper.SetEnvPrefix(envVarPrefix)
-	viper.SetDefault("agemetricgranularity", "min")
-	viper.SetDefault("envconfigpath", "/etc/cloud-key-rotator/")
-	viper.SetDefault("envconfigname", "ckr")
-	// viper.SetConfigName(viper.GetString("envconfigname"))
-	// viper.AddConfigPath(viper.GetString("envconfigpath"))
+	viper.AddConfigPath("/etc/cloud-key-rotator/")
+	viper.SetEnvPrefix("ckr")
 	viper.SetConfigName("config")
 	viper.AddConfigPath(".")
 	viper.ReadInConfig()
@@ -110,10 +105,10 @@ func main() {
 	}
 	keySlice := keys.Keys(providers)
 	keySlice = filterKeys(keySlice, c)
-	keySlice = adjustAges(keySlice, c)
 	if c.RotationMode {
 		rotateKeys(keySlice, c.KeySources, c.CircleCIAPIToken, c.GitHubAccessToken,
-			c.GitName, c.GitEmail, c.KmsKey, c.AkrPass, c.SlackWebhook)
+			c.GitName, c.GitEmail, c.KmsKey, c.AkrPass, c.SlackWebhook,
+			c.RotationAgeThresholdMins)
 	} else {
 		postMetric(keySlice, c.DatadogAPIKey)
 	}
@@ -123,7 +118,8 @@ func main() {
 //filter down to subset of target keys, generate new key for each, update the
 //key's sources and finally delete the existing/old key
 func rotateKeys(keySlice []keys.Key, keySources []keySource, circleCIAPIToken,
-	gitHubAccessToken, gitName, gitEmail, kmsKey, akrPass, slackWebhook string) {
+	gitHubAccessToken, gitName, gitEmail, kmsKey, akrPass, slackWebhook string,
+	rotationAgeThresholdMins int) {
 	processedItems := make([]string, 0)
 	for _, key := range keySlice {
 		account := key.Account
@@ -131,7 +127,7 @@ func rotateKeys(keySlice []keys.Key, keySources []keySource, circleCIAPIToken,
 			accountKeySources, err := accountKeySources(account, keySources)
 			check(err)
 			processedItems = append(processedItems, account)
-			if key.Age > rotationAgeThresholdMins {
+			if key.Age > float64(rotationAgeThresholdMins) {
 				sendAlert("Starting to process `"+account+"`, key Id: `"+
 					key.ID+"`", slackWebhook)
 				log.Println("Starting to process account: " + account)
@@ -156,14 +152,16 @@ func rotateKeys(keySlice []keys.Key, keySources []keySource, circleCIAPIToken,
 
 //sendAlert sends an alert message to the specified Webhook url
 func sendAlert(text, slackWebhook string) {
-	req, err := http.NewRequest("POST", slackWebhook,
-		bytes.NewBuffer([]byte("{\"text\": \""+text+"\"}")))
-	check(err)
-	req.Header.Set("Content-type", "application/json")
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	check(err)
-	defer resp.Body.Close()
+	if slackWebhook != "" {
+		req, err := http.NewRequest("POST", slackWebhook,
+			bytes.NewBuffer([]byte("{\"text\": \""+text+"\"}")))
+		check(err)
+		req.Header.Set("Content-type", "application/json")
+		client := &http.Client{}
+		resp, err := client.Do(req)
+		check(err)
+		defer resp.Body.Close()
+	}
 }
 
 //accountKeySources gets all the keySource elements defined in config for the
@@ -188,8 +186,13 @@ func updateKeySources(keySources []keySource, newKey, circleCIAPIToken,
 			updateCircleCI(circleCI, newKey, circleCIAPIToken)
 		}
 		if keySource.GitHub.OrgRepo != "" {
-			updateGitHubRepo(keySource, gitHubAccessToken, gitName, gitEmail,
-				circleCIAPIToken, newKey, kmsKey, akrPass)
+			if kmsKey != "" {
+				updateGitHubRepo(keySource, gitHubAccessToken, gitName, gitEmail,
+					circleCIAPIToken, newKey, kmsKey, akrPass)
+			} else {
+				panic("Not updating un-encrypted new key in a Git repository. Use the" +
+					"'KmsKey' field in config to specify the KMS key to use for encryption")
+			}
 		}
 	}
 }
@@ -380,16 +383,6 @@ func verifyCircleCiEnvVar(username, project, envVarName string,
 	return
 }
 
-//adjustAges returns a keys.Key slice containing the same keys but with keyAge
-// changed to whatever's been configured (min/day/hour)
-func adjustAges(keys []keys.Key, config config) (adjustedKeys []keys.Key) {
-	for _, key := range keys {
-		key.Age = adjustAgeScale(key.Age, config)
-		adjustedKeys = append(adjustedKeys, key)
-	}
-	return adjustedKeys
-}
-
 //filterKeys returns a keys.Key slice created by filtering the provided
 // keys.Key slice based on specific rules for each provider
 func filterKeys(keys []keys.Key, config config) (filteredKeys []keys.Key) {
@@ -398,7 +391,13 @@ func filterKeys(keys []keys.Key, config config) (filteredKeys []keys.Key) {
 		if key.Provider.Provider == "aws" {
 			valid = validAwsKey(key, config)
 		}
-		if valid && contains(config.IncludeSAs, key.Account) {
+		var eligible bool
+		if len(config.IncludeSAs) > 0 {
+			eligible = valid && contains(config.IncludeSAs, key.Account)
+		} else {
+			eligible = valid && !contains(config.ExcludeSAs, key.Account)
+		}
+		if eligible {
 			filteredKeys = append(filteredKeys, key)
 		}
 	}
@@ -425,24 +424,6 @@ func validAwsKey(key keys.Key, config config) (valid bool) {
 		valid = !match
 	}
 
-	return
-}
-
-//adjustAgeScale converts the provided keyAge into the desired age
-// granularity, based on the 'AgeMetricGranularity' in the provided
-// Specification
-func adjustAgeScale(keyAge float64, config config) (adjustedAge float64) {
-	switch config.AgeMetricGranularity {
-	case "day":
-		adjustedAge = keyAge / 60 / 24
-	case "hour":
-		adjustedAge = keyAge / 60
-	case "min":
-		adjustedAge = keyAge
-	default:
-		panic("Unsupported age metric granularity: " +
-			config.AgeMetricGranularity)
-	}
 	return
 }
 
@@ -484,7 +465,10 @@ func check(e error) {
 //be used to GPG sign Git commits
 func commitSignKey(name, email, passphrase string) (entity *openpgp.Entity,
 	err error) {
-	reader, err := os.Open("akr.asc")
+	if passphrase == "" {
+		panic("ArmouredKeyRing passphrase must not be empty")
+	}
+	reader, err := os.Open("/etc/cloud-key-rotator/akr.asc")
 	check(err)
 	entityList, err := openpgp.ReadArmoredKeyRing(reader)
 	check(err)
