@@ -206,7 +206,7 @@ func updateGitHubRepo(gitHubSource keySource,
 	check(err)
 	encKey := enc.CipherBytesFromPrimitives([]byte(decodedKey),
 		singleLine, "", "", "", "", kmsKey)
-	localDir := "cloud-key-rotator-tmp-repo"
+	localDir := "/etc/cloud-key-rotator/cloud-key-rotator-tmp-repo"
 	orgRepo := gitHubSource.GitHub.OrgRepo
 	repo := cloneGitRepo(localDir, orgRepo, gitHubAccessToken)
 	log.Println("cloned git repo: " + orgRepo)
