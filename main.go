@@ -51,30 +51,31 @@ type gitHub struct {
 
 //keySource type
 type keySource struct {
-	ServiceAccountName string
-	CircleCI           []circleCI
-	GitHub             gitHub
+	RotationAgeThresholdMins int
+	ServiceAccountName       string
+	CircleCI                 []circleCI
+	GitHub                   gitHub
 }
 
 //config type
 type config struct {
-	AkrPass                  string
-	IncludeAwsUserKeys       bool
-	DatadogAPIKey            string
-	RotationMode             bool
-	CloudProviders           []cloudProvider
-	ExcludeSAs               []string
-	IncludeSAs               []string
-	Blacklist                []string
-	Whitelist                []string
-	KeySources               []keySource
-	CircleCIAPIToken         string
-	GitHubAccessToken        string
-	GitName                  string
-	GitEmail                 string
-	KmsKey                   string
-	SlackWebhook             string
-	RotationAgeThresholdMins int
+	AkrPass                         string
+	IncludeAwsUserKeys              bool
+	DatadogAPIKey                   string
+	RotationMode                    bool
+	CloudProviders                  []cloudProvider
+	ExcludeSAs                      []string
+	IncludeSAs                      []string
+	Blacklist                       []string
+	Whitelist                       []string
+	KeySources                      []keySource
+	CircleCIAPIToken                string
+	GitHubAccessToken               string
+	GitName                         string
+	GitEmail                        string
+	KmsKey                          string
+	SlackWebhook                    string
+	DefaultRotationAgeThresholdMins int
 }
 
 //getConfig returns the application config
@@ -108,7 +109,7 @@ func main() {
 	if c.RotationMode {
 		rotateKeys(keySlice, c.KeySources, c.CircleCIAPIToken, c.GitHubAccessToken,
 			c.GitName, c.GitEmail, c.KmsKey, c.AkrPass, c.SlackWebhook,
-			c.RotationAgeThresholdMins)
+			c.DefaultRotationAgeThresholdMins)
 	} else {
 		postMetric(keySlice, c.DatadogAPIKey)
 	}
@@ -119,23 +120,27 @@ func main() {
 //key's sources and finally delete the existing/old key
 func rotateKeys(keySlice []keys.Key, keySources []keySource, circleCIAPIToken,
 	gitHubAccessToken, gitName, gitEmail, kmsKey, akrPass, slackWebhook string,
-	rotationAgeThresholdMins int) {
+	defaultRotationAgeThresholdMins int) {
 	processedItems := make([]string, 0)
 	for _, key := range keySlice {
 		account := key.Account
 		if !contains(processedItems, account) {
-			accountKeySources, err := accountKeySources(account, keySources)
+			accountKeySource, err := accountKeySource(account, keySources)
 			check(err)
+			rotationAgeThresholdMins := defaultRotationAgeThresholdMins
+			if accountKeySource.RotationAgeThresholdMins > 0 {
+				rotationAgeThresholdMins = accountKeySource.RotationAgeThresholdMins
+			}
 			processedItems = append(processedItems, account)
 			if key.Age > float64(rotationAgeThresholdMins) {
 				sendAlert("Starting to process `"+account+"`, key Id: `"+
 					key.ID+"`", slackWebhook)
 				log.Println("Starting to process account: " + account)
-				newKey, err := keys.CreateKey(key)
+				_, newKey, err := keys.CreateKey(key)
 				check(err)
 				sendAlert("Created new key for `"+account+"`", slackWebhook)
 				log.Println("created new key")
-				updateKeySources(accountKeySources, newKey, circleCIAPIToken,
+				updateKeySource(accountKeySource, newKey, circleCIAPIToken,
 					gitHubAccessToken, gitName, gitEmail, kmsKey, akrPass)
 				sendAlert("Updated key sources for `"+account+"`", slackWebhook)
 				check(keys.DeleteKey(key))
@@ -164,35 +169,34 @@ func sendAlert(text, slackWebhook string) {
 	}
 }
 
-//accountKeySources gets all the keySource elements defined in config for the
+//accountKeySource gets the keySource element defined in config for the
 //specified account
-func accountKeySources(account string,
-	keySources []keySource) (accountKeySources []keySource, err error) {
+func accountKeySource(account string,
+	keySources []keySource) (accountKeySource keySource, err error) {
 	err = errors.New("No account key sources (in config) mapped to SA: " + account)
 	for _, keySource := range keySources {
 		if account == keySource.ServiceAccountName {
 			err = nil
-			accountKeySources = append(accountKeySources, keySource)
+			accountKeySource = keySource
+			break
 		}
 	}
 	return
 }
 
-//updateKeySources updates the keySources specified with the new key
-func updateKeySources(keySources []keySource, newKey, circleCIAPIToken,
+//updateKeySource updates the keySources specified with the new key
+func updateKeySource(keySource keySource, newKey, circleCIAPIToken,
 	gitHubAccessToken, gitName, gitEmail, kmsKey, akrPass string) {
-	for _, keySource := range keySources {
-		for _, circleCI := range keySource.CircleCI {
-			updateCircleCI(circleCI, newKey, circleCIAPIToken)
-		}
-		if keySource.GitHub.OrgRepo != "" {
-			if kmsKey != "" {
-				updateGitHubRepo(keySource, gitHubAccessToken, gitName, gitEmail,
-					circleCIAPIToken, newKey, kmsKey, akrPass)
-			} else {
-				panic("Not updating un-encrypted new key in a Git repository. Use the" +
-					"'KmsKey' field in config to specify the KMS key to use for encryption")
-			}
+	for _, circleCI := range keySource.CircleCI {
+		updateCircleCI(circleCI, newKey, circleCIAPIToken)
+	}
+	if keySource.GitHub.OrgRepo != "" {
+		if kmsKey != "" {
+			updateGitHubRepo(keySource, gitHubAccessToken, gitName, gitEmail,
+				circleCIAPIToken, newKey, kmsKey, akrPass)
+		} else {
+			panic("Not updating un-encrypted new key in a Git repository. Use the" +
+				"'KmsKey' field in config to specify the KMS key to use for encryption")
 		}
 	}
 }
