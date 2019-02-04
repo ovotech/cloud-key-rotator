@@ -133,26 +133,75 @@ func rotateKeys(keySlice []keys.Key, keySources []keySource, circleCIAPIToken,
 			}
 			processedItems = append(processedItems, account)
 			if key.Age > float64(rotationAgeThresholdMins) {
-				sendAlert("Starting to process `"+account+"`, key Id: `"+
-					key.ID+"`", slackWebhook)
-				log.Println("Starting to process account: " + account)
-				_, newKey, err := keys.CreateKey(key)
+				keyProvider := key.Provider.Provider
+				sendAlert(slackString([]string{"Rotation process started for:", "Age: " +
+					fmt.Sprintf("%f", key.Age) + "(mins), Threshold: " +
+					strconv.Itoa(rotationAgeThresholdMins) + "(mins)",
+					keySlackString(key.ID, account, keyProvider)}), slackWebhook)
+				//*****************************************************
+				//  create new key
+				//*****************************************************
+				newKeyID, newKey, err := keys.CreateKey(key)
 				check(err)
-				sendAlert("Created new key for `"+account+"`", slackWebhook)
-				log.Println("created new key")
-				updateKeySource(accountKeySource, newKey, circleCIAPIToken,
-					gitHubAccessToken, gitName, gitEmail, kmsKey, akrPass)
-				sendAlert("Updated key sources for `"+account+"`", slackWebhook)
+				sendAlert(slackString([]string{"New key created:", "",
+					keySlackString(newKeyID, account, keyProvider)}), slackWebhook)
+				//*****************************************************
+				//  update sources
+				//*****************************************************
+				updateSuccessMap := updateKeySource(accountKeySource, newKey,
+					circleCIAPIToken, gitHubAccessToken, gitName, gitEmail, kmsKey, akrPass)
+				sendAlert(slackString([]string{"Sources updated: ",
+					stringFromMap(updateSuccessMap)}), slackWebhook)
+				//*****************************************************
+				//  delete key
+				//*****************************************************
 				check(keys.DeleteKey(key))
-				sendAlert("Deleted old key: "+key.ID, slackWebhook)
-				log.Println("Deleted old key, account: " + account + ", key: " +
-					key.ID)
+				sendAlert(slackString([]string{"Old key deleted:", "",
+					keySlackString(key.ID, account, keyProvider)}), slackWebhook)
 			} else {
 				log.Println("Skipping SA: " + account + ", key: " + key.ID +
 					" as it's only " + fmt.Sprintf("%f", key.Age) + " minutes old.")
 			}
 		}
 	}
+}
+
+func stringFromMap(updateSuccessMap map[string][]string) (mapString string) {
+	var stringBuff bytes.Buffer
+	for k, v := range updateSuccessMap {
+		stringBuff.WriteString(k)
+		stringBuff.WriteString(":")
+		stringBuff.WriteString("\n")
+		for _, id := range v {
+			stringBuff.WriteString(id)
+			stringBuff.WriteString("\n")
+		}
+	}
+	return
+}
+
+func slackString(slackStrings []string) (slackString string) {
+	var stringBuff bytes.Buffer
+	for _, subString := range slackStrings {
+		stringBuff.WriteString(subString)
+		stringBuff.WriteString("\n")
+	}
+	slackString = stringBuff.String()
+	return
+}
+
+func keySlackString(keyID, serviceAccount, provider string) (slackString string) {
+	var slackBuff bytes.Buffer
+	slackBuff.WriteString("```")
+	slackBuff.WriteString("Provider: ")
+	slackBuff.WriteString(provider)
+	slackBuff.WriteString("\nServiceAccount: ")
+	slackBuff.WriteString(serviceAccount)
+	slackBuff.WriteString("\nKey ID: ")
+	slackBuff.WriteString(keyID)
+	slackBuff.WriteString("```")
+	slackString = slackBuff.String()
+	return
 }
 
 //sendAlert sends an alert message to the specified Webhook url
@@ -186,19 +235,36 @@ func accountKeySource(account string,
 
 //updateKeySource updates the keySources specified with the new key
 func updateKeySource(keySource keySource, newKey, circleCIAPIToken,
-	gitHubAccessToken, gitName, gitEmail, kmsKey, akrPass string) {
+	gitHubAccessToken, gitName, gitEmail, kmsKey,
+	akrPass string) (updateSuccessMap map[string][]string) {
+	updateSuccessMap = make(map[string][]string)
 	for _, circleCI := range keySource.CircleCI {
 		updateCircleCI(circleCI, newKey, circleCIAPIToken)
+		registerUpdateSuccess("CircleCI", circleCI.UsernameProject+circleCI.EnvVar,
+			updateSuccessMap)
 	}
 	if keySource.GitHub.OrgRepo != "" {
 		if kmsKey != "" {
 			updateGitHubRepo(keySource, gitHubAccessToken, gitName, gitEmail,
 				circleCIAPIToken, newKey, kmsKey, akrPass)
+			registerUpdateSuccess("GitHub",
+				keySource.GitHub.OrgRepo+keySource.GitHub.Filepath, updateSuccessMap)
 		} else {
 			panic("Not updating un-encrypted new key in a Git repository. Use the" +
 				"'KmsKey' field in config to specify the KMS key to use for encryption")
 		}
 	}
+	return
+}
+
+func registerUpdateSuccess(sourceType, sourceIdentifier string,
+	updateSuccessMap map[string][]string) {
+	updateSlice := make([]string, 0)
+	if updateSuccessSlice, ok := updateSuccessMap[sourceType]; ok {
+		updateSlice = updateSuccessSlice
+	}
+	updateSlice = append(updateSlice, sourceIdentifier)
+	updateSuccessMap[sourceType] = updateSlice
 }
 
 //updateGitHubRepo updates the new key in the specified gitHubSource
