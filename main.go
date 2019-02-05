@@ -134,10 +134,10 @@ func rotateKeys(keySlice []keys.Key, keySources []keySource, circleCIAPIToken,
 			processedItems = append(processedItems, account)
 			if key.Age > float64(rotationAgeThresholdMins) {
 				keyProvider := key.Provider.Provider
-				sendAlert(slackString([]string{"Rotation process started for:", "Age: " +
-					fmt.Sprintf("%f", key.Age) + "(mins), Threshold: " +
-					strconv.Itoa(rotationAgeThresholdMins) + "(mins)",
-					keySlackString(key.ID, account, keyProvider)}), slackWebhook)
+				sendAlert(slackString([]string{"Rotation process started for:",
+					keySlackString(key.ID, account, keyProvider),
+					"Age: " + fmt.Sprintf("%f", key.Age) + " mins, Threshold: " +
+						strconv.Itoa(rotationAgeThresholdMins) + " mins"}), slackWebhook)
 				//*****************************************************
 				//  create new key
 				//*****************************************************
