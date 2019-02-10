@@ -177,6 +177,7 @@ func stringFromMap(updateSuccessMap map[string][]string) (mapString string) {
 			stringBuff.WriteString("\n")
 		}
 	}
+	mapString = stringBuff.String()
 	return
 }
 
