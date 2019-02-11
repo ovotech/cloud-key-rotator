@@ -25,8 +25,9 @@ import (
 )
 
 const (
-	datadogURL   = "https://api.datadoghq.com/api/v1/series?api_key="
-	envVarPrefix = "ckr"
+	datadogURL            = "https://api.datadoghq.com/api/v1/series?api_key="
+	envVarPrefix          = "ckr"
+	slackInlineCodeMarker = "```"
 )
 
 //cloudProvider type
@@ -150,8 +151,8 @@ func rotateKeys(keySlice []keys.Key, keySources []keySource, circleCIAPIToken,
 				//*****************************************************
 				updateSuccessMap := updateKeySource(accountKeySource, newKey,
 					circleCIAPIToken, gitHubAccessToken, gitName, gitEmail, kmsKey, akrPass)
-				sendAlert(slackString([]string{"Sources updated: ",
-					stringFromMap(updateSuccessMap)}), slackWebhook)
+				sendAlert(slackString([]string{"Sources updated: ", slackInlineCodeMarker,
+					stringFromMap(updateSuccessMap), slackInlineCodeMarker}), slackWebhook)
 				//*****************************************************
 				//  delete key
 				//*****************************************************
@@ -193,14 +194,14 @@ func slackString(slackStrings []string) (slackString string) {
 
 func keySlackString(keyID, serviceAccount, provider string) (slackString string) {
 	var slackBuff bytes.Buffer
-	slackBuff.WriteString("```")
+	slackBuff.WriteString(slackInlineCodeMarker)
 	slackBuff.WriteString("Provider: ")
 	slackBuff.WriteString(provider)
 	slackBuff.WriteString("\nServiceAccount: ")
 	slackBuff.WriteString(serviceAccount)
 	slackBuff.WriteString("\nKey ID: ")
 	slackBuff.WriteString(keyID)
-	slackBuff.WriteString("```")
+	slackBuff.WriteString(slackInlineCodeMarker)
 	slackString = slackBuff.String()
 	return
 }
@@ -241,7 +242,7 @@ func updateKeySource(keySource keySource, newKey, circleCIAPIToken,
 	updateSuccessMap = make(map[string][]string)
 	for _, circleCI := range keySource.CircleCI {
 		updateCircleCI(circleCI, newKey, circleCIAPIToken)
-		registerUpdateSuccess("CircleCI", circleCI.UsernameProject+circleCI.EnvVar,
+		registerUpdateSuccess("CircleCI", circleCI.UsernameProject, circleCI.EnvVar,
 			updateSuccessMap)
 	}
 	if keySource.GitHub.OrgRepo != "" {
@@ -249,7 +250,7 @@ func updateKeySource(keySource keySource, newKey, circleCIAPIToken,
 			updateGitHubRepo(keySource, gitHubAccessToken, gitName, gitEmail,
 				circleCIAPIToken, newKey, kmsKey, akrPass)
 			registerUpdateSuccess("GitHub",
-				keySource.GitHub.OrgRepo+keySource.GitHub.Filepath, updateSuccessMap)
+				keySource.GitHub.OrgRepo, keySource.GitHub.Filepath, updateSuccessMap)
 		} else {
 			panic("Not updating un-encrypted new key in a Git repository. Use the" +
 				"'KmsKey' field in config to specify the KMS key to use for encryption")
@@ -258,13 +259,13 @@ func updateKeySource(keySource keySource, newKey, circleCIAPIToken,
 	return
 }
 
-func registerUpdateSuccess(sourceType, sourceIdentifier string,
+func registerUpdateSuccess(sourceType, sourceRepo, sourceID string,
 	updateSuccessMap map[string][]string) {
 	updateSlice := make([]string, 0)
 	if updateSuccessSlice, ok := updateSuccessMap[sourceType]; ok {
 		updateSlice = updateSuccessSlice
 	}
-	updateSlice = append(updateSlice, sourceIdentifier)
+	updateSlice = append(updateSlice, sourceRepo+": "+sourceID)
 	updateSuccessMap[sourceType] = updateSlice
 }
 
