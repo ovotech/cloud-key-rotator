@@ -58,6 +58,12 @@ type keySource struct {
 	GitHub                   gitHub
 }
 
+//serviceAccount type
+type serviceAccount struct {
+	Provider cloudProvider
+	Account  string
+}
+
 //config type
 type config struct {
 	AkrPass                         string
@@ -65,8 +71,8 @@ type config struct {
 	DatadogAPIKey                   string
 	RotationMode                    bool
 	CloudProviders                  []cloudProvider
-	ExcludeSAs                      []string
-	IncludeSAs                      []string
+	ExcludeSAs                      []serviceAccount
+	IncludeSAs                      []serviceAccount
 	Blacklist                       []string
 	Whitelist                       []string
 	KeySources                      []keySource
@@ -464,10 +470,12 @@ func filterKeys(keys []keys.Key, config config) (filteredKeys []keys.Key) {
 			valid = validAwsKey(key, config)
 		}
 		var eligible bool
-		if len(config.IncludeSAs) > 0 {
-			eligible = valid && contains(config.IncludeSAs, key.Account)
-		} else {
-			eligible = valid && !contains(config.ExcludeSAs, key.Account)
+		includeSASlice := config.IncludeSAs
+		excludeSASlice := config.ExcludeSAs
+		if len(includeSASlice) > 0 {
+			eligible = valid && keyDefinedInFiltering(includeSASlice, key)
+		} else if len(excludeSASlice) > 0 {
+			eligible = valid && !keyDefinedInFiltering(excludeSASlice, key)
 		}
 		if eligible {
 			filteredKeys = append(filteredKeys, key)
@@ -476,7 +484,19 @@ func filterKeys(keys []keys.Key, config config) (filteredKeys []keys.Key) {
 	return
 }
 
-//contains returns true if the string slice contains the speicified string
+func keyDefinedInFiltering(serviceAccountSlice []serviceAccount, key keys.Key) (defined bool) {
+	for _, sa := range serviceAccountSlice {
+		defined = sa.Provider.Name == key.Provider.Provider &&
+			sa.Provider.Project == key.Provider.GcpProject &&
+			sa.Account == key.Account
+		if defined {
+			break
+		}
+	}
+	return defined
+}
+
+//contains returns true if the string slice contains the specified string
 func contains(s []string, e string) bool {
 	for _, a := range s {
 		if a == e {
