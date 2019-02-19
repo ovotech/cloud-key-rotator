@@ -39,7 +39,8 @@ type cloudProvider struct {
 //circleCI type
 type circleCI struct {
 	UsernameProject string
-	EnvVar          string
+	KeyIDEnvVar     string
+	KeyEnvVar       string
 }
 
 //gitHub type
@@ -155,7 +156,7 @@ func rotateKeys(keySlice []keys.Key, keySources []keySource, circleCIAPIToken,
 				//*****************************************************
 				//  update sources
 				//*****************************************************
-				updateSuccessMap := updateKeySource(accountKeySource, newKey,
+				updateSuccessMap := updateKeySource(accountKeySource, newKeyID, newKey,
 					circleCIAPIToken, gitHubAccessToken, gitName, gitEmail, kmsKey, akrPass)
 				sendAlert(slackString([]string{"Sources updated: ", slackInlineCodeMarker,
 					stringFromMap(updateSuccessMap), slackInlineCodeMarker}), slackWebhook)
@@ -242,19 +243,19 @@ func accountKeySource(account string,
 }
 
 //updateKeySource updates the keySources specified with the new key
-func updateKeySource(keySource keySource, newKey, circleCIAPIToken,
+func updateKeySource(keySource keySource, keyID, key, circleCIAPIToken,
 	gitHubAccessToken, gitName, gitEmail, kmsKey,
 	akrPass string) (updateSuccessMap map[string][]string) {
 	updateSuccessMap = make(map[string][]string)
 	for _, circleCI := range keySource.CircleCI {
-		updateCircleCI(circleCI, newKey, circleCIAPIToken)
-		registerUpdateSuccess("CircleCI", circleCI.UsernameProject, circleCI.EnvVar,
+		updateCircleCI(circleCI, keyID, key, circleCIAPIToken)
+		registerUpdateSuccess("CircleCI", circleCI.UsernameProject, circleCI.KeyIDEnvVar,
 			updateSuccessMap)
 	}
 	if keySource.GitHub.OrgRepo != "" {
 		if kmsKey != "" {
 			updateGitHubRepo(keySource, gitHubAccessToken, gitName, gitEmail,
-				circleCIAPIToken, newKey, kmsKey, akrPass)
+				circleCIAPIToken, key, kmsKey, akrPass)
 			registerUpdateSuccess("GitHub",
 				keySource.GitHub.OrgRepo, keySource.GitHub.Filepath, updateSuccessMap)
 		} else {
@@ -415,41 +416,34 @@ func obtainBuildNum(org, repo, gitHash, circleCIDeployJobName string,
 
 //updateCircleCI updates the circleCI environment variable by deleting and
 //then creating it again with the new key
-func updateCircleCI(circleCISource circleCI, newKey, circleCIAPIToken string) {
+func updateCircleCI(circleCISource circleCI, keyID, key, circleCIAPIToken string) {
 	log.Println("starting cirlceci key rotate process")
 	client := &circleci.Client{Token: circleCIAPIToken}
-	usernameProject := circleCISource.UsernameProject
-	envVarName := circleCISource.EnvVar
-	splitUsernameProject := strings.Split(usernameProject, "/")
+	keyIDEnvVarName := circleCISource.KeyIDEnvVar
+	splitUsernameProject := strings.Split(circleCISource.UsernameProject, "/")
 	username := splitUsernameProject[0]
 	project := splitUsernameProject[1]
-	if verifyCircleCiEnvVar(username, project, envVarName, client) {
-		check(client.DeleteEnvVar(username, project, envVarName))
-		log.Println("Deleted env var: " + envVarName + " from: " + usernameProject)
-		if !verifyCircleCiEnvVar(username, project, envVarName, client) {
-			log.Println("Verified env var: " + envVarName + " deletion on: " +
-				usernameProject)
-		} else {
-			panic("Env var: " + envVarName +
-				" deletion failed on username/project: " + usernameProject)
-		}
-		_, err := client.AddEnvVar(username, project, envVarName, newKey)
-		check(err)
-		log.Println("Added env var: " + envVarName + " to: " + usernameProject)
-		if verifyCircleCiEnvVar(username, project, envVarName, client) {
-			log.Println("Verified new env var: " + envVarName + " on: " +
-				usernameProject)
-		} else {
-			panic("New env var: " + envVarName +
-				" not detected on username/project: " + usernameProject)
-		}
+	if len(keyIDEnvVarName) > 0 {
+		updateCircleCIEnvVar(username, project, keyIDEnvVarName, keyID, client)
 	}
+	updateCircleCIEnvVar(username, project, circleCISource.KeyEnvVar, key, client)
 }
 
-//verifyCircleCiEnvVar returns true if the environment variable exists in the
-//desired circleCI username/project
+func updateCircleCIEnvVar(username, project, envVarName, envVarValue string,
+	client *circleci.Client) {
+	verifyCircleCiEnvVar(username, project, envVarName, client)
+	check(client.DeleteEnvVar(username, project, envVarName))
+	log.Println("Deleted env var: " + envVarName + " from: " + username + "/" + project)
+	verifyCircleCiEnvVar(username, project, envVarName, client)
+	_, err := client.AddEnvVar(username, project, envVarName, envVarValue)
+	check(err)
+	log.Println("Added env var: " + envVarName + " to: " + username + "/" + project)
+	verifyCircleCiEnvVar(username, project, envVarName, client)
+}
+
 func verifyCircleCiEnvVar(username, project, envVarName string,
-	client *circleci.Client) (exists bool) {
+	client *circleci.Client) {
+	var exists bool
 	envVars, err := client.ListEnvVars(username, project)
 	check(err)
 	for _, envVar := range envVars {
@@ -458,7 +452,13 @@ func verifyCircleCiEnvVar(username, project, envVarName string,
 			break
 		}
 	}
-	return
+	if exists {
+		log.Println("Verified new env var: " + envVarName + " on: " +
+			username + "/" + project)
+	} else {
+		panic("Env var: " + envVarName +
+			" not detected on username/project: " + username + "/" + project)
+	}
 }
 
 //filterKeys returns a keys.Key slice created by filtering the provided
@@ -515,7 +515,6 @@ func validAwsKey(key keys.Key, config config) (valid bool) {
 		match, _ := regexp.MatchString("[a-zA-Z]\\.[a-zA-Z]", key.Name)
 		valid = !match
 	}
-
 	return
 }
 
