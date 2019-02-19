@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 
 	keys "github.com/eversc/cloud-key-client"
@@ -33,8 +34,8 @@ func TestFilterKeysInclude(t *testing.T) {
 			Provider: keys.Provider{
 				Provider: filterTest.provider, GcpProject: filterTest.project}}
 		keys := []keys.Key{key}
-		actual := len(filterKeys(keys, appConfig))
 		expected := filterTest.filteredCount
+		actual := len(filterKeys(keys, appConfig))
 		if actual != expected {
 			t.Errorf("Incorrect number of keys after filtering, want: %d, got: %d",
 				expected, actual)
@@ -49,8 +50,8 @@ func TestFilterKeysNoIncludeOrExclude(t *testing.T) {
 		Provider: keys.Provider{
 			Provider: "gcp", GcpProject: "test-project"}}
 	keys := []keys.Key{key}
-	actual := len(filterKeys(keys, appConfig))
 	expected := 0
+	actual := len(filterKeys(keys, appConfig))
 	if actual != expected {
 		t.Errorf("Incorrect number of keys after filtering, want: %d, got: %d",
 			expected, actual)
@@ -81,8 +82,8 @@ func TestFilterKeysExclude(t *testing.T) {
 			Provider: keys.Provider{
 				Provider: filterTest.provider, GcpProject: filterTest.project}}
 		keys := []keys.Key{key}
-		actual := len(filterKeys(keys, appConfig))
 		expected := filterTest.filteredCount
+		actual := len(filterKeys(keys, appConfig))
 		if actual != expected {
 			t.Errorf("Incorrect number of keys after filtering, want: %d, got: %d",
 				expected, actual)
@@ -97,4 +98,50 @@ func TestCheck(t *testing.T) {
 		}
 	}()
 	check(errors.New("this should cause panic"))
+}
+
+var validAwsKeyTests = []struct {
+	includeUserKeys bool
+	keyName         string
+	valid           bool
+}{
+	{true, "first.last", true},
+	{true, "firstlast", true},
+	{false, "first.last", false},
+	{false, "firstlast", true},
+}
+
+func TestValidAwsKey(t *testing.T) {
+	for _, validAwsKeyTest := range validAwsKeyTests {
+		appConfig := config{IncludeAwsUserKeys: validAwsKeyTest.includeUserKeys}
+		key := keys.Key{Name: validAwsKeyTest.keyName}
+		expected := validAwsKeyTest.valid
+		actual := validAwsKey(key, appConfig)
+		if actual != expected {
+			t.Errorf("Incorrect bool returned, want: %t, got: %t", expected, actual)
+		}
+	}
+}
+
+var sliceContainsTests = []struct {
+	slice        []string
+	searchString string
+	contains     bool
+}{
+	{[]string{"test"}, "test", true},
+	{[]string{"test"}, "Test", false},
+	{[]string{"testing"}, "test", false},
+	{[]string{"test", "testing"}, "test", true},
+	{[]string{"test", "testing"}, "Test", false},
+}
+
+func TestContains(t *testing.T) {
+	for _, sliceContainsTest := range sliceContainsTests {
+		expected := sliceContainsTest.contains
+		actual := contains(sliceContainsTest.slice, sliceContainsTest.searchString)
+		if actual != expected {
+			t.Errorf("Incorrect bool returned, want: %t, got: %t", expected, actual)
+		}
+		fmt.Println()
+	}
 }
