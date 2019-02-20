@@ -67,9 +67,9 @@ type keySource struct {
 }
 
 //serviceAccount type
-type serviceAccount struct {
+type providerServiceAccounts struct {
 	Provider cloudProvider
-	Account  string
+	Accounts []string
 }
 
 //config type
@@ -80,8 +80,8 @@ type config struct {
 	DatadogAPIKey                   string
 	RotationMode                    bool
 	CloudProviders                  []cloudProvider
-	ExcludeSAs                      []serviceAccount
-	IncludeSAs                      []serviceAccount
+	ExcludeSAs                      []providerServiceAccounts
+	IncludeSAs                      []providerServiceAccounts
 	Blacklist                       []string
 	Whitelist                       []string
 	KeySources                      []keySource
@@ -497,13 +497,19 @@ func filterKeys(keys []keys.Key, config config) (filteredKeys []keys.Key) {
 	return
 }
 
-func keyDefinedInFiltering(serviceAccountSlice []serviceAccount, key keys.Key) (defined bool) {
-	for _, sa := range serviceAccountSlice {
-		defined = sa.Provider.Name == key.Provider.Provider &&
-			sa.Provider.Project == key.Provider.GcpProject &&
-			sa.Account == key.Account
-		if defined {
-			break
+func keyDefinedInFiltering(providerServiceAccounts []providerServiceAccounts, key keys.Key) (defined bool) {
+	for _, psa := range providerServiceAccounts {
+		if psa.Provider.Name == key.Provider.Provider &&
+			psa.Provider.Project == key.Provider.GcpProject {
+			for _, sa := range psa.Accounts {
+				defined = sa == key.Account
+				if defined {
+					break
+				}
+			}
+			if defined {
+				break
+			}
 		}
 	}
 	return defined
