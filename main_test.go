@@ -43,18 +43,31 @@ func TestFilterKeysInclude(t *testing.T) {
 	}
 }
 
+var noFilterTests = []struct {
+	provider      string
+	project       string
+	keyAccount    string
+	rotationMode  bool
+	filteredCount int
+}{
+	{"gcp", "test-project", "test-sa", true, 0},
+	{"gcp", "test-project", "test-sa", false, 1},
+}
+
 func TestFilterKeysNoIncludeOrExclude(t *testing.T) {
-	appConfig := config{}
-	key := keys.Key{
-		Account: "test-sa",
-		Provider: keys.Provider{
-			Provider: "gcp", GcpProject: "test-project"}}
-	keys := []keys.Key{key}
-	expected := 0
-	actual := len(filterKeys(keys, appConfig))
-	if actual != expected {
-		t.Errorf("Incorrect number of keys after filtering, want: %d, got: %d",
-			expected, actual)
+	for _, noFilterTest := range noFilterTests {
+		appConfig := config{RotationMode: noFilterTest.rotationMode}
+		key := keys.Key{
+			Account: noFilterTest.keyAccount,
+			Provider: keys.Provider{
+				Provider: noFilterTest.provider, GcpProject: noFilterTest.project}}
+		keys := []keys.Key{key}
+		expected := noFilterTest.filteredCount
+		actual := len(filterKeys(keys, appConfig))
+		if actual != expected {
+			t.Errorf("Incorrect number of keys after filtering, want: %d, got: %d",
+				expected, actual)
+		}
 	}
 }
 
