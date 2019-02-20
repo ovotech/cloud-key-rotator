@@ -43,6 +43,13 @@ type circleCI struct {
 	KeyEnvVar       string
 }
 
+//datadog type
+type datadog struct {
+	MetricEnv  string
+	MetricTeam string
+	MetricName string
+}
+
 //gitHub type
 type gitHub struct {
 	Filepath              string
@@ -69,6 +76,7 @@ type serviceAccount struct {
 type config struct {
 	AkrPass                         string
 	IncludeAwsUserKeys              bool
+	Datadog                         datadog
 	DatadogAPIKey                   string
 	RotationMode                    bool
 	CloudProviders                  []cloudProvider
@@ -119,7 +127,7 @@ func main() {
 			c.GitName, c.GitEmail, c.KmsKey, c.AkrPass, c.SlackWebhook,
 			c.DefaultRotationAgeThresholdMins)
 	} else {
-		postMetric(keySlice, c.DatadogAPIKey)
+		postMetric(keySlice, c.DatadogAPIKey, c.Datadog)
 	}
 }
 
@@ -476,6 +484,11 @@ func filterKeys(keys []keys.Key, config config) (filteredKeys []keys.Key) {
 			eligible = valid && keyDefinedInFiltering(includeSASlice, key)
 		} else if len(excludeSASlice) > 0 {
 			eligible = valid && !keyDefinedInFiltering(excludeSASlice, key)
+		} else {
+			//if no include or exclude filters have been set, we still want to include
+			//All keys if we're NOT operating in rotation mode, i.e., just posting key
+			//ages out to external places
+			eligible = !config.RotationMode
 		}
 		if eligible {
 			filteredKeys = append(filteredKeys, key)
@@ -519,16 +532,24 @@ func validAwsKey(key keys.Key, config config) (valid bool) {
 }
 
 //postMetric posts details of each keys.Key to a metrics api
-func postMetric(keys []keys.Key, apiKey string) {
+func postMetric(keys []keys.Key, apiKey string, datadog datadog) {
 	if len(apiKey) > 0 {
 		url := strings.Join([]string{datadogURL, apiKey}, "")
 		for _, key := range keys {
 			var jsonString = []byte(
-				`{ "series" :[{"metric":"key-dater.age","points":[[` +
+				`{ "series" :[{"metric":"` + datadog.MetricName + `",` +
+					`"points":[[` +
 					strconv.FormatInt(time.Now().Unix(), 10) +
 					`, ` + strconv.FormatFloat(key.Age, 'f', 2, 64) +
-					`]],"type":"count","tags":["team:cepheus","environment:prod","key:` +
-					key.Name + `","provider:` + key.Provider.Provider + `"]}]}`)
+					`]],` +
+					`"type":"count",` +
+					`"tags":[` +
+					`"team:` + datadog.MetricTeam + `",` +
+					`"environment:` + datadog.MetricEnv + `",` +
+					`"key:` + key.Name + `",` +
+					`"provider:` + key.Provider.Provider + `",` +
+					`"account:` + key.Account +
+					`"]}]}`)
 			req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonString))
 			check(err)
 			req.Header.Set("Content-type", "application/json")
