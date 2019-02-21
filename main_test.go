@@ -8,68 +8,68 @@ import (
 	keys "github.com/eversc/cloud-key-client"
 )
 
-// var includeFilterTests = []struct {
-// 	provider      string
-// 	project       string
-// 	saAccounts    []string
-// 	keyAccount    string
-// 	filteredCount int
-// }{
-// 	{"gcp", "test-project", []string{"test-sa"}, "should-not-be-returned", 0},
-// 	{"gcp", "test-project", []string{"test-sa"}, "test-sa", 1},
-// 	{"aws", "test-project", []string{"test-sa"}, "test.sa", 0}, //filtered out due to "." in keyAccount
-// 	{"aws", "test-project", []string{"test-sa"}, "test-sa", 1},
-// }
-//
-// func TestFilterKeysInclude(t *testing.T) {
-// 	for _, filterTest := range includeFilterTests {
-// 		psa := providerServiceAccounts{
-// 			Provider: cloudProvider{Name: filterTest.provider,
-// 				Project: filterTest.project},
-// 			Accounts: filterTest.saAccounts,
-// 		}
-// 		appConfig := config{IncludeSAs: []providerServiceAccounts{psa}}
-// 		key := keys.Key{
-// 			Account: filterTest.keyAccount,
-// 			Provider: keys.Provider{
-// 				Provider: filterTest.provider, GcpProject: filterTest.project}}
-// 		keys := []keys.Key{key}
-// 		expected := filterTest.filteredCount
-// 		actual := len(filterKeys(keys, appConfig))
-// 		if actual != expected {
-// 			t.Errorf("Incorrect number of keys after filtering, want: %d, got: %d",
-// 				expected, actual)
-// 		}
-// 	}
-// }
-//
-// var noFilterTests = []struct {
-// 	provider      string
-// 	project       string
-// 	keyAccount    string
-// 	rotationMode  bool
-// 	filteredCount int
-// }{
-// 	{"gcp", "test-project", "test-sa", true, 0},
-// 	{"gcp", "test-project", "test-sa", false, 1},
-// }
-//
-// func TestFilterKeysNoIncludeOrExclude(t *testing.T) {
-// 	for _, noFilterTest := range noFilterTests {
-// 		appConfig := config{RotationMode: noFilterTest.rotationMode}
-// 		key := keys.Key{
-// 			Account: noFilterTest.keyAccount,
-// 			Provider: keys.Provider{
-// 				Provider: noFilterTest.provider, GcpProject: noFilterTest.project}}
-// 		keys := []keys.Key{key}
-// 		expected := noFilterTest.filteredCount
-// 		actual := len(filterKeys(keys, appConfig))
-// 		if actual != expected {
-// 			t.Errorf("Incorrect number of keys after filtering, want: %d, got: %d",
-// 				expected, actual)
-// 		}
-// 	}
-// }
+var includeFilterTests = []struct {
+	provider      string
+	project       string
+	saAccounts    []string
+	keyAccount    string
+	filteredCount int
+}{
+	{"gcp", "test-project", []string{"test-sa"}, "should-not-be-returned", 0},
+	{"gcp", "test-project", []string{"test-sa"}, "test-sa", 1},
+	{"aws", "test-project", []string{"test-sa"}, "test.sa", 0}, //filtered out due to "." in keyAccount
+	{"aws", "test-project", []string{"test-sa"}, "test-sa", 1},
+}
+
+func TestFilterKeysInclude(t *testing.T) {
+	for _, filterTest := range includeFilterTests {
+		psa := providerServiceAccounts{
+			Provider: cloudProvider{Name: filterTest.provider,
+				Project: filterTest.project},
+			Accounts: filterTest.saAccounts,
+		}
+		appConfig := config{IncludeSAs: []providerServiceAccounts{psa}}
+		key := keys.Key{
+			Account: filterTest.keyAccount,
+			Provider: keys.Provider{
+				Provider: filterTest.provider, GcpProject: filterTest.project}}
+		keys := []keys.Key{key}
+		expected := filterTest.filteredCount
+		actual := len(filterKeys(keys, appConfig))
+		if actual != expected {
+			t.Errorf("Incorrect number of keys after filtering, want: %d, got: %d",
+				expected, actual)
+		}
+	}
+}
+
+var noFilterTests = []struct {
+	provider      string
+	project       string
+	keyAccount    string
+	rotationMode  bool
+	filteredCount int
+}{
+	{"gcp", "test-project", "test-sa", true, 0},
+	{"gcp", "test-project", "test-sa", false, 1},
+}
+
+func TestFilterKeysNoIncludeOrExclude(t *testing.T) {
+	for _, noFilterTest := range noFilterTests {
+		appConfig := config{RotationMode: noFilterTest.rotationMode}
+		key := keys.Key{
+			Account: noFilterTest.keyAccount,
+			Provider: keys.Provider{
+				Provider: noFilterTest.provider, GcpProject: noFilterTest.project}}
+		keys := []keys.Key{key}
+		expected := noFilterTest.filteredCount
+		actual := len(filterKeys(keys, appConfig))
+		if actual != expected {
+			t.Errorf("Incorrect number of keys after filtering, want: %d, got: %d",
+				expected, actual)
+		}
+	}
+}
 
 var excludeFilterTests = []struct {
 	provider      string
