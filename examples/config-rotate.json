@@ -1,0 +1,58 @@
+{
+  "AkrPass": "change_me",
+  "IncludeAwsUserKeys": true,
+  "RotationMode": true,
+  "CloudProviders": [{
+    "Project":"my-project",
+    "Name": "gcp"
+  },
+  {
+    "Name": "aws"
+  }],
+  "ExcludeSAs": [],
+  "IncludeSAs": [{
+    "Provider": {
+      "Project": "my-project",
+      "Name": "gcp"
+    },
+    "Accounts": [
+      "cloud-key-client-test",
+      "circleci-helm-backup"
+    ]
+  },
+  {
+    "Provider": {
+      "Name": "aws"
+    },
+    "Accounts": [
+      "cloud-key-rotator-aws"
+    ]
+  }],
+  "KeySources": [{
+    "ServiceAccountName": "cloud-key-rotator-test",
+    "GitHub": {
+      "FilePath": "service-account.txt",
+      "OrgRepo": "myorg/myrepo",
+      "VerifyCircleCISuccess": true,
+      "CircleCIDeployJobName": "dummy_deploy_with_wait"
+    },
+    "CircleCI": [{
+      "UsernameProject" : "myorg/myrepo",
+      "KeyEnvVar" : "GCLOUD"
+    }]
+  },
+  {
+    "ServiceAccountName": "cloud-key-rotator-aws",
+    "CircleCI": [{
+      "UsernameProject": "myorg/myrepo",
+      "KeyIDEnvVar": "AWS_KEY_ID",
+      "KeyEnvVar": "AWS_KEY"
+    }]
+  }],
+  "CircleCIAPIToken": "change_me",
+  "GitHubAccessToken": "change_me",
+  "GitName": "git-name",
+  "GitEmail": "change_me@example.com",
+  "KmsKey": "projects/my-project/locations/europe-west1/keyRings/my-keyring/cryptoKeys/my-key",
+  "SlackWebhook": "https://hooks.slack.com/services/CHANGEME/CHANGEME/CHANGEME",
+}
