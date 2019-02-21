@@ -1,5 +1,10 @@
 {
   "IncludeAwsUserKeys": true,
+  "Datadog": {
+    "MetricEnv": "prod",
+    "MetricName": "key-dater.age",
+    "MetricTeam": "my-team"
+  },
   "DatadogAPIKey": "change_me",
   "RotationMode": false,
   "CloudProviders": [{
