@@ -11,7 +11,7 @@ keys are rotated, and non-rotation mode, which only posts the ages of the keys t
 the Datadog metric API. You can specify which mode to operate in by using the
 `RotationMode` boolean field in config.
 
-Check out [config.json](config.json) for an example config file. [Viper](https://github.com/spf13/viper)
+Check out [examples](examples) for example config files. [Viper](https://github.com/spf13/viper)
 is used as a Config solution, so config can be stored as JSON, TOML, YAML, or
 HCL. To work, the file just needs to be called "config" (before whatever
 extension you're using), and be present in the `/etc/cloud-key-rotator/`

@@ -1,0 +1,14 @@
+{
+  "IncludeAwsUserKeys": true,
+  "DatadogAPIKey": "change_me",
+  "RotationMode": false,
+  "CloudProviders": [{
+    "Project":"my-project",
+    "Name": "gcp"
+  },
+  {
+    "Name":"aws"
+  }],
+  "ExcludeSAs": [],
+  "IncludeSAs": []
+}
