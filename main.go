@@ -121,8 +121,11 @@ func main() {
 			Provider: provider.Name})
 	}
 	keySlice := keys.Keys(providers)
+	log.Println("Found " + strconv.Itoa(len(keySlice)) + " keys in total")
 	keySlice = filterKeys(keySlice, c)
+
 	if c.RotationMode {
+		log.Println("Filtered down to " + strconv.Itoa(len(keySlice)) + " keys to rotate")
 		rotateKeys(keySlice, c.KeySources, c.CircleCIAPIToken, c.GitHubAccessToken,
 			c.GitName, c.GitEmail, c.KmsKey, c.AkrPass, c.SlackWebhook,
 			c.DefaultRotationAgeThresholdMins)
@@ -140,6 +143,7 @@ func rotateKeys(keySlice []keys.Key, keySources []keySource, circleCIAPIToken,
 	processedItems := make([]string, 0)
 	for _, key := range keySlice {
 		account := key.Account
+		log.Println("Starting rotation process on account: " + account + ", key: " + key.ID)
 		if !contains(processedItems, account) {
 			accountKeySource, err := accountKeySource(account, keySources)
 			check(err)
@@ -178,6 +182,9 @@ func rotateKeys(keySlice []keys.Key, keySources []keySource, circleCIAPIToken,
 				log.Println("Skipping SA: " + account + ", key: " + key.ID +
 					" as it's only " + fmt.Sprintf("%f", key.Age) + " minutes old.")
 			}
+		} else {
+			log.Println("Skipping SA: " + account + ", key: " + key.ID +
+				" as this account has already been processed")
 		}
 	}
 }
