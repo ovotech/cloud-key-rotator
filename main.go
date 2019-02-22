@@ -449,7 +449,6 @@ func updateCircleCIEnvVar(username, project, envVarName, envVarValue string,
 	verifyCircleCiEnvVar(username, project, envVarName, client)
 	check(client.DeleteEnvVar(username, project, envVarName))
 	log.Println("Deleted env var: " + envVarName + " from: " + username + "/" + project)
-	verifyCircleCiEnvVar(username, project, envVarName, client)
 	_, err := client.AddEnvVar(username, project, envVarName, envVarValue)
 	check(err)
 	log.Println("Added env var: " + envVarName + " to: " + username + "/" + project)
