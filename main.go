@@ -230,7 +230,7 @@ func keySlackString(keyID, serviceAccount, provider string) (slackString string)
 
 //sendAlert sends an alert message to the specified Webhook url
 func sendAlert(text, slackWebhook string) {
-	if slackWebhook != "" {
+	if len(slackWebhook) > 0 {
 		req, err := http.NewRequest("POST", slackWebhook,
 			bytes.NewBuffer([]byte("{\"text\": \""+text+"\"}")))
 		check(err)
@@ -264,15 +264,15 @@ func updateKeySource(keySource keySource, keyID, key, circleCIAPIToken,
 	updateSuccessMap = make(map[string][]string)
 	for _, circleCI := range keySource.CircleCI {
 		updateCircleCI(circleCI, keyID, key, circleCIAPIToken)
-		registerUpdateSuccess("CircleCI", circleCI.UsernameProject, circleCI.KeyIDEnvVar,
+		registerUpdateSuccess("CircleCI", circleCI.UsernameProject, []string{circleCI.KeyIDEnvVar, circleCI.KeyEnvVar},
 			updateSuccessMap)
 	}
-	if keySource.GitHub.OrgRepo != "" {
-		if kmsKey != "" {
+	if len(keySource.GitHub.OrgRepo) > 0 {
+		if len(kmsKey) > 0 {
 			updateGitHubRepo(keySource, gitHubAccessToken, gitName, gitEmail,
 				circleCIAPIToken, key, kmsKey, akrPass)
 			registerUpdateSuccess("GitHub",
-				keySource.GitHub.OrgRepo, keySource.GitHub.Filepath, updateSuccessMap)
+				keySource.GitHub.OrgRepo, []string{keySource.GitHub.Filepath}, updateSuccessMap)
 		} else {
 			panic("Not updating un-encrypted new key in a Git repository. Use the" +
 				"'KmsKey' field in config to specify the KMS key to use for encryption")
@@ -281,13 +281,26 @@ func updateKeySource(keySource keySource, keyID, key, circleCIAPIToken,
 	return
 }
 
-func registerUpdateSuccess(sourceType, sourceRepo, sourceID string,
+func registerUpdateSuccess(sourceType, sourceRepo string, sourceIDs []string,
 	updateSuccessMap map[string][]string) {
 	updateSlice := make([]string, 0)
 	if updateSuccessSlice, ok := updateSuccessMap[sourceType]; ok {
 		updateSlice = updateSuccessSlice
 	}
-	updateSlice = append(updateSlice, sourceRepo+": "+sourceID)
+	first := true
+	var sourceIDBuff bytes.Buffer
+	sourceIDBuff.WriteString(sourceRepo)
+	sourceIDBuff.WriteString(": ")
+	for _, sourceID := range sourceIDs {
+		if len(sourceID) > 0 {
+			if !first {
+				sourceIDBuff.WriteString(", ")
+			}
+			first = false
+			sourceIDBuff.WriteString(sourceID)
+		}
+	}
+	updateSlice = append(updateSlice, sourceIDBuff.String())
 	updateSuccessMap[sourceType] = updateSlice
 }
 
