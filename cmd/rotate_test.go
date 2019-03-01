@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"errors"
@@ -9,16 +9,19 @@ import (
 )
 
 var includeFilterTests = []struct {
-	provider      string
-	project       string
-	saAccounts    []string
-	keyAccount    string
-	filteredCount int
+	provider             string
+	project              string
+	saAccounts           []string
+	keyAccount           string
+	userSpecifiedAccount string
+	filteredCount        int
 }{
-	{"gcp", "test-project", []string{"test-sa"}, "should-not-be-returned", 0},
-	{"gcp", "test-project", []string{"test-sa"}, "test-sa", 1},
-	{"aws", "test-project", []string{"test-sa"}, "test.sa", 0}, //filtered out due to "." in keyAccount
-	{"aws", "test-project", []string{"test-sa"}, "test-sa", 1},
+	{"gcp", "test-project", []string{"test-sa"}, "should-not-be-returned", "", 0},
+	{"gcp", "test-project", []string{"test-sa"}, "test-sa", "", 1},
+	{"aws", "test-project", []string{"test-sa"}, "test.sa", "", 0}, //filtered out due to "." in keyAccount
+	{"aws", "test-project", []string{"test-sa"}, "test-sa", "", 1},
+	{"gcp", "test-project", []string{"test-sa"}, "test-sa", "test-sa", 1},
+	{"gcp", "test-project", []string{"test-sa"}, "test-sa", "should-not-be-returned", 0},
 }
 
 func TestFilterKeysInclude(t *testing.T) {
@@ -35,7 +38,7 @@ func TestFilterKeysInclude(t *testing.T) {
 				Provider: filterTest.provider, GcpProject: filterTest.project}}
 		keys := []keys.Key{key}
 		expected := filterTest.filteredCount
-		actual := len(filterKeys(keys, appConfig))
+		actual := len(filterKeys(keys, appConfig, filterTest.userSpecifiedAccount))
 		if actual != expected {
 			t.Errorf("Incorrect number of keys after filtering, want: %d, got: %d",
 				expected, actual)
@@ -63,7 +66,7 @@ func TestFilterKeysNoIncludeOrExclude(t *testing.T) {
 				Provider: noFilterTest.provider, GcpProject: noFilterTest.project}}
 		keys := []keys.Key{key}
 		expected := noFilterTest.filteredCount
-		actual := len(filterKeys(keys, appConfig))
+		actual := len(filterKeys(keys, appConfig, ""))
 		if actual != expected {
 			t.Errorf("Incorrect number of keys after filtering, want: %d, got: %d",
 				expected, actual)
@@ -96,7 +99,7 @@ func TestFilterKeysExclude(t *testing.T) {
 				Provider: filterTest.provider, GcpProject: filterTest.project}}
 		keys := []keys.Key{key}
 		expected := filterTest.filteredCount
-		actual := len(filterKeys(keys, appConfig))
+		actual := len(filterKeys(keys, appConfig, ""))
 		if actual != expected {
 			t.Errorf("Incorrect number of keys after filtering, want: %d, got: %d",
 				expected, actual)

@@ -10,4 +10,4 @@ USER ckruser
 
 RUN mkdir ~/.aws
 
-ENTRYPOINT /go/bin/cloud-key-rotator
+ENTRYPOINT ["/go/bin/cloud-key-rotator", "rotate"]
