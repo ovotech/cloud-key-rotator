@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"regexp"
@@ -15,6 +14,7 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+	"go.uber.org/zap"
 
 	keys "github.com/eversc/cloud-key-client"
 	circleci "github.com/jszwedko/go-circleci"
@@ -99,10 +99,10 @@ type config struct {
 // rotateCmd represents the save command
 var rotateCmd = &cobra.Command{
 	Use:   "rotate",
-	Short: "Short msg",
-	Long:  `Long msg`,
+	Short: "Rotate some cloud keys",
+	Long:  `Rotate some cloud keys`,
 	Run: func(cmd *cobra.Command, args []string) {
-		log.Println("cloud-key-rotator rotate called")
+		logger.Info("cloud-key-rotator rotate called")
 		rotate()
 	},
 }
@@ -110,6 +110,8 @@ var rotateCmd = &cobra.Command{
 var account string
 var provider string
 var project string
+
+var logger = stdoutLogger().Sugar()
 
 func init() {
 	defaultAccount := ""
@@ -125,6 +127,7 @@ func init() {
 }
 
 func rotate() {
+	defer logger.Sync()
 	c := getConfig()
 	providers := make([]keys.Provider, 0)
 	if len(provider) > 0 {
@@ -137,10 +140,10 @@ func rotate() {
 		}
 	}
 	keySlice := keys.Keys(providers)
-	log.Println("Found " + strconv.Itoa(len(keySlice)) + " keys in total")
+	logger.Infof("Found %d keys in total", len(keySlice))
 	keySlice = filterKeys(keySlice, c, account)
 	if c.RotationMode {
-		log.Println("Filtered down to " + strconv.Itoa(len(keySlice)) + " keys to rotate")
+		logger.Infof("Filtered down to %d keys to rotate", len(keySlice))
 		rotateKeys(keySlice, c.KeySources, c.CircleCIAPIToken, c.GitHubAccessToken,
 			c.GitName, c.GitEmail, c.KmsKey, c.AkrPass, c.SlackWebhook,
 			c.DefaultRotationAgeThresholdMins)
@@ -158,12 +161,9 @@ func getConfig() (c config) {
 	viper.SetConfigName("config")
 	viper.AddConfigPath(".")
 	viper.ReadInConfig()
-	err := viper.Unmarshal(&c)
-	if err != nil {
-		log.Println(err)
-	}
+	check(viper.Unmarshal(&c))
 	if !viper.IsSet("cloudProviders") {
-		panic("cloudProviders is not set")
+		logger.Panic("cloudProviders is not set")
 	}
 	return
 }
@@ -176,104 +176,95 @@ func rotateKeys(keySlice []keys.Key, keySources []keySource, circleCIAPIToken,
 	defaultRotationAgeThresholdMins int) {
 	processedItems := make([]string, 0)
 	for _, key := range keySlice {
-		account := key.Account
-		log.Println("Starting rotation process on account: " + account + ", key: " + key.ID)
-		if !contains(processedItems, account) {
-			accountKeySource, err := accountKeySource(account, keySources)
+		keyAccount := key.Account
+		if !contains(processedItems, keyAccount) {
+			accountKeySource, err := accountKeySource(keyAccount, keySources)
 			check(err)
 			rotationAgeThresholdMins := defaultRotationAgeThresholdMins
 			if accountKeySource.RotationAgeThresholdMins > 0 {
 				rotationAgeThresholdMins = accountKeySource.RotationAgeThresholdMins
 			}
-			processedItems = append(processedItems, account)
+			processedItems = append(processedItems, keyAccount)
 			if key.Age > float64(rotationAgeThresholdMins) {
 				keyProvider := key.Provider.Provider
-				sendAlert(slackString([]string{"Rotation process started for:",
-					keySlackString(key.ID, account, keyProvider),
-					"Age: " + fmt.Sprintf("%f", key.Age) + " mins, Threshold: " +
-						strconv.Itoa(rotationAgeThresholdMins) + " mins"}), slackWebhook)
+				informProcessStart(key, keyProvider, rotationAgeThresholdMins)
 				//*****************************************************
-				//  create new key
+				//  create key
 				//*****************************************************
-				newKeyID, newKey, err := keys.CreateKey(key)
-				check(err)
-				sendAlert(slackString([]string{"New key created:", "",
-					keySlackString(newKeyID, account, keyProvider)}), slackWebhook)
+				newKeyID, newKey := createKey(key, keyProvider, slackWebhook)
 				//*****************************************************
 				//  update sources
 				//*****************************************************
-				updateSuccessMap := updateKeySource(accountKeySource, newKeyID, newKey,
-					circleCIAPIToken, gitHubAccessToken, gitName, gitEmail, kmsKey, akrPass)
-				sendAlert(slackString([]string{"Sources updated: ", slackInlineCodeMarker,
-					stringFromMap(updateSuccessMap), slackInlineCodeMarker}), slackWebhook)
+				updateKeySources(accountKeySource, newKeyID, newKey, keyProvider, circleCIAPIToken,
+					gitHubAccessToken, gitName, gitEmail, kmsKey,
+					akrPass, slackWebhook)
 				//*****************************************************
-				//  delete key
+				//  delete old key
 				//*****************************************************
-				check(keys.DeleteKey(key))
-				sendAlert(slackString([]string{"Old key deleted:", "",
-					keySlackString(key.ID, account, keyProvider)}), slackWebhook)
+				deleteKey(key, keyProvider)
 			} else {
-				log.Println("Skipping SA: " + account + ", key: " + key.ID +
-					" as it's only " + fmt.Sprintf("%f", key.Age) + " minutes old.")
+				logger.Infof("Skipping SA: %s, key: %s as it's only %s minutes old",
+					account, key.ID, fmt.Sprintf("%f", key.Age))
 			}
 		} else {
-			log.Println("Skipping SA: " + account + ", key: " + key.ID +
-				" as this account has already been processed")
+			logger.Infof("Skipping SA: %s, key: %s as this account has already been processed",
+				account, key.ID)
 		}
 	}
 }
 
-func stringFromMap(updateSuccessMap map[string][]string) (mapString string) {
-	var stringBuff bytes.Buffer
-	for k, v := range updateSuccessMap {
-		stringBuff.WriteString(k)
-		stringBuff.WriteString(":")
-		stringBuff.WriteString("\n")
-		for _, id := range v {
-			stringBuff.WriteString(id)
-			stringBuff.WriteString("\n")
-		}
-	}
-	mapString = stringBuff.String()
+//informProcessStart informs of the rotation process starting
+func informProcessStart(key keys.Key, keyProvider string, rotationAgeThresholdMins int) {
+	logger.Infow("Rotation process started", map[string]string{
+		"keyProvider":     keyProvider,
+		"account":         account,
+		"keyID":           key.ID,
+		"keyAge":          fmt.Sprintf("%f", key.Age),
+		"keyAgeThreshold": strconv.Itoa(rotationAgeThresholdMins)})
+}
+
+//createKey creates a new key with the provider specified
+func createKey(key keys.Key, keyProvider, slackWebhook string) (newKeyID, newKey string) {
+	var err error
+	newKeyID, newKey, err = keys.CreateKey(key)
+	check(err)
+	logger.Infow("New key created",
+		"keyProvider", keyProvider,
+		"account", account,
+		"keyID", newKeyID)
 	return
 }
 
-func slackString(slackStrings []string) (slackString string) {
-	var stringBuff bytes.Buffer
-	for _, subString := range slackStrings {
-		stringBuff.WriteString(subString)
-		stringBuff.WriteString("\n")
-	}
-	slackString = stringBuff.String()
+//updateKeySources updates the sources of the key
+func updateKeySources(keySource keySource, keyID, key, keyProvider, circleCIAPIToken,
+	gitHubAccessToken, gitName, gitEmail, kmsKey,
+	akrPass, slackWebhook string) (updateSuccessMap map[string][]string) {
+	updateSuccessMap = updateKeySource(keySource, keyID, key,
+		circleCIAPIToken, gitHubAccessToken, gitName, gitEmail, kmsKey, akrPass)
+	logger.Infow("Key sources updated",
+		"keyProvider", keyProvider,
+		"account", account,
+		"keyID", keyID,
+		"keySourceUpdates", updateSuccessMap)
 	return
 }
 
-func keySlackString(keyID, serviceAccount, provider string) (slackString string) {
-	var slackBuff bytes.Buffer
-	slackBuff.WriteString(slackInlineCodeMarker)
-	slackBuff.WriteString("Provider: ")
-	slackBuff.WriteString(provider)
-	slackBuff.WriteString("\nServiceAccount: ")
-	slackBuff.WriteString(serviceAccount)
-	slackBuff.WriteString("\nKey ID: ")
-	slackBuff.WriteString(keyID)
-	slackBuff.WriteString(slackInlineCodeMarker)
-	slackString = slackBuff.String()
-	return
+//deletekey deletes the key
+func deleteKey(key keys.Key, keyProvider string) {
+	check(keys.DeleteKey(key))
+	logger.Infow("Old key deleted",
+		"keyProvider", keyProvider,
+		"account", account,
+		"keyID", key.ID)
 }
 
-//sendAlert sends an alert message to the specified Webhook url
-func sendAlert(text, slackWebhook string) {
-	if len(slackWebhook) > 0 {
-		req, err := http.NewRequest("POST", slackWebhook,
-			bytes.NewBuffer([]byte("{\"text\": \""+text+"\"}")))
-		check(err)
-		req.Header.Set("Content-type", "application/json")
-		client := &http.Client{}
-		resp, err := client.Do(req)
-		check(err)
-		defer resp.Body.Close()
-	}
+//stdoutLogger creates a stdout logger
+func stdoutLogger() (logger *zap.Logger) {
+	config := zap.NewProductionConfig()
+	config.OutputPaths = []string{"stdout"}
+	config.ErrorOutputPaths = []string{"stdout"}
+	logger, _ = config.Build()
+	return
 }
 
 //accountKeySource gets the keySource element defined in config for the
@@ -308,7 +299,7 @@ func updateKeySource(keySource keySource, keyID, key, circleCIAPIToken,
 			registerUpdateSuccess("GitHub",
 				keySource.GitHub.OrgRepo, []string{keySource.GitHub.Filepath}, updateSuccessMap)
 		} else {
-			panic("Not updating un-encrypted new key in a Git repository. Use the" +
+			logger.Panic("Not updating un-encrypted new key in a Git repository. Use the" +
 				"'KmsKey' field in config to specify the KMS key to use for encryption")
 		}
 	}
@@ -343,14 +334,15 @@ func updateGitHubRepo(gitHubSource keySource,
 	gitHubAccessToken, gitName, gitEmail, circleCIAPIToken, newKey, kmsKey,
 	akrPass string) {
 	singleLine := false
+	disableValidation := false
 	decodedKey, err := b64.StdEncoding.DecodeString(newKey)
 	check(err)
 	encKey := enc.CipherBytesFromPrimitives([]byte(decodedKey),
-		singleLine, "", "", "", "", kmsKey)
+		singleLine, disableValidation, "", "", "", "", kmsKey)
 	localDir := "/etc/cloud-key-rotator/cloud-key-rotator-tmp-repo"
 	orgRepo := gitHubSource.GitHub.OrgRepo
 	repo := cloneGitRepo(localDir, orgRepo, gitHubAccessToken)
-	log.Println("cloned git repo: " + orgRepo)
+	logger.Infof("Cloned git repo: %s", orgRepo)
 	var gitCommentBuff bytes.Buffer
 	gitCommentBuff.WriteString("CKR updating ")
 	gitCommentBuff.WriteString(gitHubSource.ServiceAccountName)
@@ -373,13 +365,13 @@ func updateGitHubRepo(gitHubSource keySource,
 	check(err)
 	committed, err := repo.CommitObject(commit)
 	check(err)
-	log.Println("committed to local git repo: " + orgRepo)
+	logger.Infof("Committed to local git repo: %s", orgRepo)
 	check(repo.Push(&git.PushOptions{Auth: &gitHttp.BasicAuth{
 		Username: "abc123", // yes, this can be anything except an empty string
 		Password: gitHubAccessToken,
 	},
 		Progress: os.Stdout}))
-	log.Println("pushed to remote git repo: " + orgRepo)
+	logger.Infof("Pushed to remote git repo: %s", orgRepo)
 	if gitHubSource.GitHub.VerifyCircleCISuccess {
 		verifyCircleCIJobSuccess(gitHubSource.GitHub.OrgRepo,
 			fmt.Sprintf("%s", committed.ID()),
@@ -423,22 +415,20 @@ func checkForJobSuccess(org, repo string, targetBuildNum int,
 	checkAttempts := 0
 	checkLimit := 60
 	checkInterval := 5 * time.Second
-	log.Println("polling circleci for status of build " +
-		strconv.Itoa(targetBuildNum))
+	logger.Infof("Polling CircleCI for status of build: %d", targetBuildNum)
 	for {
 		build, err := client.GetBuild(org, repo, targetBuildNum)
 		check(err)
 		if build.Status == "success" {
-			log.Println("detected build success")
+			logger.Infof("Detected success of CircleCI build: %d", targetBuildNum)
 			break
 		} else if build.Status == "failed" {
-			panic("CircleCI job: " + strconv.Itoa(targetBuildNum) + " has failed")
+			logger.Panicf("CircleCI job: %d has failed", targetBuildNum)
 		}
 		checkAttempts++
 		if checkAttempts == checkLimit {
-			panic("Unable to verify CircleCI job was a success. You may need to" +
-				" increase the check limit. https://circleci.com/gh/" + org + "/" +
-				repo + "/" + strconv.Itoa(targetBuildNum))
+			logger.Panicf("Unable to verify CircleCI job was a success: https://circleci.com/gh/%s/repo/%d",
+				targetBuildNum)
 		}
 		time.Sleep(checkInterval)
 	}
@@ -455,8 +445,7 @@ func obtainBuildNum(org, repo, gitHash, circleCIDeployJobName string,
 			"running", -1, 0)
 		check(err)
 		for _, build := range builds {
-			log.Println("checking for target job in build: " +
-				strconv.Itoa(build.BuildNum))
+			logger.Infof("Checking for target job in CircleCI build: %s", build.BuildNum)
 			if build.VcsRevision == gitHash &&
 				build.BuildParameters["CIRCLE_JOB"] == circleCIDeployJobName {
 				targetBuildNum = build.BuildNum
@@ -468,7 +457,7 @@ func obtainBuildNum(org, repo, gitHash, circleCIDeployJobName string,
 		}
 		checkAttempts++
 		if checkAttempts == checkLimit {
-			panic("Unable to determine CircleCI build number from target job name: " +
+			logger.Panicf("Unable to determine CircleCI build number from target job name: %s",
 				circleCIDeployJobName)
 		}
 		time.Sleep(checkInterval)
@@ -479,7 +468,7 @@ func obtainBuildNum(org, repo, gitHash, circleCIDeployJobName string,
 //updateCircleCI updates the circleCI environment variable by deleting and
 //then creating it again with the new key
 func updateCircleCI(circleCISource circleCI, keyID, key, circleCIAPIToken string) {
-	log.Println("starting cirlceci key rotate process")
+	logger.Info("Starting CircleCI env var updates")
 	client := &circleci.Client{Token: circleCIAPIToken}
 	keyIDEnvVarName := circleCISource.KeyIDEnvVar
 	splitUsernameProject := strings.Split(circleCISource.UsernameProject, "/")
@@ -495,10 +484,10 @@ func updateCircleCIEnvVar(username, project, envVarName, envVarValue string,
 	client *circleci.Client) {
 	verifyCircleCiEnvVar(username, project, envVarName, client)
 	check(client.DeleteEnvVar(username, project, envVarName))
-	log.Println("Deleted env var: " + envVarName + " from: " + username + "/" + project)
+	logger.Infof("Deleted CircleCI env var: %s from %s/%s", envVarName, username, project)
 	_, err := client.AddEnvVar(username, project, envVarName, envVarValue)
 	check(err)
-	log.Println("Added env var: " + envVarName + " to: " + username + "/" + project)
+	logger.Infof("Added CircleCI env var: %s to %s/%s", envVarName, username, project)
 	verifyCircleCiEnvVar(username, project, envVarName, client)
 }
 
@@ -514,11 +503,11 @@ func verifyCircleCiEnvVar(username, project, envVarName string,
 		}
 	}
 	if exists {
-		log.Println("Verified new env var: " + envVarName + " on: " +
-			username + "/" + project)
+		logger.Infof("Verified CircleCI env var: %s on %s/%s",
+			envVarName, username, project)
 	} else {
-		panic("Env var: " + envVarName +
-			" not detected on username/project: " + username + "/" + project)
+		logger.Panicf("CircleCI env var: %s not detected on %s/%s",
+			envVarName, username, project)
 	}
 }
 
@@ -545,7 +534,7 @@ func filterKeys(keys []keys.Key, config config, account string) (filteredKeys []
 					eligible = !keyDefinedInFiltering(excludeSASlice, key)
 				} else {
 					//if no include or exclude filters have been set, we still want to include
-					//All keys if we're NOT operating in rotation mode, i.e., just posting key
+					//ALL keys if we're NOT operating in rotation mode, i.e., just posting key
 					//ages out to external places
 					eligible = !config.RotationMode
 				}
@@ -626,8 +615,7 @@ func postMetric(keys []keys.Key, apiKey string, datadog datadog) {
 			check(err)
 			defer resp.Body.Close()
 			if resp.StatusCode != 202 {
-				panic("non-202 status code (" + strconv.Itoa(resp.StatusCode) +
-					") returned by Datadog")
+				logger.Panicf("non-202 status code (%d) returned by Datadog", resp.StatusCode)
 			}
 		}
 	}
@@ -636,7 +624,7 @@ func postMetric(keys []keys.Key, apiKey string, datadog datadog) {
 //check panics if error is not nil
 func check(e error) {
 	if e != nil {
-		panic(e.Error())
+		logger.Panic(e.Error())
 	}
 }
 
@@ -646,7 +634,7 @@ func check(e error) {
 func commitSignKey(name, email, passphrase string) (entity *openpgp.Entity,
 	err error) {
 	if passphrase == "" {
-		panic("ArmouredKeyRing passphrase must not be empty")
+		logger.Panic("ArmouredKeyRing passphrase must not be empty")
 	}
 	reader, err := os.Open("/etc/cloud-key-rotator/akr.asc")
 	check(err)
