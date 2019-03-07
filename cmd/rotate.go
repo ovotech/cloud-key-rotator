@@ -16,8 +16,8 @@ import (
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 
-	keys "github.com/eversc/cloud-key-client"
 	circleci "github.com/jszwedko/go-circleci"
+	keys "github.com/ovotech/cloud-key-client"
 	enc "github.com/ovotech/mantle/crypt"
 	"github.com/spf13/viper"
 	"golang.org/x/crypto/openpgp"

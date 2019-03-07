@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	keys "github.com/eversc/cloud-key-client"
+	keys "github.com/ovotech/cloud-key-client"
 )
 
 var includeFilterTests = []struct {
