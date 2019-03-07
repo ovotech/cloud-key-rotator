@@ -68,6 +68,13 @@ type keySource struct {
 	GitHub                   gitHub
 }
 
+//updatedSource type
+type updatedSource struct {
+	SourceType string
+	SourceURI  string
+	SourceIDs  []string
+}
+
 //serviceAccount type
 type providerServiceAccounts struct {
 	Provider cloudProvider
@@ -110,7 +117,6 @@ var rotateCmd = &cobra.Command{
 var account string
 var provider string
 var project string
-
 var logger = stdoutLogger().Sugar()
 
 func init() {
@@ -203,8 +209,8 @@ func rotateKeys(keySlice []keys.Key, keySources []keySource, circleCIAPIToken,
 				//*****************************************************
 				deleteKey(key, keyProvider)
 			} else {
-				logger.Infof("Skipping SA: %s, key: %s as it's only %s minutes old",
-					account, key.ID, fmt.Sprintf("%f", key.Age))
+				logger.Infof("Skipping SA: %s, key: %s as it's only %f minutes old",
+					account, key.ID, key.Age)
 			}
 		} else {
 			logger.Infof("Skipping SA: %s, key: %s as this account has already been processed",
@@ -238,15 +244,13 @@ func createKey(key keys.Key, keyProvider, slackWebhook string) (newKeyID, newKey
 //updateKeySources updates the sources of the key
 func updateKeySources(keySource keySource, keyID, key, keyProvider, circleCIAPIToken,
 	gitHubAccessToken, gitName, gitEmail, kmsKey,
-	akrPass, slackWebhook string) (updateSuccessMap map[string][]string) {
-	updateSuccessMap = updateKeySource(keySource, keyID, key,
-		circleCIAPIToken, gitHubAccessToken, gitName, gitEmail, kmsKey, akrPass)
+	akrPass, slackWebhook string) {
 	logger.Infow("Key sources updated",
 		"keyProvider", keyProvider,
 		"account", account,
 		"keyID", keyID,
-		"keySourceUpdates", updateSuccessMap)
-	return
+		"keySourceUpdates", updateKeySource(keySource, keyID, key,
+			circleCIAPIToken, gitHubAccessToken, gitName, gitEmail, kmsKey, akrPass))
 }
 
 //deletekey deletes the key
@@ -285,48 +289,30 @@ func accountKeySource(account string,
 //updateKeySource updates the keySources specified with the new key
 func updateKeySource(keySource keySource, keyID, key, circleCIAPIToken,
 	gitHubAccessToken, gitName, gitEmail, kmsKey,
-	akrPass string) (updateSuccessMap map[string][]string) {
-	updateSuccessMap = make(map[string][]string)
+	akrPass string) (updatedSources []updatedSource) {
+
 	for _, circleCI := range keySource.CircleCI {
 		updateCircleCI(circleCI, keyID, key, circleCIAPIToken)
-		registerUpdateSuccess("CircleCI", circleCI.UsernameProject, []string{circleCI.KeyIDEnvVar, circleCI.KeyEnvVar},
-			updateSuccessMap)
+		updatedSources = append(updatedSources, updatedSource{
+			SourceType: "CircleCI",
+			SourceURI:  circleCI.UsernameProject,
+			SourceIDs:  []string{circleCI.KeyIDEnvVar, circleCI.KeyEnvVar}})
 	}
+
 	if len(keySource.GitHub.OrgRepo) > 0 {
 		if len(kmsKey) > 0 {
 			updateGitHubRepo(keySource, gitHubAccessToken, gitName, gitEmail,
 				circleCIAPIToken, key, kmsKey, akrPass)
-			registerUpdateSuccess("GitHub",
-				keySource.GitHub.OrgRepo, []string{keySource.GitHub.Filepath}, updateSuccessMap)
+			updatedSources = append(updatedSources, updatedSource{
+				SourceType: "GitHub",
+				SourceURI:  keySource.GitHub.OrgRepo,
+				SourceIDs:  []string{keySource.GitHub.Filepath}})
 		} else {
 			logger.Panic("Not updating un-encrypted new key in a Git repository. Use the" +
 				"'KmsKey' field in config to specify the KMS key to use for encryption")
 		}
 	}
 	return
-}
-
-func registerUpdateSuccess(sourceType, sourceRepo string, sourceIDs []string,
-	updateSuccessMap map[string][]string) {
-	updateSlice := make([]string, 0)
-	if updateSuccessSlice, ok := updateSuccessMap[sourceType]; ok {
-		updateSlice = updateSuccessSlice
-	}
-	first := true
-	var sourceIDBuff bytes.Buffer
-	sourceIDBuff.WriteString(sourceRepo)
-	sourceIDBuff.WriteString(": ")
-	for _, sourceID := range sourceIDs {
-		if len(sourceID) > 0 {
-			if !first {
-				sourceIDBuff.WriteString(", ")
-			}
-			first = false
-			sourceIDBuff.WriteString(sourceID)
-		}
-	}
-	updateSlice = append(updateSlice, sourceIDBuff.String())
-	updateSuccessMap[sourceType] = updateSlice
 }
 
 //updateGitHubRepo updates the new key in the specified gitHubSource
@@ -353,13 +339,14 @@ func updateGitHubRepo(gitHubSource keySource,
 	w.Add(fullFilePath)
 	signKey, err := commitSignKey(gitName, gitEmail, akrPass)
 	check(err)
+	autoStage := true
 	commit, err := w.Commit(gitCommentBuff.String(), &git.CommitOptions{
 		Author: &object.Signature{
 			Name:  gitName,
 			Email: gitEmail,
 			When:  time.Now(),
 		},
-		All:     true,
+		All:     autoStage,
 		SignKey: signKey,
 	})
 	check(err)
