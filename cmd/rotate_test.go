@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"testing"
 
@@ -105,15 +104,6 @@ func TestFilterKeysExclude(t *testing.T) {
 				expected, actual)
 		}
 	}
-}
-
-func TestCheck(t *testing.T) {
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("The code did not panic")
-		}
-	}()
-	check(errors.New("this should cause panic"))
 }
 
 var validAwsKeyTests = []struct {
