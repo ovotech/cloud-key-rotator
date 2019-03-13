@@ -350,7 +350,7 @@ func updateGitHubRepo(gitHubSource keySource,
 	gitHubAccessToken, gitName, gitEmail, circleCIAPIToken, newKey, kmsKey,
 	akrPass string) (err error) {
 	singleLine := false
-	disableValidation := false
+	disableValidation := true
 	var decodedKey []byte
 	if decodedKey, err = b64.StdEncoding.DecodeString(newKey); err != nil {
 		return
