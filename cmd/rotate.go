@@ -242,12 +242,12 @@ func rotateKeys(keySlice []keys.Key, keySources []keySource, circleCIAPIToken,
 
 //informProcessStart informs of the rotation process starting
 func informProcessStart(key keys.Key, keyProvider string, rotationAgeThresholdMins int) {
-	logger.Infow("Rotation process started", map[string]string{
-		"keyProvider":     keyProvider,
-		"account":         account,
-		"keyID":           key.ID,
-		"keyAge":          fmt.Sprintf("%f", key.Age),
-		"keyAgeThreshold": strconv.Itoa(rotationAgeThresholdMins)})
+	logger.Infow("Rotation process started",
+		"keyProvider", keyProvider,
+		"account", account,
+		"keyID", key.ID,
+		"keyAge", fmt.Sprintf("%f", key.Age),
+		"keyAgeThreshold", strconv.Itoa(rotationAgeThresholdMins))
 }
 
 //createKey creates a new key with the provider specified
