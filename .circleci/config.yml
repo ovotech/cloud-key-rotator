@@ -1,0 +1,133 @@
+defaults: &defaults
+  working_directory: /go/src/github.com/ovotech/cloud-key-rotator
+
+version: 2
+jobs:
+  goreleaser:
+    <<: *defaults
+
+    docker:
+      - image: circleci/golang:1.10
+
+    steps:
+      - checkout
+
+      - run:
+           name: goreleaser
+           command: |
+             export GITHUB_TOKEN=$GITHUB
+             curl -sL https://git.io/goreleaser | bash
+  go_fmt:
+    <<: *defaults
+
+    docker:
+      - image: eversc/go-pr-checks
+
+    steps:
+      - checkout
+
+      - run:
+           name: ensure gofmt
+           command: |
+             test -z $(gofmt -s -l $(find . -iname '*.go' -type f | grep -v /vendor/))
+  go_vet:
+    <<: *defaults
+
+    docker:
+      - image: eversc/go-pr-checks
+
+    steps:
+      - checkout
+
+      - run:
+           name: go vet
+           command: go vet ./...
+
+  go_cyclo:
+    <<: *defaults
+
+    docker:
+      - image: eversc/go-pr-checks
+
+    steps:
+      - checkout
+
+      - run:
+           name: go_cyclo
+           command: gocyclo -over 6 cmd utils
+
+  go_lint:
+    <<: *defaults
+
+    docker:
+      - image: eversc/go-pr-checks
+
+    steps:
+      - checkout
+
+      - run:
+           name: golint
+           command: golint -set_exit_status $(go list ./...)
+
+  go_build:
+    <<: *defaults
+
+    docker:
+      - image: eversc/go-pr-checks
+
+    steps:
+      - checkout
+
+      - run:
+           name: go build
+           command: go build
+
+  go_test:
+    <<: *defaults
+
+    docker:
+      - image: eversc/go-pr-checks
+
+    steps:
+      - checkout
+
+      - run:
+           name: go test
+           command: go test ./...
+
+workflows:
+  version: 2
+  goreleaser_pipeline:
+    jobs:
+      - goreleaser:
+          filters:
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*(-.*)*/
+            branches:
+              ignore: /.*/
+  pr_pipeline:
+    jobs:
+      - go_fmt:
+          filters:
+            branches:
+              ignore: master
+      - go_vet:
+          filters:
+            branches:
+              ignore: master
+      - go_cyclo:
+          filters:
+            branches:
+              ignore: master
+      - go_lint:
+          filters:
+            branches:
+              ignore: master
+      - go_build:
+          filters:
+            branches:
+              ignore: master
+      - go_test:
+          filters:
+            branches:
+              ignore: master
