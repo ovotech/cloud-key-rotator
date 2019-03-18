@@ -1,5 +1,5 @@
 defaults: &defaults
-  working_directory: /go/src/ovotech/cloud-key-rotator
+  working_directory: /go/src/cloud-key-rotator
 
 version: 2
 jobs:
