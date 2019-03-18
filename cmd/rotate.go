@@ -51,6 +51,7 @@ type circleCI struct {
 	KeyEnvVar       string
 }
 
+//k8s type
 type k8s struct {
 	Project     string
 	Location    string

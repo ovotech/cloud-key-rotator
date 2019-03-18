@@ -1,5 +1,5 @@
 defaults: &defaults
-  working_directory: /go/src/github.com/ovotech/cloud-key-rotator
+  working_directory: /go/src/ovotech/cloud-key-rotator
 
 version: 2
 jobs:
@@ -54,7 +54,7 @@ jobs:
 
       - run:
            name: go_cyclo
-           command: gocyclo -over 6 cmd utils
+           command: gocyclo -over 6 cmd
 
   go_lint:
     <<: *defaults
