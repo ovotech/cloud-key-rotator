@@ -1,7 +1,7 @@
 package main
 
 import (
-	"cloud-key-rotator/cmd"
+	"github.com/ovotech/cloud-key-rotator/cmd"
 )
 
 func main() {
