@@ -21,6 +21,7 @@ import (
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/openpgp"
+	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	gkev1 "google.golang.org/api/container/v1"
 	git "gopkg.in/src-d/go-git.v4"
@@ -31,11 +32,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-)
-
-const (
-	datadogURL   = "https://api.datadoghq.com/api/v1/series?api_key="
-	envVarPrefix = "ckr"
+	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 )
 
 //cloudProvider type
@@ -120,28 +117,43 @@ type config struct {
 	DefaultRotationAgeThresholdMins int
 }
 
-// rotateCmd represents the save command
-var rotateCmd = &cobra.Command{
-	Use:   "rotate",
-	Short: "Rotate some cloud keys",
-	Long:  `Rotate some cloud keys`,
-	Run: func(cmd *cobra.Command, args []string) {
-		logger.Info("cloud-key-rotator rotate called")
-		if err := rotate(); err != nil {
-			logger.Error(err)
-		}
-	},
+//googleAuthProvider type
+type googleAuthProvider struct {
+	tokenSource oauth2.TokenSource
 }
 
-var account string
-var provider string
-var project string
-var logger = stdoutLogger().Sugar()
+var (
+	googleScopes = []string{
+		"https://www.googleapis.com/auth/cloud-platform",
+		"https://www.googleapis.com/auth/userinfo.email"}
+	_         rest.AuthProvider = &googleAuthProvider{}
+	rotateCmd                   = &cobra.Command{
+		Use:   "rotate",
+		Short: "Rotate some cloud keys",
+		Long:  `Rotate some cloud keys`,
+		Run: func(cmd *cobra.Command, args []string) {
+			logger.Info("cloud-key-rotator rotate called")
+			if err := rotate(); err != nil {
+				logger.Error(err)
+			}
+		},
+	}
+	account         string
+	provider        string
+	project         string
+	defaultAccount  string
+	defaultProvider string
+	defaultProject  string
+	logger          = stdoutLogger().Sugar()
+)
+
+const (
+	datadogURL       = "https://api.datadoghq.com/api/v1/series?api_key="
+	envVarPrefix     = "ckr"
+	googleAuthPlugin = "google" // so that this is different than "gcp" that's already in client-go tree.
+)
 
 func init() {
-	defaultAccount := ""
-	defaultProvider := ""
-	defaultProject := ""
 	rotateCmd.Flags().StringVarP(&account, "account", "a", defaultAccount,
 		"Account to rotate")
 	rotateCmd.Flags().StringVarP(&provider, "provider", "p", defaultProvider,
@@ -149,6 +161,9 @@ func init() {
 	rotateCmd.Flags().StringVarP(&project, "project", "j", defaultProject,
 		"Project of account to rotate")
 	rootCmd.AddCommand(rotateCmd)
+	if err := rest.RegisterAuthProviderPlugin(googleAuthPlugin, newGoogleAuthProvider); err != nil {
+		logger.Fatalf("Failed to register %s auth plugin: %v", googleAuthPlugin, err)
+	}
 }
 
 func rotate() (err error) {
@@ -176,7 +191,7 @@ func rotate() (err error) {
 	if c.RotationMode {
 		logger.Infof("Filtered down to %d keys to rotate", len(keySlice))
 		if err = rotateKeys(keySlice, c.KeySources, c.CircleCIAPIToken, c.GitHubAccessToken,
-			c.GitName, c.GitEmail, c.KmsKey, c.AkrPass, c.SlackWebhook,
+			c.GitName, c.GitEmail, c.KmsKey, c.AkrPass,
 			c.DefaultRotationAgeThresholdMins); err != nil {
 			return
 		}
@@ -209,7 +224,7 @@ func getConfig() (c config, err error) {
 //filter down to subset of target keys, generate new key for each, update the
 //key's sources and finally delete the existing/old key
 func rotateKeys(keySlice []keys.Key, keySources []keySource, circleCIAPIToken,
-	gitHubAccessToken, gitName, gitEmail, kmsKey, akrPass, slackWebhook string,
+	gitHubAccessToken, gitName, gitEmail, kmsKey, akrPass string,
 	defaultRotationAgeThresholdMins int) (err error) {
 	processedItems := make([]string, 0)
 	for _, key := range keySlice {
@@ -232,7 +247,7 @@ func rotateKeys(keySlice []keys.Key, keySources []keySource, circleCIAPIToken,
 				//*****************************************************
 				var newKeyID string
 				var newKey string
-				if newKeyID, newKey, err = createKey(key, keyProvider, slackWebhook); err != nil {
+				if newKeyID, newKey, err = createKey(key, keyProvider); err != nil {
 					return
 				}
 				//*****************************************************
@@ -240,7 +255,7 @@ func rotateKeys(keySlice []keys.Key, keySources []keySource, circleCIAPIToken,
 				//*****************************************************
 				if err = updateKeySources(source, newKeyID, newKey, keyProvider, circleCIAPIToken,
 					gitHubAccessToken, gitName, gitEmail, kmsKey,
-					akrPass, slackWebhook); err != nil {
+					akrPass); err != nil {
 					return
 				}
 				//*****************************************************
@@ -270,7 +285,7 @@ func informProcessStart(key keys.Key, keyProvider string, rotationAgeThresholdMi
 }
 
 //createKey creates a new key with the provider specified
-func createKey(key keys.Key, keyProvider, slackWebhook string) (newKeyID, newKey string, err error) {
+func createKey(key keys.Key, keyProvider string) (newKeyID, newKey string, err error) {
 	if newKeyID, newKey, err = keys.CreateKey(key); err != nil {
 		logger.Error(err)
 		return
@@ -285,7 +300,7 @@ func createKey(key keys.Key, keyProvider, slackWebhook string) (newKeyID, newKey
 //updateKeySources updates the sources of the key
 func updateKeySources(keySource keySource, keyID, key, keyProvider, circleCIAPIToken,
 	gitHubAccessToken, gitName, gitEmail, kmsKey,
-	akrPass, slackWebhook string) (err error) {
+	akrPass string) (err error) {
 	var updatedSources []updatedSource
 	if updatedSources, err = updateKeySource(keySource, keyID, key,
 		circleCIAPIToken, gitHubAccessToken, gitName, gitEmail, kmsKey, akrPass); err != nil {
@@ -416,7 +431,7 @@ func kubernetesClient(cluster *gkev1.Cluster) (k8sclient *kubernetes.Clientset, 
 		DecodeString(cluster.MasterAuth.ClusterCaCertificate); err != nil {
 		return
 	}
-	k8sclient, err = kubernetes.NewForConfig(&rest.Config{
+	return kubernetes.NewForConfig(&rest.Config{
 		Username: cluster.MasterAuth.Username,
 		Password: cluster.MasterAuth.Password,
 		Host:     "https://" + cluster.Endpoint,
@@ -426,8 +441,26 @@ func kubernetesClient(cluster *gkev1.Cluster) (k8sclient *kubernetes.Clientset, 
 			KeyData:  decodedClientKey,
 			CAData:   decodedClusterCaCertificate,
 		},
+		AuthProvider: &clientcmdapi.AuthProviderConfig{Name: googleAuthPlugin},
 	})
-	return
+}
+
+func (g *googleAuthProvider) WrapTransport(rt http.RoundTripper) http.RoundTripper {
+	return &oauth2.Transport{
+		Base:   rt,
+		Source: g.tokenSource,
+	}
+}
+
+func (g *googleAuthProvider) Login() error { return nil }
+
+func newGoogleAuthProvider(addr string, config map[string]string,
+	persister rest.AuthProviderConfigPersister) (authProvider rest.AuthProvider, err error) {
+	var ts oauth2.TokenSource
+	if ts, err = google.DefaultTokenSource(context.TODO(), googleScopes...); err != nil {
+		return
+	}
+	return &googleAuthProvider{tokenSource: ts}, nil
 }
 
 //updateK8sSecret updates a specific namespace/secret/data with the key string
