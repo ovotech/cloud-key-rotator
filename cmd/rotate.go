@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"context"
 	b64 "encoding/base64"
 	"errors"
 	"fmt"
@@ -20,16 +21,18 @@ import (
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/openpgp"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
+	gkev1 "google.golang.org/api/container/v1"
 	git "gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
 	gitHttp "gopkg.in/src-d/go-git.v4/plumbing/transport/http"
-)
-
-const (
-	datadogURL            = "https://api.datadoghq.com/api/v1/series?api_key="
-	envVarPrefix          = "ckr"
-	slackInlineCodeMarker = "```"
+	"k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
+	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 )
 
 //cloudProvider type
@@ -43,6 +46,16 @@ type circleCI struct {
 	UsernameProject string
 	KeyIDEnvVar     string
 	KeyEnvVar       string
+}
+
+//k8s type
+type k8s struct {
+	Project     string
+	Location    string
+	ClusterName string
+	Namespace   string
+	SecretName  string
+	DataName    string
 }
 
 //datadog type
@@ -66,6 +79,7 @@ type keySource struct {
 	ServiceAccountName       string
 	CircleCI                 []circleCI
 	GitHub                   gitHub
+	K8s                      []k8s
 }
 
 //updatedSource type
@@ -103,28 +117,43 @@ type config struct {
 	DefaultRotationAgeThresholdMins int
 }
 
-// rotateCmd represents the save command
-var rotateCmd = &cobra.Command{
-	Use:   "rotate",
-	Short: "Rotate some cloud keys",
-	Long:  `Rotate some cloud keys`,
-	Run: func(cmd *cobra.Command, args []string) {
-		logger.Info("cloud-key-rotator rotate called")
-		if err := rotate(); err != nil {
-			logger.Error(err)
-		}
-	},
+//googleAuthProvider type
+type googleAuthProvider struct {
+	tokenSource oauth2.TokenSource
 }
 
-var account string
-var provider string
-var project string
-var logger = stdoutLogger().Sugar()
+var (
+	googleScopes = []string{
+		"https://www.googleapis.com/auth/cloud-platform",
+		"https://www.googleapis.com/auth/userinfo.email"}
+	_         rest.AuthProvider = &googleAuthProvider{}
+	rotateCmd                   = &cobra.Command{
+		Use:   "rotate",
+		Short: "Rotate some cloud keys",
+		Long:  `Rotate some cloud keys`,
+		Run: func(cmd *cobra.Command, args []string) {
+			logger.Info("cloud-key-rotator rotate called")
+			if err := rotate(); err != nil {
+				logger.Error(err)
+			}
+		},
+	}
+	account         string
+	provider        string
+	project         string
+	defaultAccount  string
+	defaultProvider string
+	defaultProject  string
+	logger          = stdoutLogger().Sugar()
+)
+
+const (
+	datadogURL       = "https://api.datadoghq.com/api/v1/series?api_key="
+	envVarPrefix     = "ckr"
+	googleAuthPlugin = "google" // so that this is different than "gcp" that's already in client-go tree.
+)
 
 func init() {
-	defaultAccount := ""
-	defaultProvider := ""
-	defaultProject := ""
 	rotateCmd.Flags().StringVarP(&account, "account", "a", defaultAccount,
 		"Account to rotate")
 	rotateCmd.Flags().StringVarP(&provider, "provider", "p", defaultProvider,
@@ -132,6 +161,9 @@ func init() {
 	rotateCmd.Flags().StringVarP(&project, "project", "j", defaultProject,
 		"Project of account to rotate")
 	rootCmd.AddCommand(rotateCmd)
+	if err := rest.RegisterAuthProviderPlugin(googleAuthPlugin, newGoogleAuthProvider); err != nil {
+		logger.Fatalf("Failed to register %s auth plugin: %v", googleAuthPlugin, err)
+	}
 }
 
 func rotate() (err error) {
@@ -158,9 +190,11 @@ func rotate() (err error) {
 	keySlice = filterKeys(keySlice, c, account)
 	if c.RotationMode {
 		logger.Infof("Filtered down to %d keys to rotate", len(keySlice))
-		rotateKeys(keySlice, c.KeySources, c.CircleCIAPIToken, c.GitHubAccessToken,
-			c.GitName, c.GitEmail, c.KmsKey, c.AkrPass, c.SlackWebhook,
-			c.DefaultRotationAgeThresholdMins)
+		if err = rotateKeys(keySlice, c.KeySources, c.CircleCIAPIToken, c.GitHubAccessToken,
+			c.GitName, c.GitEmail, c.KmsKey, c.AkrPass,
+			c.DefaultRotationAgeThresholdMins); err != nil {
+			return
+		}
 	} else {
 		postMetric(keySlice, c.DatadogAPIKey, c.Datadog)
 	}
@@ -190,7 +224,7 @@ func getConfig() (c config, err error) {
 //filter down to subset of target keys, generate new key for each, update the
 //key's sources and finally delete the existing/old key
 func rotateKeys(keySlice []keys.Key, keySources []keySource, circleCIAPIToken,
-	gitHubAccessToken, gitName, gitEmail, kmsKey, akrPass, slackWebhook string,
+	gitHubAccessToken, gitName, gitEmail, kmsKey, akrPass string,
 	defaultRotationAgeThresholdMins int) (err error) {
 	processedItems := make([]string, 0)
 	for _, key := range keySlice {
@@ -213,7 +247,7 @@ func rotateKeys(keySlice []keys.Key, keySources []keySource, circleCIAPIToken,
 				//*****************************************************
 				var newKeyID string
 				var newKey string
-				if newKeyID, newKey, err = createKey(key, keyProvider, slackWebhook); err != nil {
+				if newKeyID, newKey, err = createKey(key, keyProvider); err != nil {
 					return
 				}
 				//*****************************************************
@@ -221,7 +255,7 @@ func rotateKeys(keySlice []keys.Key, keySources []keySource, circleCIAPIToken,
 				//*****************************************************
 				if err = updateKeySources(source, newKeyID, newKey, keyProvider, circleCIAPIToken,
 					gitHubAccessToken, gitName, gitEmail, kmsKey,
-					akrPass, slackWebhook); err != nil {
+					akrPass); err != nil {
 					return
 				}
 				//*****************************************************
@@ -251,7 +285,7 @@ func informProcessStart(key keys.Key, keyProvider string, rotationAgeThresholdMi
 }
 
 //createKey creates a new key with the provider specified
-func createKey(key keys.Key, keyProvider, slackWebhook string) (newKeyID, newKey string, err error) {
+func createKey(key keys.Key, keyProvider string) (newKeyID, newKey string, err error) {
 	if newKeyID, newKey, err = keys.CreateKey(key); err != nil {
 		logger.Error(err)
 		return
@@ -266,7 +300,7 @@ func createKey(key keys.Key, keyProvider, slackWebhook string) (newKeyID, newKey
 //updateKeySources updates the sources of the key
 func updateKeySources(keySource keySource, keyID, key, keyProvider, circleCIAPIToken,
 	gitHubAccessToken, gitName, gitEmail, kmsKey,
-	akrPass, slackWebhook string) (err error) {
+	akrPass string) (err error) {
 	var updatedSources []updatedSource
 	if updatedSources, err = updateKeySource(keySource, keyID, key,
 		circleCIAPIToken, gitHubAccessToken, gitName, gitEmail, kmsKey, akrPass); err != nil {
@@ -320,29 +354,130 @@ func accountKeySource(account string,
 func updateKeySource(keySource keySource, keyID, key, circleCIAPIToken,
 	gitHubAccessToken, gitName, gitEmail, kmsKey,
 	akrPass string) (updatedSources []updatedSource, err error) {
-
 	for _, circleCI := range keySource.CircleCI {
-		updateCircleCI(circleCI, keyID, key, circleCIAPIToken)
+		if err = updateCircleCI(circleCI, keyID, key, circleCIAPIToken); err != nil {
+			return
+		}
 		updatedSources = append(updatedSources, updatedSource{
 			SourceType: "CircleCI",
 			SourceURI:  circleCI.UsernameProject,
 			SourceIDs:  []string{circleCI.KeyIDEnvVar, circleCI.KeyEnvVar}})
 	}
-
 	if len(keySource.GitHub.OrgRepo) > 0 {
 		if len(kmsKey) > 0 {
-			updateGitHubRepo(keySource, gitHubAccessToken, gitName, gitEmail,
-				circleCIAPIToken, key, kmsKey, akrPass)
+			if err = updateGitHubRepo(keySource, gitHubAccessToken, gitName, gitEmail,
+				circleCIAPIToken, key, kmsKey, akrPass); err != nil {
+				return
+			}
 			updatedSources = append(updatedSources, updatedSource{
 				SourceType: "GitHub",
 				SourceURI:  keySource.GitHub.OrgRepo,
 				SourceIDs:  []string{keySource.GitHub.Filepath}})
 		} else {
-			logger.Panic("Not updating un-encrypted new key in a Git repository. Use the" +
+			err = errors.New("Not updating un-encrypted new key in a Git repository. Use the" +
 				"'KmsKey' field in config to specify the KMS key to use for encryption")
+			return
+		}
+	}
+	for _, k8sSecret := range keySource.K8s {
+		var cluster *gkev1.Cluster
+		if cluster, err = gkeCluster(k8sSecret.Project, k8sSecret.Location,
+			k8sSecret.ClusterName); err != nil {
+			return
+		}
+		var k8sClient *kubernetes.Clientset
+		if k8sClient, err = kubernetesClient(cluster); err != nil {
+			return
+		}
+		if _, err = updateK8sSecret(k8sSecret.SecretName, k8sSecret.DataName,
+			k8sSecret.Namespace, key, k8sClient); err != nil {
+			return
 		}
 	}
 	return
+}
+
+//gkeCluster creates a GKE cluster struct
+func gkeCluster(project, location, clusterName string) (cluster *gkev1.Cluster, err error) {
+	ctx := context.Background()
+	var httpClient *http.Client
+	if httpClient, err = google.DefaultClient(ctx, gkev1.CloudPlatformScope); err != nil {
+		return
+	}
+	var gkeService *gkev1.Service
+	if gkeService, err = gkev1.New(httpClient); err != nil {
+		return
+	}
+	cluster, err = gkeService.Projects.Locations.Clusters.
+		Get(fmt.Sprintf("projects/%s/locations/%s/clusters/%s", project, location, clusterName)).
+		Do()
+	return
+}
+
+//kubernetesClient creates a kubernetes clientset
+func kubernetesClient(cluster *gkev1.Cluster) (k8sclient *kubernetes.Clientset, err error) {
+	var decodedClientCertificate []byte
+	if decodedClientCertificate, err = b64.StdEncoding.
+		DecodeString(cluster.MasterAuth.ClientCertificate); err != nil {
+		return
+	}
+	var decodedClientKey []byte
+	if decodedClientKey, err = b64.StdEncoding.
+		DecodeString(cluster.MasterAuth.ClientKey); err != nil {
+		return
+	}
+	var decodedClusterCaCertificate []byte
+	if decodedClusterCaCertificate, err = b64.StdEncoding.
+		DecodeString(cluster.MasterAuth.ClusterCaCertificate); err != nil {
+		return
+	}
+	return kubernetes.NewForConfig(&rest.Config{
+		Username: cluster.MasterAuth.Username,
+		Password: cluster.MasterAuth.Password,
+		Host:     "https://" + cluster.Endpoint,
+		TLSClientConfig: rest.TLSClientConfig{
+			Insecure: false,
+			CertData: decodedClientCertificate,
+			KeyData:  decodedClientKey,
+			CAData:   decodedClusterCaCertificate,
+		},
+		AuthProvider: &clientcmdapi.AuthProviderConfig{Name: googleAuthPlugin},
+	})
+}
+
+func (g *googleAuthProvider) WrapTransport(rt http.RoundTripper) http.RoundTripper {
+	return &oauth2.Transport{
+		Base:   rt,
+		Source: g.tokenSource,
+	}
+}
+
+func (g *googleAuthProvider) Login() error { return nil }
+
+func newGoogleAuthProvider(addr string, config map[string]string,
+	persister rest.AuthProviderConfigPersister) (authProvider rest.AuthProvider, err error) {
+	var ts oauth2.TokenSource
+	if ts, err = google.DefaultTokenSource(context.TODO(), googleScopes...); err != nil {
+		return
+	}
+	return &googleAuthProvider{tokenSource: ts}, nil
+}
+
+//updateK8sSecret updates a specific namespace/secret/data with the key string
+func updateK8sSecret(secretName, dataName, namespace, key string,
+	k8sclient *kubernetes.Clientset) (newSecret *v1.Secret, err error) {
+	logger.Info("Starting k8s secret updates")
+	var secret *v1.Secret
+	if secret, err = k8sclient.CoreV1().Secrets(namespace).Get(secretName,
+		metav1.GetOptions{}); err != nil {
+		return
+	}
+	var decodedKey []byte
+	if decodedKey, err = b64.StdEncoding.DecodeString(key); err != nil {
+		return
+	}
+	secret.Data = map[string][]byte{dataName: decodedKey}
+	return k8sclient.CoreV1().Secrets(namespace).Update(secret)
 }
 
 //updateGitHubRepo updates the new key in the specified gitHubSource
@@ -407,7 +542,7 @@ func updateGitHubRepo(gitHubSource keySource,
 	}
 	logger.Infof("Pushed to remote git repo: %s", orgRepo)
 	if gitHubSource.GitHub.VerifyCircleCISuccess {
-		verifyCircleCIJobSuccess(gitHubSource.GitHub.OrgRepo,
+		err = verifyCircleCIJobSuccess(gitHubSource.GitHub.OrgRepo,
 			fmt.Sprintf("%s", committed.ID()),
 			gitHubSource.GitHub.CircleCIDeployJobName, circleCIAPIToken)
 	}
@@ -431,27 +566,29 @@ func cloneGitRepo(localDir, orgRepo, token string) (repo *git.Repository, err er
 //verifyCircleCIJobSuccess uses the specified gitHash to track down the circleCI
 //build number, which it then uses to determine the status of the circleCI build
 func verifyCircleCIJobSuccess(orgRepo, gitHash, circleCIDeployJobName,
-	circleCIAPIToken string) {
+	circleCIAPIToken string) (err error) {
 	client := &circleci.Client{Token: circleCIAPIToken}
 	splitOrgRepo := strings.Split(orgRepo, "/")
 	org := splitOrgRepo[0]
 	repo := splitOrgRepo[1]
-	targetBuildNum := obtainBuildNum(org, repo, gitHash, circleCIDeployJobName,
-		client)
-	checkForJobSuccess(org, repo, targetBuildNum, client)
+	var targetBuildNum int
+	if targetBuildNum, err = obtainBuildNum(org, repo, gitHash, circleCIDeployJobName,
+		client); err != nil {
+		return
+	}
+	return checkForJobSuccess(org, repo, targetBuildNum, client)
 }
 
 //checkForJobSuccess polls the circleCI API until the build is successful or
 //failed, or a timeout is reached, whichever happens first
 func checkForJobSuccess(org, repo string, targetBuildNum int,
-	client *circleci.Client) {
+	client *circleci.Client) (err error) {
 	checkAttempts := 0
 	checkLimit := 60
 	checkInterval := 5 * time.Second
 	logger.Infof("Polling CircleCI for status of build: %d", targetBuildNum)
 	for {
 		var build *circleci.Build
-		var err error
 		if build, err = client.GetBuild(org, repo, targetBuildNum); err != nil {
 			return
 		}
@@ -459,26 +596,26 @@ func checkForJobSuccess(org, repo string, targetBuildNum int,
 			logger.Infof("Detected success of CircleCI build: %d", targetBuildNum)
 			break
 		} else if build.Status == "failed" {
-			logger.Panicf("CircleCI job: %d has failed", targetBuildNum)
+			return fmt.Errorf("CircleCI job: %d has failed", targetBuildNum)
 		}
 		checkAttempts++
 		if checkAttempts == checkLimit {
-			logger.Panicf("Unable to verify CircleCI job was a success: https://circleci.com/gh/%s/repo/%d",
-				targetBuildNum)
+			return fmt.Errorf("Unable to verify CircleCI job was a success: https://circleci.com/gh/%s/%s/%d",
+				org, repo, targetBuildNum)
 		}
 		time.Sleep(checkInterval)
 	}
+	return
 }
 
 //obtainBuildNum gets the number of the circleCI build by matching up the gitHash
 func obtainBuildNum(org, repo, gitHash, circleCIDeployJobName string,
-	client *circleci.Client) (targetBuildNum int) {
+	client *circleci.Client) (targetBuildNum int, err error) {
 	checkAttempts := 0
 	checkLimit := 60
 	checkInterval := 5 * time.Second
 	for {
 		var builds []*circleci.Build
-		var err error
 		if builds, err = client.ListRecentBuildsForProject(org, repo, "master",
 			"running", -1, 0); err != nil {
 			return
@@ -496,8 +633,9 @@ func obtainBuildNum(org, repo, gitHash, circleCIDeployJobName string,
 		}
 		checkAttempts++
 		if checkAttempts == checkLimit {
-			logger.Panicf("Unable to determine CircleCI build number from target job name: %s",
+			err = fmt.Errorf("Unable to determine CircleCI build number from target job name: %s",
 				circleCIDeployJobName)
+			return
 		}
 		time.Sleep(checkInterval)
 	}
@@ -506,7 +644,7 @@ func obtainBuildNum(org, repo, gitHash, circleCIDeployJobName string,
 
 //updateCircleCI updates the circleCI environment variable by deleting and
 //then creating it again with the new key
-func updateCircleCI(circleCISource circleCI, keyID, key, circleCIAPIToken string) {
+func updateCircleCI(circleCISource circleCI, keyID, key, circleCIAPIToken string) (err error) {
 	logger.Info("Starting CircleCI env var updates")
 	client := &circleci.Client{Token: circleCIAPIToken}
 	keyIDEnvVarName := circleCISource.KeyIDEnvVar
@@ -514,14 +652,19 @@ func updateCircleCI(circleCISource circleCI, keyID, key, circleCIAPIToken string
 	username := splitUsernameProject[0]
 	project := splitUsernameProject[1]
 	if len(keyIDEnvVarName) > 0 {
-		updateCircleCIEnvVar(username, project, keyIDEnvVarName, keyID, client)
+		if err = updateCircleCIEnvVar(username, project, keyIDEnvVarName, keyID,
+			client); err != nil {
+			return
+		}
 	}
-	updateCircleCIEnvVar(username, project, circleCISource.KeyEnvVar, key, client)
+	return updateCircleCIEnvVar(username, project, circleCISource.KeyEnvVar, key, client)
 }
 
 func updateCircleCIEnvVar(username, project, envVarName, envVarValue string,
 	client *circleci.Client) (err error) {
-	verifyCircleCiEnvVar(username, project, envVarName, client)
+	if err = verifyCircleCiEnvVar(username, project, envVarName, client); err != nil {
+		return
+	}
 	if err = client.DeleteEnvVar(username, project, envVarName); err != nil {
 		return
 	}
@@ -530,8 +673,7 @@ func updateCircleCIEnvVar(username, project, envVarName, envVarValue string,
 		return
 	}
 	logger.Infof("Added CircleCI env var: %s to %s/%s", envVarName, username, project)
-	verifyCircleCiEnvVar(username, project, envVarName, client)
-	return
+	return verifyCircleCiEnvVar(username, project, envVarName, client)
 }
 
 func verifyCircleCiEnvVar(username, project, envVarName string,
@@ -551,8 +693,9 @@ func verifyCircleCiEnvVar(username, project, envVarName string,
 		logger.Infof("Verified CircleCI env var: %s on %s/%s",
 			envVarName, username, project)
 	} else {
-		logger.Panicf("CircleCI env var: %s not detected on %s/%s",
+		err = fmt.Errorf("CircleCI env var: %s not detected on %s/%s",
 			envVarName, username, project)
+		return
 	}
 	return
 }
@@ -665,7 +808,7 @@ func postMetric(keys []keys.Key, apiKey string, datadog datadog) (err error) {
 			}
 			defer resp.Body.Close()
 			if resp.StatusCode != 202 {
-				logger.Panicf("non-202 status code (%d) returned by Datadog", resp.StatusCode)
+				err = fmt.Errorf("non-202 status code (%d) returned by Datadog", resp.StatusCode)
 			}
 		}
 	}
@@ -678,7 +821,8 @@ func postMetric(keys []keys.Key, apiKey string, datadog datadog) (err error) {
 func commitSignKey(name, email, passphrase string) (entity *openpgp.Entity,
 	err error) {
 	if passphrase == "" {
-		logger.Panic("ArmouredKeyRing passphrase must not be empty")
+		err = errors.New("ArmouredKeyRing passphrase must not be empty")
+		return
 	}
 	var reader *os.File
 	if reader, err = os.Open("/etc/cloud-key-rotator/akr.asc"); err != nil {
