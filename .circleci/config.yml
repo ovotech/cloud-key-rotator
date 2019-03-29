@@ -1,5 +1,9 @@
 defaults: &defaults
+<<<<<<< HEAD
   working_directory: /go/src/github.com/ovotech/cloud-key-rotator
+=======
+  working_directory: /go/src/cloud-key-rotator
+>>>>>>> master
 
 version: 2
 jobs:
