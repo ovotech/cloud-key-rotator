@@ -13,7 +13,5 @@
   },
   {
     "Name":"aws"
-  }],
-  "ExcludeSAs": [],
-  "IncludeSAs": []
+  }]
 }

@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"testing"
 
 	keys "github.com/ovotech/cloud-key-client"
@@ -28,16 +27,21 @@ func TestFilterKeysInclude(t *testing.T) {
 		psa := providerServiceAccounts{
 			Provider: cloudProvider{Name: filterTest.provider,
 				Project: filterTest.project},
-			Accounts: filterTest.saAccounts,
+			ProviderAccounts: filterTest.saAccounts,
 		}
-		appConfig := config{IncludeSAs: []providerServiceAccounts{psa}}
+
+		psas := []providerServiceAccounts{psa}
+		includeFilter := filter{Mode: "include", Accounts: psas}
+		appConfig := config{RotationMode: true, AccountFilter: includeFilter}
+
 		key := keys.Key{
 			Account: filterTest.keyAccount,
 			Provider: keys.Provider{
 				Provider: filterTest.provider, GcpProject: filterTest.project}}
 		keys := []keys.Key{key}
 		expected := filterTest.filteredCount
-		actual := len(filterKeys(keys, appConfig, filterTest.userSpecifiedAccount))
+		filteredKeys, _ := filterKeys(keys, appConfig, filterTest.userSpecifiedAccount)
+		actual := len(filteredKeys)
 		if actual != expected {
 			t.Errorf("Incorrect number of keys after filtering, want: %d, got: %d",
 				expected, actual)
@@ -65,7 +69,8 @@ func TestFilterKeysNoIncludeOrExclude(t *testing.T) {
 				Provider: noFilterTest.provider, GcpProject: noFilterTest.project}}
 		keys := []keys.Key{key}
 		expected := noFilterTest.filteredCount
-		actual := len(filterKeys(keys, appConfig, ""))
+		filteredKeys, _ := filterKeys(keys, appConfig, "")
+		actual := len(filteredKeys)
 		if actual != expected {
 			t.Errorf("Incorrect number of keys after filtering, want: %d, got: %d",
 				expected, actual)
@@ -89,16 +94,19 @@ func TestFilterKeysExclude(t *testing.T) {
 		psa := providerServiceAccounts{
 			Provider: cloudProvider{Name: filterTest.provider,
 				Project: filterTest.project},
-			Accounts: filterTest.saAccounts,
+			ProviderAccounts: filterTest.saAccounts,
 		}
-		appConfig := config{ExcludeSAs: []providerServiceAccounts{psa}}
+		psas := []providerServiceAccounts{psa}
+		excludeFilter := filter{Mode: "exclude", Accounts: psas}
+		appConfig := config{RotationMode: true, AccountFilter: excludeFilter}
 		key := keys.Key{
 			Account: filterTest.keyAccount,
 			Provider: keys.Provider{
 				Provider: filterTest.provider, GcpProject: filterTest.project}}
 		keys := []keys.Key{key}
 		expected := filterTest.filteredCount
-		actual := len(filterKeys(keys, appConfig, ""))
+		filteredKeys, _ := filterKeys(keys, appConfig, "")
+		actual := len(filteredKeys)
 		if actual != expected {
 			t.Errorf("Incorrect number of keys after filtering, want: %d, got: %d",
 				expected, actual)
@@ -148,6 +156,41 @@ func TestContains(t *testing.T) {
 		if actual != expected {
 			t.Errorf("Incorrect bool returned, want: %t, got: %t", expected, actual)
 		}
-		fmt.Println()
 	}
 }
+
+var filterTests = []struct {
+	provider             string
+	project              string
+	saAccounts           []string
+	keyAccount           string
+	keyExistsInFiltering bool
+}{
+	{"gcp", "test-project", []string{"test-sa"}, "doesnt-exist-in-filtering", false},
+	{"gcp", "test-project", []string{"test-sa"}, "test-sa", true},
+}
+
+func TestKeyDefinedInFiltering(t *testing.T) {
+	for _, filterTest := range filterTests {
+		psa := providerServiceAccounts{
+			Provider: cloudProvider{Name: filterTest.provider,
+				Project: filterTest.project},
+			ProviderAccounts: filterTest.saAccounts,
+		}
+		psas := []providerServiceAccounts{psa}
+		key := keys.Key{
+			Account: filterTest.keyAccount,
+			Provider: keys.Provider{
+				Provider: filterTest.provider, GcpProject: filterTest.project}}
+		expected := filterTest.keyExistsInFiltering
+		actual := keyDefinedInFiltering(psas, key)
+		if actual != expected {
+			t.Errorf("Incorrect bool returned, want: %t, got: %t", expected, actual)
+		}
+	}
+
+}
+
+// func TestNewInterfaceApproach(t *testing.T) {
+// 	newInterfaceApproach()
+// }
