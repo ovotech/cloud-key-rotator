@@ -1,5 +1,4 @@
 {
-  "AkrPass": "change_me",
   "IncludeAwsUserKeys": true,
   "RotationMode": true,
   "CloudProviders": [{
@@ -9,26 +8,19 @@
   {
     "Name": "aws"
   }],
-  "ExcludeSAs": [],
-  "IncludeSAs": [{
-    "Provider": {
-      "Project": "my-project",
-      "Name": "gcp"
-    },
-    "Accounts": [
-      "cloud-key-client-test",
-      "circleci-helm-backup"
-    ]
+  "AccountFilter": {
+    "Mode": "include",
+    "Accounts": [{
+      "Provider": {
+        "Name": "gcp",
+        "Project": "cepheus-202811"
+      },
+      "ProviderAccounts": [
+        "cloud-key-client-test"
+      ]
+    }]
   },
-  {
-    "Provider": {
-      "Name": "aws"
-    },
-    "Accounts": [
-      "cloud-key-rotator-aws"
-    ]
-  }],
-  "KeySources": [{
+  "KeyLocations": [{
     "ServiceAccountName": "cloud-key-rotator-test",
     "GitHub": {
       "FilePath": "service-account.txt",
@@ -49,10 +41,15 @@
       "KeyEnvVar": "AWS_KEY"
     }]
   }],
-  "CircleCIAPIToken": "change_me",
-  "GitHubAccessToken": "change_me",
-  "GitName": "git-name",
-  "GitEmail": "change_me@example.com",
-  "KmsKey": "projects/my-project/locations/europe-west1/keyRings/my-keyring/cryptoKeys/my-key",
-  "SlackWebhook": "https://hooks.slack.com/services/CHANGEME/CHANGEME/CHANGEME",
+  "Credentials": {
+    "CircleCIAPIToken": "change_me",
+    "GitHubAccount": {
+      "GitHubAccessToken": "change_me",
+      "GitName": "git-name",
+      "GitEmail": "change_me@example.com"
+    },
+    "KmsKey": "projects/my-project/locations/europe-west1/keyRings/my-keyring/cryptoKeys/my-key",
+    "AkrPass": "change_me"
+  },
+  "DefaultRotationAgeThresholdMins": 1000
 }
