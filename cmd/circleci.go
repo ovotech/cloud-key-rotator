@@ -134,7 +134,7 @@ func obtainBuildNum(org, repo, gitHash, circleCIDeployJobName string, client *ci
 // The GitHash is used to ensure the correct build is selected
 func buildNumFromRecentBuilds(builds []*circleci.Build, gitHash, circleCIDeployJobName string) (targetBuildNum int) {
 	for _, build := range builds {
-		logger.Infof("Checking for target job in CircleCI build: %s", build.BuildNum)
+		logger.Infof("Checking for target job in CircleCI build: %d", build.BuildNum)
 		if build.VcsRevision == gitHash &&
 			build.BuildParameters["CIRCLE_JOB"] == circleCIDeployJobName {
 			targetBuildNum = build.BuildNum
