@@ -194,3 +194,26 @@ func TestKeyDefinedInFiltering(t *testing.T) {
 // func TestNewInterfaceApproach(t *testing.T) {
 // 	newInterfaceApproach()
 // }
+
+var flagValidationTests = []struct {
+	account     string
+	provider    string
+	project     string
+	shouldError bool
+}{
+	{"sa-account", "", "", true},
+	{"sa-account", "gcp", "", true},
+	{"sa-account", "gcp", "gcp-project", false},
+	{"sa-account", "aws", "", false},
+}
+
+func TestValidateFlags(t *testing.T) {
+	for _, flagValidationTest := range flagValidationTests {
+		err := validateFlags(flagValidationTest.account, flagValidationTest.provider, flagValidationTest.project)
+		actual := err != nil
+		expected := flagValidationTest.shouldError
+		if actual != expected {
+			t.Errorf("Incorrect error behaviour encountered")
+		}
+	}
+}

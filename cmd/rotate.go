@@ -142,6 +142,8 @@ func init() {
 	}
 }
 
+//keyProviders returns a slice of key providers based on flags or config (in
+// that order of priority)
 func keyProviders(c config) (keyProviders []keys.Provider) {
 	if len(provider) > 0 {
 		keyProviders = append(keyProviders, keys.Provider{GcpProject: project,
@@ -155,10 +157,27 @@ func keyProviders(c config) (keyProviders []keys.Provider) {
 	return
 }
 
+//validateFlags returns an error that's not nil if provided string values fail
+// a set of validation rules
+func validateFlags(account, provider, project string) (err error) {
+	if (len(account) > 0 && len(provider) == 0) || (len(account) == 0 && len(provider) > 0) {
+		err = errors.New("Both account AND provider flags must be set")
+		return
+	}
+	if provider == "gcp" && len(project) == 0 {
+		err = errors.New("Project flag must be set when using the GCP provider")
+		return
+	}
+	return
+}
+
 func rotate() (err error) {
 	defer logger.Sync()
 	var c config
 	if c, err = getConfig(); err != nil {
+		return
+	}
+	if err = validateFlags(account, provider, project); err != nil {
 		return
 	}
 	var accountKeys []keys.Key
@@ -529,7 +548,10 @@ func commitSignKey(name, email, passphrase string) (entity *openpgp.Entity,
 		return
 	}
 	var reader *os.File
-	if reader, err = os.Open("/etc/cloud-key-rotator/akr.asc"); err != nil {
+	// if reader, err = os.Open("/etc/cloud-key-rotator/akr.asc"); err != nil {
+	// 	return
+	// }
+	if reader, err = os.Open("./akr.asc"); err != nil {
 		return
 	}
 	var entityList openpgp.EntityList
