@@ -31,6 +31,7 @@ type keyWriter interface {
 type cloudProvider struct {
 	Name    string
 	Project string
+	Self    string
 }
 
 //datadog type
@@ -92,6 +93,7 @@ type googleAuthProvider struct {
 	tokenSource oauth2.TokenSource
 }
 
+//rotationCandidate type
 type rotationCandidate struct {
 	key                   keys.Key
 	keyLocation           keyLocations
@@ -160,7 +162,7 @@ func keyProviders(c config) (keyProviders []keys.Provider) {
 //validateFlags returns an error that's not nil if provided string values fail
 // a set of validation rules
 func validateFlags(account, provider, project string) (err error) {
-	if (len(account) > 0 && len(provider) == 0) || (len(account) == 0 && len(provider) > 0) {
+	if len(account) > 0 && len(provider) == 0 {
 		err = errors.New("Both account AND provider flags must be set")
 		return
 	}
@@ -169,6 +171,16 @@ func validateFlags(account, provider, project string) (err error) {
 		return
 	}
 	return
+}
+
+//keysOfProviders returns keys from all the configured providers that have passed
+// through filtering
+func keysOfProviders(c config) (accountKeys []keys.Key, err error) {
+	if accountKeys, err = keys.Keys(keyProviders(c)); err != nil {
+		return
+	}
+	logger.Infof("Found %d keys in total", len(accountKeys))
+	return filterKeys(accountKeys, c, account)
 }
 
 func rotate() (err error) {
@@ -180,21 +192,18 @@ func rotate() (err error) {
 	if err = validateFlags(account, provider, project); err != nil {
 		return
 	}
-	var accountKeys []keys.Key
-	if accountKeys, err = keys.Keys(keyProviders(c)); err != nil {
+	var providerKeys []keys.Key
+	if providerKeys, err = keysOfProviders(c); err != nil {
 		return
 	}
-	logger.Infof("Found %d keys in total", len(accountKeys))
-	if accountKeys, err = filterKeys(accountKeys, c, account); err != nil {
-		return
-	}
-	logger.Infof("Filtered down to %d keys based on current app config", len(accountKeys))
+	logger.Infof("Filtered down to %d keys based on current app config", len(providerKeys))
 	if !c.RotationMode {
-		postMetric(accountKeys, c.DatadogAPIKey, c.Datadog)
+		postMetric(providerKeys, c.DatadogAPIKey, c.Datadog)
 		return
 	}
 	var rc []rotationCandidate
-	if rc, err = rotationCandidates(accountKeys, c.AccountKeyLocations, c.Credentials, c.DefaultRotationAgeThresholdMins); err != nil {
+	if rc, err = rotationCandidates(providerKeys, c.AccountKeyLocations,
+		c.Credentials, c.DefaultRotationAgeThresholdMins); err != nil {
 		return
 	}
 	logger.Infof("Finalised %d keys that are candidates for rotation", len(rc))
@@ -350,6 +359,8 @@ func accountKeyLocation(account string,
 	return
 }
 
+//locationsToUpdate return a slice of structs that implement the keyWriter
+// interface, based on the keyLocations supplied
 func locationsToUpdate(keyLocation keyLocations) (kws []keyWriter) {
 
 	// read locations
@@ -395,6 +406,8 @@ func updateKeyLocation(keyLocations keyLocations, keyID, key, keyProvider string
 	return
 }
 
+//encryptedServiceAccountKey uses github.com/ovotech/mantle to encrypt the
+// key string that's passed in
 func encryptedServiceAccountKey(key, kmsKey string) (encKey []byte, err error) {
 	const singleLine = false
 	const disableValidation = true
@@ -407,25 +420,60 @@ func encryptedServiceAccountKey(key, kmsKey string) (encKey []byte, err error) {
 	return enc.CipherBytesFromPrimitives([]byte(decodedKey), singleLine, disableValidation, "", "", "", "", kmsKey), nil
 }
 
+//validKey returns a bool reflecting whether the key is deemed to be valid, based
+// on a number of provider-specific rules. E.g., if the provider is AWS, and
+// not configured to include user keys, is the key a user key (and hence invalid)?
+func validKey(key keys.Key, config config) bool {
+	if key.Provider.Provider == "aws" {
+		return validAwsKey(key, config)
+	}
+	return true
+}
+
 //filterKeys returns a keys.Key slice created by filtering the provided
 // keys.Key slice based on specific rules for each provider
-func filterKeys(keys []keys.Key, config config, account string) (filteredKeys []keys.Key, err error) {
-	for _, key := range keys {
+func filterKeys(keysToFilter []keys.Key, config config, account string) (filteredKeys []keys.Key, err error) {
+	var selfKeys []keys.Key
+	for _, key := range keysToFilter {
 		//valid bool is used to filter out keys early, e.g. if config says don't
 		//include AWS user keys, and the current key happens to be a user key
-		valid := true
-		if key.Provider.Provider == "aws" {
-			valid = validAwsKey(key, config)
+		if !validKey(key, config) {
+			continue
 		}
 		var eligible bool
 		if eligible, err = filterKey(account, config, key); err != nil {
 			return
 		}
-		if valid && eligible {
-			filteredKeys = append(filteredKeys, key)
+		if eligible {
+			//don't add the key to filteredKeys yet if it's deemed to be a 'self' key
+			// (i.e. the key belongs to the process performing this rotation)
+			if isSelf(config, key) {
+				logger.Infow("Key has been identified as a cloud-rotator key, so will be processed last",
+					"keyProvider", key.Provider,
+					"account", key.Account)
+				selfKeys = append(selfKeys, key)
+			} else {
+				filteredKeys = append(filteredKeys, key)
+			}
 		}
 	}
+	//now add the 'self' keys
+	filteredKeys = append(filteredKeys, selfKeys...)
 	return
+}
+
+//isSelf returns true iff the key provided matches the 'self' defined in the
+// config.cloudProvider. This means the key is the one being used in the
+// rotation process, and should probably be rotated last.
+func isSelf(config config, key keys.Key) bool {
+	for _, cloudProvider := range config.CloudProviders {
+		if cloudProvider.Name == key.Provider.Provider &&
+			cloudProvider.Project == key.Provider.GcpProject &&
+			cloudProvider.Self == key.Account {
+			return true
+		}
+	}
+	return false
 }
 
 //filterKey returns a bool indicating whether the key is eligible for 'use'
@@ -548,10 +596,7 @@ func commitSignKey(name, email, passphrase string) (entity *openpgp.Entity,
 		return
 	}
 	var reader *os.File
-	// if reader, err = os.Open("/etc/cloud-key-rotator/akr.asc"); err != nil {
-	// 	return
-	// }
-	if reader, err = os.Open("./akr.asc"); err != nil {
+	if reader, err = os.Open("/etc/cloud-key-rotator/akr.asc"); err != nil {
 		return
 	}
 	var entityList openpgp.EntityList
