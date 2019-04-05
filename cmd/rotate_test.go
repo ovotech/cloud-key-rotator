@@ -114,6 +114,32 @@ func TestFilterKeysExclude(t *testing.T) {
 	}
 }
 
+var validKeyTests = []struct {
+	provider        string
+	project         string
+	includeUserKeys bool
+	keyName         string
+	valid           bool
+}{
+	{"aws", "", true, "first.last", true},
+	{"aws", "", true, "firstlast", true},
+	{"aws", "", false, "first.last", false},
+	{"aws", "", false, "firstlast", true},
+}
+
+func TestValidKey(t *testing.T) {
+	for _, validKeyTest := range validKeyTests {
+		appConfig := config{IncludeAwsUserKeys: validKeyTest.includeUserKeys}
+		key := keys.Key{Provider: keys.Provider{
+			Provider: validKeyTest.provider, GcpProject: validKeyTest.project}, Name: validKeyTest.keyName}
+		expected := validKeyTest.valid
+		actual := validKey(key, appConfig)
+		if actual != expected {
+			t.Errorf("Incorrect bool returned, want: %t, got: %t", expected, actual)
+		}
+	}
+}
+
 var validAwsKeyTests = []struct {
 	includeUserKeys bool
 	keyName         string
