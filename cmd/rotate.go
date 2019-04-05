@@ -180,11 +180,7 @@ func keysOfProviders(c config) (accountKeys []keys.Key, err error) {
 		return
 	}
 	logger.Infof("Found %d keys in total", len(accountKeys))
-	if accountKeys, err = filterKeys(accountKeys, c, account); err != nil {
-		return
-	}
-	logger.Infof("Filtered down to %d keys based on current app config", len(accountKeys))
-	return
+	return filterKeys(accountKeys, c, account)
 }
 
 func rotate() (err error) {
@@ -200,6 +196,7 @@ func rotate() (err error) {
 	if providerKeys, err = keysOfProviders(c); err != nil {
 		return
 	}
+	logger.Infof("Filtered down to %d keys based on current app config", len(providerKeys))
 	if !c.RotationMode {
 		postMetric(providerKeys, c.DatadogAPIKey, c.Datadog)
 		return
