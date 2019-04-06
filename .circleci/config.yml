@@ -41,7 +41,10 @@ jobs:
 
       - run:
            name: go vet
-           command: go vet ./...
+           command: |
+             export GO111MODULE=on
+             go build
+             go vet ./...
 
   go_cyclo:
     <<: *defaults
