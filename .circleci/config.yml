@@ -80,7 +80,9 @@ jobs:
 
       - run:
            name: go build
-           command: go build
+           command: |
+             export GO111MODULE=on
+             go build
 
   go_test:
     <<: *defaults
