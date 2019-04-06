@@ -7,7 +7,7 @@ jobs:
     <<: *defaults
 
     docker:
-      - image: circleci/golang:1.10
+      - image: circleci/golang:1.12
 
     steps:
       - checkout
@@ -43,7 +43,7 @@ jobs:
            name: go vet
            command: |
              export GO111MODULE=on
-             go build
+             go mod download
              go vet ./...
 
   go_cyclo:
@@ -98,7 +98,10 @@ jobs:
 
       - run:
            name: go test
-           command: go test ./...
+           command: |
+             export GO111MODULE=on
+             go mod download
+             go test ./...
 
 workflows:
   version: 2
