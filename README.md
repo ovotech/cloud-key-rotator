@@ -1,21 +1,76 @@
-# cloud-key-rotator
+# Cloud-Key-Rotator
 
 This is a Golang program to assist with the reporting of Service Account key
 ages, and rotating said keys once they pass a specific age threshold.
 
-You can set the age threshold to whatever you want in the config, using the
-`RotationAgeThresholdMins` field (the value is always in minutes).
+## Install
+
+### From Binary Releases
+
+Darwin, Linux and Windows Binaries can be downloaded from the [Releases](https://github.com/ovotech/cloud-key-rotator/releases) page.
+
+Try it out:
+
+```
+$ cloud-key-rotator -h
+```
+
+### Docker image
+
+An alpine based Docker image is available [here](https://hub.docker.com/r/ovotech/cloud-key-rotator).
+
+
+## Getting Started
+
+### Config
+
+`cloud-key-rotator` picks up details about which key(s) to rotate, and locations
+to update with new keys, from config.
+
+Check out [examples](examples) for example config files. [Viper](https://github.com/spf13/viper)
+is used as the Config framework, so config can be stored as JSON, TOML, YAML, or
+HCL. To work, the file just needs to be called "config" (before whatever
+extension you're using), and be present either in `/etc/cloud-key-rotator/` or
+in the same directory the binary runs in.
+
+### Authentication/Authorisation
+
+You'll need to provide `cloud-key-rotator` with the means of authenticating into
+any key provider that it'll be updating.
+
+Authorisation is handled by the Default Credential Provider Chains for both
+[GCP](https://cloud.google.com/docs/authentication/production#auth-cloud-implicit-go) and [AWS](https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html#credentials-default).
+
+### Mode Of Operation
 
 `cloud-key-rotator` can operate in 2 different modes. Rotation mode, in which
 keys are rotated, and non-rotation mode, which only posts the ages of the keys to
 the Datadog metric API. You can specify which mode to operate in by using the
 `RotationMode` boolean field in config.
 
-Check out [examples](examples) for example config files. [Viper](https://github.com/spf13/viper)
-is used as a Config solution, so config can be stored as JSON, TOML, YAML, or
-HCL. To work, the file just needs to be called "config" (before whatever
-extension you're using), and be present in the `/etc/cloud-key-rotator/`
-directory.
+### Age Thresholds
+
+You can set the age threshold to whatever you want in the config, using the
+`DefaultRotationAgeThresholdMins` field in config, or you can override on a
+per-service-account-basis with the `RotationAgeThresholdMins` field. Key ages
+are always measured in minutes.
+
+`cloud-key-rotator` won't attempt to rotate a key until it's passed the age
+threshold you've set (either default or the key-specific). This allows you to
+run it as frequently as you want without worrying about keys being rotated too
+much.
+
+### Key Locations
+
+Key locations is the term used for the places that keys are stored, that
+ultimately get updated with new keys that are generated.
+
+Currently, the following locations are supported:
+
+- EnvVars CircleCI
+- Secrets in GKE
+- Files (encrypted via [mantle](https://github.com/ovotech/mantle) which
+integrates with KMS) in GitHub
 
 ## Rotation Process
 
@@ -39,23 +94,32 @@ sources multiple times.
 
 ## Key Sources
 
-The `KeySources` section of config holds details of the places where the keys
+The `AccountKeyLocations` section of config holds details of the places where the keys
 are stored. E.g.:
 
 ```JSON
-"KeySources": [{
-  "ServiceAccountName": "cloud-key-rotator-test",
+"AccountKeyLocations": [{
+  "ServiceAccountName": "cloud-key-client-test",
+  "RotationAgeThresholdMins": 60,
   "GitHub": {
     "FilePath": "service-account.txt",
-    "OrgRepo": "myorg/myrepo",
+    "OrgRepo": "ovotech/cloud-key-rotator",
     "VerifyCircleCISuccess": true,
     "CircleCIDeployJobName": "dummy_deploy_with_wait"
   },
   "CircleCI": [{
-    "UsernameProject" : "ovotech/cloud-key-rotator-poc",
-    "EnvVar" : "GCLOUD"
+    "UsernameProject": "ovotech/cloud-key-rotator",
+    "KeyEnvVar": "ENV_VAR_NAME"
+  }],
+  "K8s": [{
+    "Project": "my_project",
+    "Location": "europe-west2-b",
+    "ClusterName": "cluster_name",
+    "Namespace": "uat",
+    "SecretName": "key-rotate-test-secret",
+    "DataName": "my-key.json"
   }]
-}],
+}]
 ```
 
 `cloud-key-rotator` has integrations into GitHub and CircleCI, which allows it
@@ -63,10 +127,6 @@ not only to update those sources with the new key, but also to verify that a
 deployment has been successful after committing to a GitHub repo. If that
 verification isn't required, you can disable it using the `VerifyCircleCISuccess`
 boolean.
-
-Only a single `GitHub` element is permitted, as you shouldn't be holding your
-keys in multiple repositories, whereas `CircleCI` is an array as it's much more
-likely that you'll be storing the same key in multiple environment variables.
 
 For any GitHub key source that's configured, the whole process will be aborted
 if there's no `KmsKey` value set. Unencrypted keys shouldn't ever be committed
@@ -89,23 +149,30 @@ e.g. along with the `akr.asc` file, you should set the following:
 "GitEmail": "change_me@example.com",
 ```
 
-## Include/Exclude Service Accounts
+## Filtering Service Accounts
 
 You may want to only include or exclude specific Service Accounts. This is
-possible using the `IncludeSAs` and `ExcludeSAs` config fields respectively.
+possible using `AccountFilter`.
 
 E.g.:
 
 ```JSON
-"ExcludeSAs": [],
-"IncludeSAs": ["cloud-key-rotator-test"],
+"AccountFilter": {
+  "Mode": "include",
+  "Accounts": [{
+    "Provider": {
+      "Name": "gcp",
+      "Project": "my-project"
+    },
+    "ProviderAccounts": [
+      "cloud-key-client-test"
+    ]
+  }]
+}
 ```
 
-`IncludeSAs` overrides `ExcludeSAs` entirely, meaning that if you want to
-Exclude, you'll have to specify an empty array for the Include field.
-
-If any Service Accounts are specified in `IncludeSAs`, then keys for any other
-Service Accounts will be completely filtered out.
+`Mode` field is either `include` or `exclude`. If you omit the `AccountFilter`,
+the rotation process will fail.
 
 Notice how the name of the Service Account is used. In the case of GCP, this is
 everything preceding the `@[project].iam.gserviceaccount.com` string in the
@@ -113,14 +180,18 @@ Service Account's email address.
 
 ## Rotation Flow
 
-1. Filter keys to those deemed to be eligible
-2. For each eligible key:
- 1. Create new key
- 2. Update key sources
- 3.  Delete old key
+- Reduce keys to those of service accounts deemed to be valid (e.g. strip out
+  user accounts if in rotation-mode)
+- Filter keys to those deemed to be eligible (e.g. according to filtering rules
+  configured by the user)
+- For each eligible key:
+ - Create new key
+ - Update key locations
+ - Verify update has worked (where possible)
+ - Delete old key
 
 ## Contributions
 
 Contributions are more than welcome. It should be straight forward plugging in
-new integrations of new key sources, so for that, or anything else, please
-branch or fork and raise a PR.
+new integrations of new key providers and/or locations, so for that,
+or anything else, please branch or fork and raise a PR.
