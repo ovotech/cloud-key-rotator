@@ -16,6 +16,8 @@ jobs:
            name: goreleaser
            command: |
              export GITHUB_TOKEN=$GITHUB
+             export GO111MODULE=on
+             go mod download
              curl -sL https://git.io/goreleaser | bash
   go_fmt:
     <<: *defaults
