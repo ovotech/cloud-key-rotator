@@ -1,3 +1,5 @@
 ckr.yaml
 config.*
 *.asc
+cloud-key-rotator
+key.json
