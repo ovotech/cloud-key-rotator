@@ -1,4 +1,4 @@
-package cmd
+package location
 
 import (
 	"fmt"
@@ -6,18 +6,22 @@ import (
 	"time"
 
 	circleci "github.com/jszwedko/go-circleci"
+	"github.com/ovotech/cloud-key-rotator/pkg/cred"
+	"github.com/ovotech/cloud-key-rotator/pkg/log"
 )
 
-//circleCI type
-type circleCI struct {
+//CircleCI type
+type CircleCI struct {
 	UsernameProject string
 	KeyIDEnvVar     string
 	KeyEnvVar       string
 }
 
+var logger = log.StdoutLogger().Sugar()
+
 //updateCircleCI updates the circleCI environment variable by deleting and
 //then creating it again with the new key
-func (circle circleCI) write(serviceAccountName, keyID, key string, creds credentials) (updated updatedLocation, err error) {
+func (circle CircleCI) Write(serviceAccountName, keyID, key string, creds cred.Credentials) (updated UpdatedLocation, err error) {
 	logger.Info("Starting CircleCI env var updates")
 	client := &circleci.Client{Token: creds.CircleCIAPIToken}
 	keyIDEnvVarName := circle.KeyIDEnvVar
@@ -35,7 +39,7 @@ func (circle circleCI) write(serviceAccountName, keyID, key string, creds creden
 		return
 	}
 
-	updated = updatedLocation{
+	updated = UpdatedLocation{
 		LocationType: "CircleCI",
 		LocationURI:  circle.UsernameProject,
 		LocationIDs:  []string{circle.KeyIDEnvVar, circle.KeyEnvVar}}
