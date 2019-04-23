@@ -10,7 +10,7 @@ import (
 	"golang.org/x/crypto/openpgp"
 )
 
-//encryptedServiceAccountKey uses github.com/ovotech/mantle to encrypt the
+//EncryptedServiceAccountKey uses github.com/ovotech/mantle to encrypt the
 // key string that's passed in
 func EncryptedServiceAccountKey(key, kmsKey string) (encKey []byte, err error) {
 	const singleLine = false
@@ -25,7 +25,7 @@ func EncryptedServiceAccountKey(key, kmsKey string) (encKey []byte, err error) {
 		disableValidation, "", "", "", "", kmsKey), nil
 }
 
-//commitSignKey creates an openPGP Entity based on a user's name, email,
+//CommitSignKey creates an openPGP Entity based on a user's name, email,
 //armoredKeyRing and passphrase for the key ring. This commitSignKey can then
 //be used to GPG sign Git commits
 func CommitSignKey(name, email, passphrase string) (entity *openpgp.Entity,
@@ -35,11 +35,10 @@ func CommitSignKey(name, email, passphrase string) (entity *openpgp.Entity,
 		return
 	}
 	var reader *os.File
-	// if reader, err = os.Open("/etc/cloud-key-rotator/akr.asc"); err != nil {
-	// 	return
-	// }
-	if reader, err = os.Open("./akr.asc"); err != nil {
-		return
+	if reader, err = os.Open("/etc/cloud-key-rotator/akr.asc"); err != nil {
+		if reader, err = os.Open("./akr.asc"); err != nil {
+			return
+		}
 	}
 	var entityList openpgp.EntityList
 	if entityList, err = openpgp.ReadArmoredKeyRing(reader); err != nil {

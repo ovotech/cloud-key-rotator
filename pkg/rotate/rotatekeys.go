@@ -77,6 +77,7 @@ func keysOfProviders(account, provider, project string, c config.Config) (accoun
 	return filterKeys(accountKeys, c, account)
 }
 
+//Rotate rotates those keys..
 func Rotate(account, provider, project string, c config.Config) (err error) {
 	defer logger.Sync()
 
