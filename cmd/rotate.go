@@ -35,11 +35,6 @@ var (
 	logger            = log.StdoutLogger().Sugar()
 )
 
-const (
-	datadogURL   = "https://api.datadoghq.com/api/v1/series?api_key="
-	envVarPrefix = "ckr"
-)
-
 func init() {
 	rotateCmd.Flags().StringVarP(&account, "account", "a", defaultAccount,
 		"Account to rotate")

@@ -1,5 +1,6 @@
 package cred
 
+// Credentials type
 type Credentials struct {
 	CircleCIAPIToken string
 	GitHubAccount    GitHubAccount
@@ -7,7 +8,7 @@ type Credentials struct {
 	KmsKey           string
 }
 
-// gitHubAccount type
+// GitHubAccount type
 type GitHubAccount struct {
 	GitHubAccessToken string
 	GitName           string
