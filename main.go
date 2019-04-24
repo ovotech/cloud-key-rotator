@@ -19,13 +19,16 @@ type MyEvent struct {
 func HandleRequest(ctx context.Context, name MyEvent) (string, error) {
 	var c config.Config
 	var err error
+	status := "fail"
 	if c, err = config.GetConfigFromAWSSecretManager(
 		getEnv("CKR_SECRET_CONFIG_NAME", "ckr-config"),
 		getEnv("CKR_CONFIG_TYPE", "json")); err != nil {
-		return "fail", err
+		return status, err
 	}
-	rotate.Rotate("", "", "", c)
-	return "success", err
+	if err = rotate.Rotate("", "", "", c); err == nil {
+		status = "success"
+	}
+	return status, err
 }
 
 func main() {
