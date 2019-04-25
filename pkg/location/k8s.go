@@ -17,7 +17,7 @@ import (
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 )
 
-//k8s type
+//K8s type
 type K8s struct {
 	Project     string
 	Location    string

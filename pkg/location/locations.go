@@ -1,6 +1,6 @@
 package location
 
-//updatedLocation type
+//UpdatedLocation type
 type UpdatedLocation struct {
 	LocationType string
 	LocationURI  string
