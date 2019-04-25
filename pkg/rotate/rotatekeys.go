@@ -25,13 +25,6 @@ type rotationCandidate struct {
 	rotationThresholdMins int
 }
 
-//cloudProvider type
-type cloudProvider struct {
-	Name    string
-	Project string
-	Self    string
-}
-
 var logger = log.StdoutLogger().Sugar()
 
 const (

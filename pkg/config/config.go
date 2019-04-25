@@ -18,15 +18,15 @@ type Config struct {
 	Datadog                         Datadog
 	DatadogAPIKey                   string
 	RotationMode                    bool
-	CloudProviders                  []cloudProvider
-	AccountFilter                   filter
+	CloudProviders                  []CloudProvider
+	AccountFilter                   Filter
 	AccountKeyLocations             []KeyLocations
 	Credentials                     cred.Credentials
 	DefaultRotationAgeThresholdMins int
 }
 
-//cloudProvider type
-type cloudProvider struct {
+//CloudProvider type
+type CloudProvider struct {
 	Name    string
 	Project string
 	Self    string
@@ -39,7 +39,8 @@ type Datadog struct {
 	MetricName string
 }
 
-type filter struct {
+//Filter type
+type Filter struct {
 	Mode     string
 	Accounts []ProviderServiceAccounts
 }
@@ -55,7 +56,7 @@ type KeyLocations struct {
 
 //ProviderServiceAccounts type
 type ProviderServiceAccounts struct {
-	Provider         cloudProvider
+	Provider         CloudProvider
 	ProviderAccounts []string
 }
 
