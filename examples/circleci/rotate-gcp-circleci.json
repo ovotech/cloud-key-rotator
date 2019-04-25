@@ -1,0 +1,31 @@
+{
+  "RotationMode": true,
+  "CloudProviders": [{
+    "Name": "gcp",
+    "Project": "my_gcp_project",
+    "Self": ""
+  }],
+  "AccountFilter": {
+    "Mode": "include",
+    "Accounts": [{
+      "Provider": {
+        "Name": "gcp",
+        "Project": "my_gcp_project"
+      },
+      "ProviderAccounts": [
+        "gcp-circleci-user"
+      ]
+    }]
+  },
+  "AccountKeyLocations": [{
+    "ServiceAccountName": "gcp-circleci-user",
+    "CircleCI": [{
+      "UsernameProject": "ovotech/project_name",
+      "KeyEnvVar": "GCP_KEY_JSON"
+    }]
+  }],
+  "Credentials": {
+    "CircleCIAPIToken": "**change_me**"
+  },
+  "DefaultRotationAgeThresholdMins": 5
+}

@@ -1,0 +1,30 @@
+{
+  "RotationMode": true,
+  "CloudProviders": [{
+    "Name": "aws",
+    "Self": ""
+  }],
+  "AccountFilter": {
+    "Mode": "include",
+    "Accounts": [{
+      "Provider": {
+        "Name": "aws"
+      },
+      "ProviderAccounts": [
+        "aws-circleci-user"
+      ]
+    }]
+  },
+  "AccountKeyLocations": [{
+    "ServiceAccountName": "aws-circleci-user",
+    "CircleCI": [{
+      "UsernameProject": "ovotech/project_name",
+      "KeyIDEnvVar": "AWS_ACCESS_KEY_ID",
+      "KeyEnvVar": "AWS_SECRET_ACCESS_KEY"
+    }]
+  }],
+  "Credentials": {
+    "CircleCIAPIToken": "**change_me**"
+  },
+  "DefaultRotationAgeThresholdMins": 5
+}
