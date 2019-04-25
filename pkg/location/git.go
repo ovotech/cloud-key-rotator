@@ -17,7 +17,7 @@ import (
 	gitHttp "gopkg.in/src-d/go-git.v4/plumbing/transport/http"
 )
 
-//gitHub type
+//GitHub type
 type GitHub struct {
 	Filepath              string
 	OrgRepo               string
