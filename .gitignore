@@ -1,6 +1,6 @@
 ckr.yaml
-config.*
 !*.go
+*config*.json
 *.asc
-cloud-key-rotator
+*cloud-key-rotator*
 key.json
