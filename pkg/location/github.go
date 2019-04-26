@@ -35,7 +35,7 @@ func (gitHub GitHub) Write(serviceAccountName, keyID, key string, creds cred.Cre
 
 	// const localDir = "/etc/cloud-key-rotator/cloud-key-rotator-tmp-repo"
 
-	const localDir = "/tmp/tmp-repo2"
+	const localDir = "/etc/cloud-key-rotator/cloud-key-rotator-tmp-repo"
 
 	defer os.RemoveAll(localDir)
 

@@ -107,7 +107,7 @@ single sources multiple times.
 ## Key Sources
 
 The `AccountKeyLocations` section of config holds details of the places where the keys
-are stored. e.g.:
+are stored, e.g.:
 
 ```JSON
 "AccountKeyLocations": [{
@@ -140,7 +140,7 @@ deployment has been successful after committing to a GitHub repository. If that
 verification isn't required, you can disable it using the `VerifyCircleCISuccess`
 boolean.
 
-For any GitHub configure key source, the whole process will be aborted
+For any GitHub key location, the whole process will be aborted
 if there is no `KmsKey` value set. Unencrypted keys should **never** be committed
 to a Git repository.
 
