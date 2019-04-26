@@ -1,8 +1,10 @@
 archives:
-  - format: binary
+  - id: binary
+    format: binary
     builds:
     - binary-build
-  - format: zip
+  - id: zip
+    format: zip
     builds:
     - lambda-build
     files:
