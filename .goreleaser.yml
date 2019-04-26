@@ -1,11 +1,25 @@
-# .goreleaser.yml
-archive:
-  format: binary
+archives:
+  - format: binary
+    builds:
+    - binary-build
+  - format: zip
+    builds:
+    - lambda-build
+    files:
+      - none*
+    name_template: "{{ .ProjectName }}_{{ .Version }}_lambda"
 builds:
-  - main: ./
+  - id: binary-build
+    main: ./
     goos:
       - windows
       - darwin
+      - linux
+    goarch:
+      - amd64
+  - id: lambda-build
+    main: ./
+    goos:
       - linux
     goarch:
       - amd64

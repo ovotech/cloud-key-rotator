@@ -1,9 +1,10 @@
-package cmd
+package rotate
 
 import (
 	"testing"
 
 	keys "github.com/ovotech/cloud-key-client"
+	"github.com/ovotech/cloud-key-rotator/pkg/config"
 )
 
 var includeFilterTests = []struct {
@@ -24,15 +25,15 @@ var includeFilterTests = []struct {
 
 func TestFilterKeysInclude(t *testing.T) {
 	for _, filterTest := range includeFilterTests {
-		psa := providerServiceAccounts{
-			Provider: cloudProvider{Name: filterTest.provider,
+		psa := config.ProviderServiceAccounts{
+			Provider: config.CloudProvider{Name: filterTest.provider,
 				Project: filterTest.project},
 			ProviderAccounts: filterTest.saAccounts,
 		}
 
-		psas := []providerServiceAccounts{psa}
-		includeFilter := filter{Mode: "include", Accounts: psas}
-		appConfig := config{RotationMode: true, AccountFilter: includeFilter}
+		psas := []config.ProviderServiceAccounts{psa}
+		includeFilter := config.Filter{Mode: "include", Accounts: psas}
+		appConfig := config.Config{RotationMode: true, AccountFilter: includeFilter}
 
 		key := keys.Key{
 			Account: filterTest.keyAccount,
@@ -62,7 +63,7 @@ var noFilterTests = []struct {
 
 func TestFilterKeysNoIncludeOrExclude(t *testing.T) {
 	for _, noFilterTest := range noFilterTests {
-		appConfig := config{RotationMode: noFilterTest.rotationMode}
+		appConfig := config.Config{RotationMode: noFilterTest.rotationMode}
 		key := keys.Key{
 			Account: noFilterTest.keyAccount,
 			Provider: keys.Provider{
@@ -91,14 +92,14 @@ var excludeFilterTests = []struct {
 
 func TestFilterKeysExclude(t *testing.T) {
 	for _, filterTest := range excludeFilterTests {
-		psa := providerServiceAccounts{
-			Provider: cloudProvider{Name: filterTest.provider,
+		psa := config.ProviderServiceAccounts{
+			Provider: config.CloudProvider{Name: filterTest.provider,
 				Project: filterTest.project},
 			ProviderAccounts: filterTest.saAccounts,
 		}
-		psas := []providerServiceAccounts{psa}
-		excludeFilter := filter{Mode: "exclude", Accounts: psas}
-		appConfig := config{RotationMode: true, AccountFilter: excludeFilter}
+		psas := []config.ProviderServiceAccounts{psa}
+		excludeFilter := config.Filter{Mode: "exclude", Accounts: psas}
+		appConfig := config.Config{RotationMode: true, AccountFilter: excludeFilter}
 		key := keys.Key{
 			Account: filterTest.keyAccount,
 			Provider: keys.Provider{
@@ -129,7 +130,7 @@ var validKeyTests = []struct {
 
 func TestValidKey(t *testing.T) {
 	for _, validKeyTest := range validKeyTests {
-		appConfig := config{IncludeAwsUserKeys: validKeyTest.includeUserKeys}
+		appConfig := config.Config{IncludeAwsUserKeys: validKeyTest.includeUserKeys}
 		key := keys.Key{Provider: keys.Provider{
 			Provider: validKeyTest.provider, GcpProject: validKeyTest.project}, Name: validKeyTest.keyName}
 		expected := validKeyTest.valid
@@ -153,7 +154,7 @@ var validAwsKeyTests = []struct {
 
 func TestValidAwsKey(t *testing.T) {
 	for _, validAwsKeyTest := range validAwsKeyTests {
-		appConfig := config{IncludeAwsUserKeys: validAwsKeyTest.includeUserKeys}
+		appConfig := config.Config{IncludeAwsUserKeys: validAwsKeyTest.includeUserKeys}
 		key := keys.Key{Name: validAwsKeyTest.keyName}
 		expected := validAwsKeyTest.valid
 		actual := validAwsKey(key, appConfig)
@@ -198,12 +199,12 @@ var filterTests = []struct {
 
 func TestKeyDefinedInFiltering(t *testing.T) {
 	for _, filterTest := range filterTests {
-		psa := providerServiceAccounts{
-			Provider: cloudProvider{Name: filterTest.provider,
+		psa := config.ProviderServiceAccounts{
+			Provider: config.CloudProvider{Name: filterTest.provider,
 				Project: filterTest.project},
 			ProviderAccounts: filterTest.saAccounts,
 		}
-		psas := []providerServiceAccounts{psa}
+		psas := []config.ProviderServiceAccounts{psa}
 		key := keys.Key{
 			Account: filterTest.keyAccount,
 			Provider: keys.Provider{

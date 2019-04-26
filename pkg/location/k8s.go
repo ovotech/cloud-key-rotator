@@ -1,4 +1,4 @@
-package cmd
+package location
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/ovotech/cloud-key-rotator/pkg/cred"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	gkev1 "google.golang.org/api/container/v1"
@@ -16,8 +17,8 @@ import (
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 )
 
-//k8s type
-type k8s struct {
+//K8s type
+type K8s struct {
 	Project     string
 	Location    string
 	ClusterName string
@@ -26,7 +27,28 @@ type k8s struct {
 	DataName    string
 }
 
-func (k8s k8s) write(serviceAccountName, keyID, key string, creds credentials) (updated updatedLocation, err error) {
+//googleAuthProvider type
+type googleAuthProvider struct {
+	tokenSource oauth2.TokenSource
+}
+
+var (
+	googleScopes = []string{
+		"https://www.googleapis.com/auth/cloud-platform",
+		"https://www.googleapis.com/auth/userinfo.email"}
+	_ rest.AuthProvider = &googleAuthProvider{}
+	// logger                   = log.StdoutLogger()
+)
+
+const googleAuthPlugin = "google" // so that this is different than "gcp" that's already in client-go tree.
+
+func init() {
+	if err := rest.RegisterAuthProviderPlugin(googleAuthPlugin, newGoogleAuthProvider); err != nil {
+		logger.Fatalf("Failed to register %s auth plugin: %v", googleAuthPlugin, err)
+	}
+}
+
+func (k8s K8s) Write(serviceAccountName, keyID, key string, creds cred.Credentials) (updated UpdatedLocation, err error) {
 	var cluster *gkev1.Cluster
 
 	if cluster, err = gkeCluster(k8s.Project, k8s.Location, k8s.ClusterName); err != nil {
@@ -42,7 +64,7 @@ func (k8s k8s) write(serviceAccountName, keyID, key string, creds credentials) (
 		return
 	}
 
-	updated = updatedLocation{
+	updated = UpdatedLocation{
 		LocationType: "K8S",
 		LocationURI:  k8s.Project,
 		LocationIDs:  []string{k8s.Location}}

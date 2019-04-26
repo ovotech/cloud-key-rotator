@@ -1,4 +1,4 @@
-package cmd
+package location
 
 import (
 	"errors"
@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ovotech/cloud-key-rotator/pkg/cred"
+	"github.com/ovotech/cloud-key-rotator/pkg/crypt"
 	"golang.org/x/crypto/openpgp"
 	git "gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing"
@@ -15,22 +17,15 @@ import (
 	gitHttp "gopkg.in/src-d/go-git.v4/plumbing/transport/http"
 )
 
-// gitHubAccount type
-type gitHubAccount struct {
-	GitHubAccessToken string
-	GitName           string
-	GitEmail          string
-}
-
-//gitHub type
-type gitHub struct {
+//GitHub type
+type GitHub struct {
 	Filepath              string
 	OrgRepo               string
 	VerifyCircleCISuccess bool
 	CircleCIDeployJobName string
 }
 
-func (gitHub gitHub) write(serviceAccountName, keyID, key string, creds credentials) (updated updatedLocation, err error) {
+func (gitHub GitHub) Write(serviceAccountName, keyID, key string, creds cred.Credentials) (updated UpdatedLocation, err error) {
 
 	if len(creds.KmsKey) == 0 {
 		err = errors.New("Not updating un-encrypted new key in a Git repository. Use the" +
@@ -38,18 +33,20 @@ func (gitHub gitHub) write(serviceAccountName, keyID, key string, creds credenti
 		return
 	}
 
+	// const localDir = "/etc/cloud-key-rotator/cloud-key-rotator-tmp-repo"
+
 	const localDir = "/etc/cloud-key-rotator/cloud-key-rotator-tmp-repo"
 
 	defer os.RemoveAll(localDir)
 
 	// TODO Move me out of git-specific code
 	var encKey []byte
-	if encKey, err = encryptedServiceAccountKey(key, creds.KmsKey); err != nil {
+	if encKey, err = crypt.EncryptedServiceAccountKey(key, creds.KmsKey); err != nil {
 		return
 	}
 
 	var signKey *openpgp.Entity
-	if signKey, err = commitSignKey(creds.GitHubAccount.GitName, creds.GitHubAccount.GitEmail, creds.AkrPass); err != nil {
+	if signKey, err = crypt.CommitSignKey(creds.GitHubAccount.GitName, creds.GitHubAccount.GitEmail, creds.AkrPass); err != nil {
 		return
 	}
 
@@ -64,7 +61,7 @@ func (gitHub gitHub) write(serviceAccountName, keyID, key string, creds credenti
 			gitHub.CircleCIDeployJobName, creds.CircleCIAPIToken)
 	}
 
-	updated = updatedLocation{
+	updated = UpdatedLocation{
 		LocationType: "GitHub",
 		LocationURI:  gitHub.OrgRepo,
 		LocationIDs:  []string{gitHub.Filepath}}
@@ -74,8 +71,8 @@ func (gitHub gitHub) write(serviceAccountName, keyID, key string, creds credenti
 
 //writeKeyToRemoteGitRepo handles the writing of the supplied key to the *remote*
 // Git repo defined in the GitHub struct
-func writeKeyToRemoteGitRepo(gitHub gitHub, serviceAccountName string,
-	key []byte, localDir string, signKey *openpgp.Entity, creds credentials) (committed *object.Commit, err error) {
+func writeKeyToRemoteGitRepo(gitHub GitHub, serviceAccountName string,
+	key []byte, localDir string, signKey *openpgp.Entity, creds cred.Credentials) (committed *object.Commit, err error) {
 	var repo *git.Repository
 	if repo, err = cloneGitRepo(localDir, gitHub.OrgRepo,
 		creds.GitHubAccount.GitHubAccessToken); err != nil {
@@ -104,8 +101,8 @@ func writeKeyToRemoteGitRepo(gitHub gitHub, serviceAccountName string,
 
 //writeKeyToLocalGitRepo handles the writing of the supplied key to the *local*
 // Git repo defined in the GitHub struct
-func writeKeyToLocalGitRepo(gitHub gitHub, repo *git.Repository, key []byte,
-	serviceAccountName, localDir string, signKey *openpgp.Entity, creds credentials) (commmit plumbing.Hash, err error) {
+func writeKeyToLocalGitRepo(gitHub GitHub, repo *git.Repository, key []byte,
+	serviceAccountName, localDir string, signKey *openpgp.Entity, creds cred.Credentials) (commmit plumbing.Hash, err error) {
 	var w *git.Worktree
 	if w, err = repo.Worktree(); err != nil {
 		return
