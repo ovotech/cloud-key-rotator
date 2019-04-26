@@ -3,8 +3,8 @@ module github.com/ovotech/cloud-key-rotator
 go 1.12
 
 require (
-	github.com/aws/aws-lambda-go v1.10.0 // indirect
-	github.com/aws/aws-sdk-go v1.19.11 // indirect
+	github.com/aws/aws-lambda-go v1.10.0
+	github.com/aws/aws-sdk-go v1.19.11
 	github.com/docker/spdystream v0.0.0-20160310174837-449fdfce4d96 // indirect
 	github.com/elazarl/goproxy v0.0.0-20170405201442-c4fc26588b6e // indirect
 	github.com/evanphx/json-patch v0.0.0-20190203023257-5858425f7550 // indirect
@@ -13,6 +13,7 @@ require (
 	github.com/google/gofuzz v0.0.0-20170612174753-24818f796faf // indirect
 	github.com/google/uuid v0.0.0-20171113160352-8c31c18f31ed // indirect
 	github.com/googleapis/gnostic v0.0.0-20170729233727-0c5108395e2d // indirect
+	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/json-iterator/go v0.0.0-20180701071628-ab8a2e0c74be // indirect
 	github.com/jszwedko/go-circleci v0.2.0
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
