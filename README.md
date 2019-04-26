@@ -3,11 +3,21 @@
 This is a Golang program to assist with the reporting of Service Account key
 ages, and rotating said keys once they pass a specific age threshold.
 
+The tool can update keys held in the following locations:
+
+* GitHub
+* CircleCI
+* K8S (GKE only)
+
+The tool is packaged as an executable file for native invocation, and as a zip
+ file for deployment as an AWS Lambda.
+
 ## Install
 
 ### From Binary Releases
 
-Darwin, Linux and Windows Binaries can be downloaded from the [Releases](https://github.com/ovotech/cloud-key-rotator/releases) page.
+Darwin, Linux and Windows Binaries can be downloaded from the
+ [Releases](https://github.com/ovotech/cloud-key-rotator/releases) page.
 
 Try it out:
 
@@ -15,10 +25,9 @@ Try it out:
 $ cloud-key-rotator -h
 ```
 
-### Docker image
+### Docker Image
 
-An alpine based Docker image is available [here](https://hub.docker.com/r/ovotech/cloud-key-rotator).
-
+An Alpine-based Docker image is available [here](https://hub.docker.com/r/ovotech/cloud-key-rotator).
 
 ## Getting Started
 
@@ -28,10 +37,14 @@ An alpine based Docker image is available [here](https://hub.docker.com/r/ovotec
 to update with new keys, from config.
 
 Check out [examples](examples) for example config files. [Viper](https://github.com/spf13/viper)
-is used as the Config framework, so config can be stored as JSON, TOML, YAML, or
-HCL. To work, the file just needs to be called "config" (before whatever
+is used as the config framework, so config can be stored as JSON, TOML, YAML or
+HCL.
+
+For native invocation, the file needs to be called "config" (before whatever
 extension you're using), and be present either in `/etc/cloud-key-rotator/` or
-in the same directory the binary runs in.
+in the same directory the binary runs in.  For AWS Lambda invocation, the config needs
+to be set as a plaintext secret in the AWS Secrets Manager, using a default key name
+ of "ckr-config".
 
 ### Authentication/Authorisation
 
@@ -39,14 +52,17 @@ You'll need to provide `cloud-key-rotator` with the means of authenticating into
 any key provider that it'll be updating.
 
 Authorisation is handled by the Default Credential Provider Chains for both
-[GCP](https://cloud.google.com/docs/authentication/production#auth-cloud-implicit-go) and [AWS](https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html#credentials-default).
+[GCP](https://cloud.google.com/docs/authentication/production#auth-cloud-implicit-go) and
+ [AWS](https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html#credentials-default).
 
 ### Mode Of Operation
 
-`cloud-key-rotator` can operate in 2 different modes. Rotation mode, in which
-keys are rotated, and non-rotation mode, which only posts the ages of the keys to
-the Datadog metric API. You can specify which mode to operate in by using the
-`RotationMode` boolean field in config.
+`cloud-key-rotator` can operate in two different modes:
+
+1. Rotation mode - in which keys are rotated; and
+2. Non-rotation mode - which only posts the ages of keys to the Datadog Metric API.
+
+The boolean field `RotationMode` config controls the mode of operation.
 
 ### Age Thresholds
 
@@ -55,47 +71,43 @@ You can set the age threshold to whatever you want in the config, using the
 per-service-account-basis with the `RotationAgeThresholdMins` field. Key ages
 are always measured in minutes.
 
-`cloud-key-rotator` won't attempt to rotate a key until it's passed the age
+`cloud-key-rotator` will not attempt to rotate a key until it's passed the age
 threshold you've set (either default or the key-specific). This allows you to
-run it as frequently as you want without worrying about keys being rotated too
-much.
+run it the tool frequently as you want without worrying about keys being rotated
+too excessively.
 
 ### Key Locations
 
-Key locations is the term used for the places that keys are stored, that
-ultimately get updated with new keys that are generated.
+"Key locations" is the term used for the places where keys are stored, which will
+ultimately be updated with the new keys that are generated.
 
 Currently, the following locations are supported:
 
-- EnvVars CircleCI
-- Secrets in GKE
-- Files (encrypted via [mantle](https://github.com/ovotech/mantle) which
+* EnvVars CircleCI
+* Secrets in GKE
+* Files (encrypted via [mantle](https://github.com/ovotech/mantle) which
 integrates with KMS) in GitHub
 
 ## Rotation Process
 
-By design, the rotation process is sensitive; it attempts to verify its actions
-as much as possible, and aborts immediately if it sees any errors. The idea
-behind this approach is that it should be quick to re-run the tool (with new
-keys being created) once issues have been resolved. Cloud Providers usually
-limit the number of keys you can have attached to a Service Account at any one
-time, so worth bearing this in mind when re-running manually after seeing errors.
+The tool attempts to verify its actions as much as possible and aborts
+immediately if it encounters an error.  By design, the tool does **not** attempt to
+handle errors gracefully and continue, since this can lead to a "split-brain effect",
+with keys out-of-sync in various locations.
 
-The alternative to this, is for `cloud-key-rotator` to attempt to gracefully
-handle errors, and for someone to manually patch things up afterwards. This
-approach could lead to split-brain effect of key sources (places where the keys
-are used) and confusion around what needs to be done before the old key can be
-deleted. After all sources are using the new key, the same thing may happen on
-the next key rotation, which doesn't lend itself well to automation.
+It should be quick to re-run the tool (with new keys being created) once issues
+ have been resolved.   Note that cloud providers usually limit the number of
+ keys you can have attached to a Service Account at any one time, so it is
+ worth bearing this in mind when re-running manually after seeing errors.
 
-Only the first key of a Service Account is handled by `cloud-key-rotator`. If it
-handled more than one key, it could lead to complications when updating single
-sources multiple times.
+Only the first key of a Service Account is handled by `cloud-key-rotator`. If
+it handled more than one key, it could lead to complications when updating
+single sources multiple times.
 
 ## Key Sources
 
 The `AccountKeyLocations` section of config holds details of the places where the keys
-are stored. E.g.:
+are stored. e.g.:
 
 ```JSON
 "AccountKeyLocations": [{
@@ -124,18 +136,18 @@ are stored. E.g.:
 
 `cloud-key-rotator` has integrations into GitHub and CircleCI, which allows it
 not only to update those sources with the new key, but also to verify that a
-deployment has been successful after committing to a GitHub repo. If that
+deployment has been successful after committing to a GitHub repository. If that
 verification isn't required, you can disable it using the `VerifyCircleCISuccess`
 boolean.
 
-For any GitHub key source that's configured, the whole process will be aborted
-if there's no `KmsKey` value set. Unencrypted keys shouldn't ever be committed
+For any GitHub configure key source, the whole process will be aborted
+if there is no `KmsKey` value set. Unencrypted keys should **never** be committed
 to a Git repository.
 
 ## GPG Commit Signing
 
 Commits to GitHub repositories are required to be GPG signed. In order to
-achieve this, you just need to provide 4 things:
+achieve this, you need to provide 4 things:
 
 * `Username` of the GitHub user commits will be made on behalf of, set in config
 * `Email` address of GitHub user, set in config
@@ -180,18 +192,19 @@ Service Account's email address.
 
 ## Rotation Flow
 
-- Reduce keys to those of service accounts deemed to be valid (e.g. strip out
+1. Reduce keys to those of service accounts deemed to be valid (e.g. strip out
   user accounts if in rotation-mode)
-- Filter keys to those deemed to be eligible (e.g. according to filtering rules
+2. Filter keys to those deemed to be eligible (e.g. according to filtering rules
   configured by the user)
-- For each eligible key:
- - Create new key
- - Update key locations
- - Verify update has worked (where possible)
- - Delete old key
+3. For each eligible key:
+
+  * Create new key
+  * Update key locations
+  * Verify update has worked (where possible)
+  * Delete old key
 
 ## Contributions
 
-Contributions are more than welcome. It should be straight forward plugging in
-new integrations of new key providers and/or locations, so for that,
+Contributions are more than welcome. It should be straightforward plugging in
+integrations of new key providers and/or locations, so for that,
 or anything else, please branch or fork and raise a PR.
