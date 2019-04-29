@@ -107,6 +107,8 @@ github.com/ovotech/cloud-key-client v0.0.0-20190308153018-b87014241d7f h1:X5GZQM
 github.com/ovotech/cloud-key-client v0.0.0-20190308153018-b87014241d7f/go.mod h1:OvgUNh9B+oYztK8tzBcV7/Wdk1Y27X5c/KD8Xt10kLg=
 github.com/ovotech/cloud-key-client v0.0.0-20190426135411-b135e896d1de h1:2ekYysDY/4Ct7k8dst4iKDaO9gKGFY/Yv6uDLGqK9jY=
 github.com/ovotech/cloud-key-client v0.0.0-20190426135411-b135e896d1de/go.mod h1:OvgUNh9B+oYztK8tzBcV7/Wdk1Y27X5c/KD8Xt10kLg=
+github.com/ovotech/cloud-key-client v0.0.0-20190429090117-701d7535a396 h1:amYOJAxxcF/WnBURfenuKH86Md6eZfOCjt6Oiv00Zbc=
+github.com/ovotech/cloud-key-client v0.0.0-20190429090117-701d7535a396/go.mod h1:OvgUNh9B+oYztK8tzBcV7/Wdk1Y27X5c/KD8Xt10kLg=
 github.com/ovotech/mantle v0.0.0-20190313113039-b525d8003135 h1:8+bIeyKtZuUzspiQAuItJZY2Jbos+qxhA7O5+6JVF8k=
 github.com/ovotech/mantle v0.0.0-20190313113039-b525d8003135/go.mod h1:GPJjHM562HB62MRjNzakWN+LXmIoXcYKOG51D2uT6Kw=
 github.com/pelletier/go-buffruneio v0.2.0 h1:U4t4R6YkofJ5xHm3dJzuRpPZ0mr5MMCoAWooScCR7aA=
