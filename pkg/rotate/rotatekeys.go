@@ -408,7 +408,7 @@ func postMetric(keys []keys.Key, apiKey string, datadog config.Datadog) (err err
 					`"environment:` + datadog.MetricEnv + `",` +
 					`"key:` + key.Name + `",` +
 					`"provider:` + key.Provider.Provider + `",` +
-					`"status:"` + key.Status + `","` +
+					`"status:` + key.Status + `","` +
 					`"account:` + key.Account +
 					`"]}]}`)
 			var req *http.Request
