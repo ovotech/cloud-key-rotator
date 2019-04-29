@@ -63,7 +63,7 @@ func validateFlags(account, provider, project string) (err error) {
 //keysOfProviders returns keys from all the configured providers that have passed
 // through filtering
 func keysOfProviders(account, provider, project string, c config.Config) (accountKeys []keys.Key, err error) {
-	if accountKeys, err = keys.Keys(keyProviders(provider, project, c)); err != nil {
+	if accountKeys, err = keys.Keys(keyProviders(provider, project, c), false); err != nil {
 		return
 	}
 	logger.Infof("Found %d keys in total", len(accountKeys))
