@@ -15,6 +15,7 @@ import (
 //Config type
 type Config struct {
 	IncludeAwsUserKeys              bool
+	IncludeInactiveKeys             bool
 	Datadog                         Datadog
 	DatadogAPIKey                   string
 	RotationMode                    bool

@@ -63,7 +63,7 @@ func validateFlags(account, provider, project string) (err error) {
 //keysOfProviders returns keys from all the configured providers that have passed
 // through filtering
 func keysOfProviders(account, provider, project string, c config.Config) (accountKeys []keys.Key, err error) {
-	if accountKeys, err = keys.Keys(keyProviders(provider, project, c), false); err != nil {
+	if accountKeys, err = keys.Keys(keyProviders(provider, project, c), c.IncludeInactiveKeys); err != nil {
 		return
 	}
 	logger.Infof("Found %d keys in total", len(accountKeys))
@@ -408,6 +408,7 @@ func postMetric(keys []keys.Key, apiKey string, datadog config.Datadog) (err err
 					`"environment:` + datadog.MetricEnv + `",` +
 					`"key:` + key.Name + `",` +
 					`"provider:` + key.Provider.Provider + `",` +
+					`"status:"` + key.Status + `","` +
 					`"account:` + key.Account +
 					`"]}]}`)
 			var req *http.Request
