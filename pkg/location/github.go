@@ -32,8 +32,12 @@ func (gitHub GitHub) Write(serviceAccountName, keyID, key string, creds cred.Cre
 			"'KmsKey' field in config to specify the KMS key to use for encryption")
 		return
 	}
-
-	// const localDir = "/etc/cloud-key-rotator/cloud-key-rotator-tmp-repo"
+	var base64Decode bool
+	if len(keyID) > 0 {
+		key = fmt.Sprintf("[default]\naws_access_key_id = %s\naws_secret_access_key = %s", keyID, key)
+	} else {
+		base64Decode = true
+	}
 
 	const localDir = "/etc/cloud-key-rotator/cloud-key-rotator-tmp-repo"
 
@@ -41,7 +45,7 @@ func (gitHub GitHub) Write(serviceAccountName, keyID, key string, creds cred.Cre
 
 	// TODO Move me out of git-specific code
 	var encKey []byte
-	if encKey, err = crypt.EncryptedServiceAccountKey(key, creds.KmsKey); err != nil {
+	if encKey, err = crypt.EncryptedServiceAccountKey(key, creds.KmsKey, base64Decode); err != nil {
 		return
 	}
 
