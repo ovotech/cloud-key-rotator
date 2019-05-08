@@ -246,7 +246,7 @@ func updateKeyLocation(account string, keyLocations config.KeyLocations, keyID, 
 
 		var updated location.UpdatedLocation
 
-		if updated, err = locationToUpdate.Write(keyLocations.ServiceAccountName, keyID, key, creds); err != nil {
+		if updated, err = locationToUpdate.Write(keyLocations.ServiceAccountName, keyID, key, keyProvider, creds); err != nil {
 			return
 		}
 

@@ -48,7 +48,7 @@ func init() {
 	}
 }
 
-func (k8s K8s) Write(serviceAccountName, keyID, key string, creds cred.Credentials) (updated UpdatedLocation, err error) {
+func (k8s K8s) Write(serviceAccountName, keyID, key, keyProvider string, creds cred.Credentials) (updated UpdatedLocation, err error) {
 	var cluster *gkev1.Cluster
 
 	if cluster, err = gkeCluster(k8s.Project, k8s.Location, k8s.ClusterName); err != nil {

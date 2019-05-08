@@ -25,7 +25,7 @@ type GitHub struct {
 	CircleCIDeployJobName string
 }
 
-func (gitHub GitHub) Write(serviceAccountName, keyID, key string, creds cred.Credentials) (updated UpdatedLocation, err error) {
+func (gitHub GitHub) Write(serviceAccountName, keyID, key, keyProvider string, creds cred.Credentials) (updated UpdatedLocation, err error) {
 
 	if len(creds.KmsKey) == 0 {
 		err = errors.New("Not updating un-encrypted new key in a Git repository. Use the" +
@@ -33,7 +33,7 @@ func (gitHub GitHub) Write(serviceAccountName, keyID, key string, creds cred.Cre
 		return
 	}
 	var base64Decode bool
-	if len(keyID) > 0 {
+	if keyProvider == "aws" {
 		key = fmt.Sprintf("[default]\naws_access_key_id = %s\naws_secret_access_key = %s", keyID, key)
 	} else {
 		base64Decode = true

@@ -5,5 +5,5 @@ import "github.com/ovotech/cloud-key-rotator/pkg/cred"
 
 //KeyWriter interface
 type KeyWriter interface {
-	Write(serviceAccountName, keyID, key string, creds cred.Credentials) (UpdatedLocation, error)
+	Write(serviceAccountName, keyID, key, keyProvider string, creds cred.Credentials) (UpdatedLocation, error)
 }
