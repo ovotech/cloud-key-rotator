@@ -73,8 +73,8 @@ are always measured in minutes.
 
 `cloud-key-rotator` will not attempt to rotate a key until it's passed the age
 threshold you've set (either default or the key-specific). This allows you to
-run it the tool frequently as you want without worrying about keys being rotated
-too excessively.
+run the tool as frequently as you want without worrying about keys being rotated
+excessively.
 
 ### Key Locations
 
