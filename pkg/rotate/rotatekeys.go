@@ -105,7 +105,7 @@ func rotateKey(account string, rotationCandidate rotationCandidate, creds cred.C
 	if newKeyID, newKey, err = createKey(account, key, keyProvider); err != nil {
 		return
 	}
-	keyWrapper := location.KeyWrapper{newKey, newKeyID, keyProvider}
+	keyWrapper := location.KeyWrapper{Key: newKey, KeyID: newKeyID, KeyProvider: keyProvider}
 	if err = updateKeyLocation(account, rotationCandidate.keyLocation, keyWrapper, creds); err != nil {
 		return
 	}
