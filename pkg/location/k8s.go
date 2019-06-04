@@ -48,7 +48,7 @@ func init() {
 	}
 }
 
-func (k8s K8s) Write(serviceAccountName, keyWrapper keyWrapper, creds cred.Credentials) (updated UpdatedLocation, err error) {
+func (k8s K8s) Write(serviceAccountName string, keyWrapper KeyWrapper, creds cred.Credentials) (updated UpdatedLocation, err error) {
 	var cluster *gkev1.Cluster
 
 	if cluster, err = gkeCluster(k8s.Project, k8s.Location, k8s.ClusterName); err != nil {
@@ -60,7 +60,7 @@ func (k8s K8s) Write(serviceAccountName, keyWrapper keyWrapper, creds cred.Crede
 		return
 	}
 
-	if _, err = updateK8sSecret(k8s.SecretName, k8s.DataName, k8s.Namespace, keyWrapper.key, k8sClient); err != nil {
+	if _, err = updateK8sSecret(k8s.SecretName, k8s.DataName, k8s.Namespace, keyWrapper.Key, k8sClient); err != nil {
 		return
 	}
 

@@ -105,7 +105,7 @@ func rotateKey(account string, rotationCandidate rotationCandidate, creds cred.C
 	if newKeyID, newKey, err = createKey(account, key, keyProvider); err != nil {
 		return
 	}
-	keyWrapper := location.keyWrapper{newKey, newKeyID, keyProvider}
+	keyWrapper := location.KeyWrapper{newKey, newKeyID, keyProvider}
 	if err = updateKeyLocation(account, rotationCandidate.keyLocation, keyWrapper, creds); err != nil {
 		return
 	}
@@ -239,7 +239,7 @@ func locationsToUpdate(keyLocation config.KeyLocations) (kws []location.KeyWrite
 
 //updateKeyLocation updates locations specified in keyLocations with the new key, e.g. GitHub, CircleCI an K8s
 func updateKeyLocation(account string, keyLocations config.KeyLocations,
-	keyWrapper location.keyWrapper, creds cred.Credentials) (err error) {
+	keyWrapper location.KeyWrapper, creds cred.Credentials) (err error) {
 
 	// update locations
 	var updatedLocations []location.UpdatedLocation
@@ -257,9 +257,9 @@ func updateKeyLocation(account string, keyLocations config.KeyLocations,
 
 	// all done
 	logger.Infow("Key locations updated",
-		"keyProvider", keyProvider,
+		"keyProvider", keyWrapper.KeyProvider,
 		"account", account,
-		"keyID", keyID,
+		"keyID", keyWrapper.KeyID,
 		"keyLocationUpdates", updatedLocations)
 
 	return

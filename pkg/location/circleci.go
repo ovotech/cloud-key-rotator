@@ -21,7 +21,7 @@ var logger = log.StdoutLogger().Sugar()
 
 //updateCircleCI updates the circleCI environment variable by deleting and
 //then creating it again with the new key
-func (circle CircleCI) Write(serviceAccountName, keyWrapper keyWrapper, creds cred.Credentials) (updated UpdatedLocation, err error) {
+func (circle CircleCI) Write(serviceAccountName string, keyWrapper KeyWrapper, creds cred.Credentials) (updated UpdatedLocation, err error) {
 	logger.Info("Starting CircleCI env var updates")
 	client := &circleci.Client{Token: creds.CircleCIAPIToken}
 	keyIDEnvVarName := circle.KeyIDEnvVar
@@ -30,12 +30,12 @@ func (circle CircleCI) Write(serviceAccountName, keyWrapper keyWrapper, creds cr
 	project := splitUsernameProject[1]
 
 	if len(keyIDEnvVarName) > 0 {
-		if err = updateCircleCIEnvVar(username, project, keyIDEnvVarName, keyWrapper.keyID, client); err != nil {
+		if err = updateCircleCIEnvVar(username, project, keyIDEnvVarName, keyWrapper.KeyID, client); err != nil {
 			return
 		}
 	}
 
-	if err = updateCircleCIEnvVar(username, project, circle.KeyEnvVar, keyWrapper.key, client); err != nil {
+	if err = updateCircleCIEnvVar(username, project, circle.KeyEnvVar, keyWrapper.Key, client); err != nil {
 		return
 	}
 

@@ -26,20 +26,20 @@ type GitHub struct {
 	CircleCIDeployJobName string
 }
 
-func (gitHub GitHub) Write(serviceAccountName, keyWrapper keyWrapper, creds cred.Credentials) (updated UpdatedLocation, err error) {
+func (gitHub GitHub) Write(serviceAccountName string, keyWrapper KeyWrapper, creds cred.Credentials) (updated UpdatedLocation, err error) {
 
 	if len(creds.KmsKey) == 0 {
 		err = errors.New("Not updating un-encrypted new key in a Git repository. Use the" +
 			"'KmsKey' field in config to specify the KMS key to use for encryption")
 		return
 	}
-	var base64Decode bool
 	var key string
-	if keyWrapper.keyProvider == "aws" {
-		key = fmt.Sprintf("[default]\naws_access_key_id = %s\naws_secret_access_key = %s", keyWrapper.keyID, keyWrapper.key)
+	if keyWrapper.KeyProvider == "aws" {
+		key = fmt.Sprintf("[default]\naws_access_key_id = %s\naws_secret_access_key = %s", keyWrapper.KeyID, keyWrapper.Key)
 	} else {
-		if key, err = b64.StdEncoding.DecodeString(keyWrapper.key); err != nil {
-			return
+		var keyBytes []byte
+		if keyBytes, err = b64.StdEncoding.DecodeString(keyWrapper.Key); err == nil {
+			key = string(keyBytes)
 		}
 	}
 

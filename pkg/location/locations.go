@@ -7,9 +7,9 @@ type UpdatedLocation struct {
 	LocationIDs  []string
 }
 
-//keyWrapper type
-type keyWrapper struct {
-	key         string
-	keyID       string
-	keyProvider string
+//KeyWrapper type
+type KeyWrapper struct {
+	Key         string
+	KeyID       string
+	KeyProvider string
 }
