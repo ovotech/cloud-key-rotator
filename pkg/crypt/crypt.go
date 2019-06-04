@@ -1,7 +1,6 @@
 package crypt
 
 import (
-	b64 "encoding/base64"
 	"errors"
 	"os"
 	"strings"
@@ -12,20 +11,10 @@ import (
 
 //EncryptedServiceAccountKey uses github.com/ovotech/mantle to encrypt the
 // key string that's passed in
-func EncryptedServiceAccountKey(key, kmsKey string, base64Decode bool) (encKey []byte, err error) {
+func EncryptedServiceAccountKey(key, kmsKey string) (encKey []byte, err error) {
 	const singleLine = false
 	const disableValidation = true
-
-	var decodedKey []byte
-	if base64Decode {
-		if decodedKey, err = b64.StdEncoding.DecodeString(key); err != nil {
-			return
-		}
-	} else {
-		decodedKey = []byte(key)
-	}
-
-	return enc.CipherBytesFromPrimitives([]byte(decodedKey), singleLine,
+	return enc.CipherBytesFromPrimitives([]byte(key), singleLine,
 		disableValidation, "", "", "", "", kmsKey), nil
 }
 

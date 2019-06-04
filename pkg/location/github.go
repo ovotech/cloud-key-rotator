@@ -25,7 +25,7 @@ type GitHub struct {
 	CircleCIDeployJobName string
 }
 
-func (gitHub GitHub) Write(serviceAccountName, keyID, key, keyProvider string, creds cred.Credentials) (updated UpdatedLocation, err error) {
+func (gitHub GitHub) Write(serviceAccountName, keyWrapper keyWrapper, creds cred.Credentials) (updated UpdatedLocation, err error) {
 
 	if len(creds.KmsKey) == 0 {
 		err = errors.New("Not updating un-encrypted new key in a Git repository. Use the" +
@@ -33,21 +33,17 @@ func (gitHub GitHub) Write(serviceAccountName, keyID, key, keyProvider string, c
 		return
 	}
 	var base64Decode bool
-	if keyProvider == "aws" {
-		key = fmt.Sprintf("[default]\naws_access_key_id = %s\naws_secret_access_key = %s", keyID, key)
+	if keyWrapper.keyProvider == "aws" {
+		key = fmt.Sprintf("[default]\naws_access_key_id = %s\naws_secret_access_key = %s", keyWrapper.keyID, keyWrapper.key)
 	} else {
-		base64Decode = true
+		if key, err = b64.StdEncoding.DecodeString(keyWrapper.key); err != nil {
+			return
+		}
 	}
 
 	const localDir = "/etc/cloud-key-rotator/cloud-key-rotator-tmp-repo"
 
 	defer os.RemoveAll(localDir)
-
-	// TODO Move me out of git-specific code
-	var encKey []byte
-	if encKey, err = crypt.EncryptedServiceAccountKey(key, creds.KmsKey, base64Decode); err != nil {
-		return
-	}
 
 	var signKey *openpgp.Entity
 	if signKey, err = crypt.CommitSignKey(creds.GitHubAccount.GitName, creds.GitHubAccount.GitEmail, creds.AkrPass); err != nil {
@@ -55,7 +51,11 @@ func (gitHub GitHub) Write(serviceAccountName, keyID, key, keyProvider string, c
 	}
 
 	var committed *object.Commit
-	if committed, err = writeKeyToRemoteGitRepo(gitHub, serviceAccountName, encKey, localDir, signKey, creds); err != nil {
+	const singleLine = false
+	const disableValidation = true
+	if committed, err = writeKeyToRemoteGitRepo(gitHub, serviceAccountName,
+		crypt.EncryptedServiceAccountKey(key, creds.KmsKey),
+		localDir, signKey, creds); err != nil {
 		return
 	}
 

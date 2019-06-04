@@ -25,6 +25,12 @@ type rotationCandidate struct {
 	rotationThresholdMins int
 }
 
+type keyWrapper struct {
+	key         string
+	keyID       string
+	keyProvider string
+}
+
 var logger = log.StdoutLogger().Sugar()
 
 const (
@@ -105,7 +111,8 @@ func rotateKey(account string, rotationCandidate rotationCandidate, creds cred.C
 	if newKeyID, newKey, err = createKey(account, key, keyProvider); err != nil {
 		return
 	}
-	if err = updateKeyLocation(account, rotationCandidate.keyLocation, newKeyID, newKey, keyProvider, creds); err != nil {
+	keyWrapper := keyWrapper{newKey, newKeyID, keyProvider}
+	if err = updateKeyLocation(account, rotationCandidate.keyLocation, keyWrapper, creds); err != nil {
 		return
 	}
 	return deleteKey(account, key, keyProvider)
@@ -237,7 +244,7 @@ func locationsToUpdate(keyLocation config.KeyLocations) (kws []location.KeyWrite
 }
 
 //updateKeyLocation updates locations specified in keyLocations with the new key, e.g. GitHub, CircleCI an K8s
-func updateKeyLocation(account string, keyLocations config.KeyLocations, keyID, key, keyProvider string, creds cred.Credentials) (err error) {
+func updateKeyLocation(account string, keyLocations config.KeyLocations, keyWrapper keyWrapper, creds cred.Credentials) (err error) {
 
 	// update locations
 	var updatedLocations []location.UpdatedLocation
@@ -246,7 +253,7 @@ func updateKeyLocation(account string, keyLocations config.KeyLocations, keyID, 
 
 		var updated location.UpdatedLocation
 
-		if updated, err = locationToUpdate.Write(keyLocations.ServiceAccountName, keyID, key, keyProvider, creds); err != nil {
+		if updated, err = locationToUpdate.Write(keyLocations.ServiceAccountName, keyWrapper, creds); err != nil {
 			return
 		}
 
