@@ -1,6 +1,7 @@
 package location
 
 import (
+	b64 "encoding/base64"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -33,6 +34,7 @@ func (gitHub GitHub) Write(serviceAccountName, keyWrapper keyWrapper, creds cred
 		return
 	}
 	var base64Decode bool
+	var key string
 	if keyWrapper.keyProvider == "aws" {
 		key = fmt.Sprintf("[default]\naws_access_key_id = %s\naws_secret_access_key = %s", keyWrapper.keyID, keyWrapper.key)
 	} else {

@@ -25,12 +25,6 @@ type rotationCandidate struct {
 	rotationThresholdMins int
 }
 
-type keyWrapper struct {
-	key         string
-	keyID       string
-	keyProvider string
-}
-
 var logger = log.StdoutLogger().Sugar()
 
 const (
@@ -111,7 +105,7 @@ func rotateKey(account string, rotationCandidate rotationCandidate, creds cred.C
 	if newKeyID, newKey, err = createKey(account, key, keyProvider); err != nil {
 		return
 	}
-	keyWrapper := keyWrapper{newKey, newKeyID, keyProvider}
+	keyWrapper := location.keyWrapper{newKey, newKeyID, keyProvider}
 	if err = updateKeyLocation(account, rotationCandidate.keyLocation, keyWrapper, creds); err != nil {
 		return
 	}
@@ -244,7 +238,8 @@ func locationsToUpdate(keyLocation config.KeyLocations) (kws []location.KeyWrite
 }
 
 //updateKeyLocation updates locations specified in keyLocations with the new key, e.g. GitHub, CircleCI an K8s
-func updateKeyLocation(account string, keyLocations config.KeyLocations, keyWrapper keyWrapper, creds cred.Credentials) (err error) {
+func updateKeyLocation(account string, keyLocations config.KeyLocations,
+	keyWrapper location.keyWrapper, creds cred.Credentials) (err error) {
 
 	// update locations
 	var updatedLocations []location.UpdatedLocation

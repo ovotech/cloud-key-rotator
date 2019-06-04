@@ -6,3 +6,10 @@ type UpdatedLocation struct {
 	LocationURI  string
 	LocationIDs  []string
 }
+
+//keyWrapper type
+type keyWrapper struct {
+	key         string
+	keyID       string
+	keyProvider string
+}

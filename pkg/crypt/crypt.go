@@ -11,11 +11,11 @@ import (
 
 //EncryptedServiceAccountKey uses github.com/ovotech/mantle to encrypt the
 // key string that's passed in
-func EncryptedServiceAccountKey(key, kmsKey string) (encKey []byte, err error) {
+func EncryptedServiceAccountKey(key, kmsKey string) (encKey []byte) {
 	const singleLine = false
 	const disableValidation = true
 	return enc.CipherBytesFromPrimitives([]byte(key), singleLine,
-		disableValidation, "", "", "", "", kmsKey), nil
+		disableValidation, "", "", "", "", kmsKey)
 }
 
 //CommitSignKey creates an openPGP Entity based on a user's name, email,
