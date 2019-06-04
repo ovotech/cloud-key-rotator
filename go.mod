@@ -29,7 +29,7 @@ require (
 	golang.org/x/crypto v0.0.0-20190404164418-38d8ce5564a5
 	golang.org/x/oauth2 v0.0.0-20190402181905-9f3314589c9a
 	golang.org/x/time v0.0.0-20190308202827-9d24e82272b4 // indirect
-	google.golang.org/api v0.3.0
+	google.golang.org/api v0.5.0
 	gopkg.in/inf.v0 v0.9.0 // indirect
 	gopkg.in/src-d/go-git.v4 v4.10.0
 	k8s.io/api v0.0.0-20190313235455-40a48860b5ab
