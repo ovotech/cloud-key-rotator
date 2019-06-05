@@ -1,4 +1,5 @@
 # Cloud-Key-Rotator
+[![CircleCI](https://circleci.com/gh/ovotech/cloud-key-rotator/tree/master.svg?style=svg)](https://circleci.com/gh/ovotech/cloud-key-rotator/tree/master)
 
 This is a Golang program to assist with the reporting of Service Account key
 ages, and rotating said keys once they pass a specific age threshold.
