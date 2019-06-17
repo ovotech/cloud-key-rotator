@@ -22,7 +22,7 @@ require (
 	github.com/ovotech/cloud-key-client v0.0.0-20190429090117-701d7535a396
 	github.com/ovotech/mantle v0.0.0-20190313113039-b525d8003135
 	github.com/spf13/cobra v0.0.5
-	github.com/spf13/viper v1.3.2
+	github.com/spf13/viper v1.4.0
 	go.uber.org/atomic v1.3.2 // indirect
 	go.uber.org/multierr v1.1.0 // indirect
 	go.uber.org/zap v1.10.0
