@@ -141,3 +141,29 @@ workflows:
           filters:
             branches:
               ignore: master
+  master_pipeline:
+    jobs:
+      - go_fmt:
+          filters:
+            branches:
+              only: master
+      - go_vet:
+          filters:
+            branches:
+              only: master
+      - go_cyclo:
+          filters:
+            branches:
+              only: master
+      - go_lint:
+          filters:
+            branches:
+              only: master
+      - go_build:
+          filters:
+            branches:
+              only: master
+      - go_test:
+          filters:
+            branches:
+              only: master
