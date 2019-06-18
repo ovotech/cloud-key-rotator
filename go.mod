@@ -19,8 +19,7 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/mxk/go-flowrate v0.0.0-20140419014527-cca7078d478f // indirect
-	github.com/ovotech/cloud-key-client v0.0.0-20190617085745-26df01b76279
-	//github.com/ovotech/cloud-key-client v0.0.0-20190429090117-701d7535a396
+	github.com/ovotech/cloud-key-client v0.0.0-20190429090117-701d7535a396
 	github.com/ovotech/mantle v0.0.0-20190313113039-b525d8003135
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/viper v1.3.2
