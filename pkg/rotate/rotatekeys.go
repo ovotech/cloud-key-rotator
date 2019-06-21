@@ -101,29 +101,29 @@ func Rotate(account, provider, project string, c config.Config) (err error) {
 		return
 	}
 	var rc []rotationCandidate
-	if rc, err = rotationCandidates(account, providerKeys, c.AccountKeyLocations,
+	if rc, err = rotationCandidates(providerKeys, c.AccountKeyLocations,
 		c.Credentials, c.DefaultRotationAgeThresholdMins); err != nil {
 		return
 	}
 	logger.Infof("Finalised %d keys that are candidates for rotation", len(rc))
-	return rotateKeys(account, rc, c.Credentials)
+	return rotateKeys(rc, c.Credentials)
 }
 
 //rotatekey creates a new key for the rotation candidate, updates its key locations,
 // and deletes the old key iff the key location update is successful
-func rotateKey(account string, rotationCandidate rotationCandidate, creds cred.Credentials) (err error) {
+func rotateKey(rotationCandidate rotationCandidate, creds cred.Credentials) (err error) {
 	key := rotationCandidate.key
 	keyProvider := key.Provider.Provider
 	var newKeyID string
 	var newKey string
-	if newKeyID, newKey, err = createKey(account, key, keyProvider); err != nil {
+	if newKeyID, newKey, err = createKey(key, keyProvider); err != nil {
 		return
 	}
 	keyWrapper := location.KeyWrapper{Key: newKey, KeyID: newKeyID, KeyProvider: keyProvider}
-	if err = updateKeyLocation(account, rotationCandidate.keyLocation, keyWrapper, creds); err != nil {
+	if err = updateKeyLocation(key.FullAccount, rotationCandidate.keyLocation, keyWrapper, creds); err != nil {
 		return
 	}
-	return deleteKey(account, key, keyProvider)
+	return deleteKey(key, keyProvider)
 }
 
 //rotationAgeThreshold calculates the key age rotation threshold based on config values
@@ -137,17 +137,17 @@ func rotationAgeThreshold(keyLocation config.KeyLocations, defaultRotationAgeThr
 
 //rotateKeys iterates over the rotation candidates, invoking the func that actually
 // performs the rotation
-func rotateKeys(account string, rotationCandidates []rotationCandidate, creds cred.Credentials) (err error) {
+func rotateKeys(rotationCandidates []rotationCandidate, creds cred.Credentials) (err error) {
 	for _, rc := range rotationCandidates {
 		key := rc.key
 		logger.Infow("Rotation process started",
 			"keyProvider", key.Provider.Provider,
-			"account", account,
+			"account", key.FullAccount,
 			"keyID", key.ID,
 			"keyAge", fmt.Sprintf("%f", key.Age),
 			"keyAgeThreshold", strconv.Itoa(rc.rotationThresholdMins))
 
-		if err = rotateKey(account, rc, creds); err != nil {
+		if err = rotateKey(rc, creds); err != nil {
 			return
 		}
 	}
@@ -158,7 +158,7 @@ func rotateKeys(account string, rotationCandidates []rotationCandidate, creds cr
 //rotatekeys runs through the end to end process of rotating a slice of keys:
 //filter down to subset of target keys, generate new key for each, update the
 //key's locations and finally delete the existing/old key
-func rotationCandidates(account string, accountKeys []keys.Key, keyLoc []config.KeyLocations,
+func rotationCandidates(accountKeys []keys.Key, keyLoc []config.KeyLocations,
 	creds cred.Credentials, defaultRotationAgeThresholdMins int) (rotationCandidates []rotationCandidate, err error) {
 	processedItems := make([]string, 0)
 	for _, key := range accountKeys {
@@ -171,14 +171,14 @@ func rotationCandidates(account string, accountKeys []keys.Key, keyLoc []config.
 
 		if contains(processedItems, key.FullAccount) {
 			logger.Infof("Skipping SA: %s, key: %s as a key for this account has already been added as a candidate for rotation",
-				account, key.ID)
+				key.FullAccount, key.ID)
 			continue
 		}
 
 		rotationThresholdMins := rotationAgeThreshold(locations, defaultRotationAgeThresholdMins)
 		if float64(rotationThresholdMins) > key.Age {
 			logger.Infof("Skipping SA: %s, key: %s as it's only %f minutes old (threshold: %d mins)",
-				account, key.ID, key.Age, rotationThresholdMins)
+				key.FullAccount, key.ID, key.Age, rotationThresholdMins)
 			continue
 		}
 
@@ -192,26 +192,26 @@ func rotationCandidates(account string, accountKeys []keys.Key, keyLoc []config.
 }
 
 //createKey creates a new key with the provider specified
-func createKey(account string, key keys.Key, keyProvider string) (newKeyID, newKey string, err error) {
+func createKey(key keys.Key, keyProvider string) (newKeyID, newKey string, err error) {
 	if newKeyID, newKey, err = keys.CreateKey(key); err != nil {
 		logger.Error(err)
 		return
 	}
 	logger.Infow("New key created",
 		"keyProvider", keyProvider,
-		"account", account,
+		"account", key.FullAccount,
 		"keyID", newKeyID)
 	return
 }
 
 //deletekey deletes the key
-func deleteKey(account string, key keys.Key, keyProvider string) (err error) {
+func deleteKey(key keys.Key, keyProvider string) (err error) {
 	if err = keys.DeleteKey(key); err != nil {
 		return
 	}
 	logger.Infow("Old key deleted",
 		"keyProvider", keyProvider,
-		"account", account,
+		"account", key.FullAccount,
 		"keyID", key.ID)
 	return
 }
