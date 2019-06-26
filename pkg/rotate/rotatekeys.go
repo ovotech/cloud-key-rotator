@@ -39,11 +39,6 @@ type rotationCandidate struct {
 	rotationThresholdMins int
 }
 
-// keys functions are defined here, so they can be overridden easily in tests
-var keysFn = keys.Keys
-var createKeyFn = keys.CreateKey
-var delKeyFn = keys.DeleteKey
-
 var logger = log.StdoutLogger().Sugar()
 
 const (
@@ -82,7 +77,7 @@ func validateFlags(account, provider, project string) (err error) {
 //keysOfProviders returns keys from all the configured providers that have passed
 // through filtering
 func keysOfProviders(account, provider, project string, c config.Config) (accountKeys []keys.Key, err error) {
-	if accountKeys, err = keysFn(keyProviders(provider, project, c), c.IncludeInactiveKeys); err != nil {
+	if accountKeys, err = keys.Keys(keyProviders(provider, project, c), c.IncludeInactiveKeys); err != nil {
 		return
 	}
 	logger.Infof("Found %d keys in total", len(accountKeys))
@@ -198,7 +193,7 @@ func rotationCandidates(account string, accountKeys []keys.Key, keyLoc []config.
 
 //createKey creates a new key with the provider specified
 func createKey(account string, key keys.Key, keyProvider string) (newKeyID, newKey string, err error) {
-	if newKeyID, newKey, err = createKeyFn(key); err != nil {
+	if newKeyID, newKey, err = keys.CreateKey(key); err != nil {
 		logger.Error(err)
 		return
 	}
@@ -211,7 +206,7 @@ func createKey(account string, key keys.Key, keyProvider string) (newKeyID, newK
 
 //deletekey deletes the key
 func deleteKey(account string, key keys.Key, keyProvider string) (err error) {
-	if err = delKeyFn(key); err != nil {
+	if err = keys.DeleteKey(key); err != nil {
 		return
 	}
 	logger.Infow("Old key deleted",

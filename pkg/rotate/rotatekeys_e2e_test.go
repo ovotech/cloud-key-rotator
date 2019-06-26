@@ -12,19 +12,19 @@ type MockProvider struct {
 	deleted bool
 }
 
-func (m MockProvider) Keys(project string, includeInactiveKeys bool) (keysArr []keys.Key, err error) {
-	k := keys.Key{Account: "account1", ID: "1234", Provider: keys.Provider{Provider: "provider1"}}
+func (m *MockProvider) Keys(project string, includeInactiveKeys bool) (keysArr []keys.Key, err error) {
+	k := keys.Key{Account: "account1", ID: "1234", Age: keyAge, Provider: keys.Provider{Provider: "mockProvider"}}
 	keysArr = append(keysArr, k)
 
 	return
 }
 
-func (m MockProvider) CreateKey(project, account string) (keyID, newKey string, err error) {
+func (m *MockProvider) CreateKey(project, account string) (keyID, newKey string, err error) {
 	m.created = true
 	return
 }
 
-func (m MockProvider) DeleteKey(project, account, keyID string) (err error) {
+func (m *MockProvider) DeleteKey(project, account, keyID string) (err error) {
 	m.deleted = true
 	return
 }
@@ -36,7 +36,7 @@ const longRotationPeriod = keyAge + 100
 func TestMetricsOnly(t *testing.T) {
 
 	var m MockProvider
- 	keys.RegisterProvider("mockProvider", m)
+ 	keys.RegisterProvider("mockProvider", &m)
 
 	err := Rotate("account1", "mockProvider", "project1", config.Config{RotationMode: false})
 
@@ -52,7 +52,7 @@ func TestMetricsOnly(t *testing.T) {
 func TestRotateWithinThreshold(t *testing.T) {
 
 	var m MockProvider
- 	keys.RegisterProvider("mockProvider", m)
+ 	keys.RegisterProvider("mockProvider", &m)
 
 	var locations config.KeyLocations = config.KeyLocations{RotationAgeThresholdMins: longRotationPeriod, ServiceAccountName: "account1"}
 	err := Rotate("account1", "mockProvider", "project1", config.Config{RotationMode: true,
@@ -70,7 +70,7 @@ func TestRotateWithinThreshold(t *testing.T) {
 func TestRotateOutsideThreshold(t *testing.T) {
 
 	var m MockProvider
-	keys.RegisterProvider("mockProvider", m)
+	keys.RegisterProvider("mockProvider", &m)
 
 	var locations config.KeyLocations = config.KeyLocations{RotationAgeThresholdMins: shortRotationPeriod, ServiceAccountName: "account1"}
 	err := Rotate("account1", "mockProvider", "project1", config.Config{RotationMode: true,
