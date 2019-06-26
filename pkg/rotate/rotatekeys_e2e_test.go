@@ -62,7 +62,7 @@ func TestRotateWithinThreshold(t *testing.T) {
 	delKeyFn = mockDeleteFn(&res)
 	keysFn = mockKeys
 
-	var locations config.KeyLocations = config.KeyLocations{RotationAgeThresholdMins: longRotationPeriod, ServiceAccountName: "account1"}
+	var locations = config.KeyLocations{RotationAgeThresholdMins: longRotationPeriod, ServiceAccountName: "account1"}
 	err := Rotate("account1", "mockProvider", "project1", config.Config{RotationMode: true,
 		AccountKeyLocations: []config.KeyLocations{locations}})
 
@@ -83,7 +83,7 @@ func TestRotateOutsideThreshold(t *testing.T) {
 	delKeyFn = mockDeleteFn(&res)
 	keysFn = mockKeys
 
-	var locations config.KeyLocations = config.KeyLocations{RotationAgeThresholdMins: shortRotationPeriod, ServiceAccountName: "account1"}
+	var locations = config.KeyLocations{RotationAgeThresholdMins: shortRotationPeriod, ServiceAccountName: "account1"}
 	err := Rotate("account1", "mockProvider", "project1", config.Config{RotationMode: true,
 		AccountKeyLocations: []config.KeyLocations{locations}})
 
