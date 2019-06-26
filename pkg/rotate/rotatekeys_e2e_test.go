@@ -38,7 +38,9 @@ func TestMetricsOnly(t *testing.T) {
 	var m MockProvider
  	keys.RegisterProvider("mockProvider", &m)
 
-	err := Rotate("account1", "mockProvider", "project1", config.Config{RotationMode: false})
+	var locations config.KeyLocations = config.KeyLocations{RotationAgeThresholdMins: shortRotationPeriod, ServiceAccountName: "account1"}
+	err := Rotate("account1", "mockProvider", "project1", config.Config{RotationMode: false,
+		AccountKeyLocations: []config.KeyLocations{locations}})
 
 	if err != nil {
 		t.Error(err)
