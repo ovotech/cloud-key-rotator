@@ -103,7 +103,7 @@ jobs:
            command: |
              export GO111MODULE=on
              go mod download
-             go test ./...
+             go test ./... -v
 
 workflows:
   version: 2
