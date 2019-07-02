@@ -19,6 +19,25 @@ jobs:
              export GO111MODULE=on
              go mod download
              curl -sL https://git.io/goreleaser | bash
+  docker_build_and_push:
+    <<: *defaults
+
+    docker:
+      - image: circleci/golang
+
+    steps:
+      - checkout
+
+      -run:
+          name:
+          command: |
+            export GO111MODULE=on
+            go mod download
+            GOOS=linux go build
+            docker build -t ovotech/cloud-key-rotator:latest .
+            docker login -u=$DOCKER_USER -p=$DOCKER_PASS
+            docker push ovotech/cloud-key-rotator
+
   go_fmt:
     <<: *defaults
 
@@ -110,6 +129,12 @@ workflows:
   goreleaser_pipeline:
     jobs:
       - goreleaser:
+          filters:
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*(-.*)*/
+            branches:
+              ignore: /.*/
+      - docker_build_and_push:
           filters:
             tags:
               only: /v[0-9]+(\.[0-9]+)*(-.*)*/
