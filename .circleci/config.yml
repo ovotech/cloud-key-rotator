@@ -28,7 +28,7 @@ jobs:
     steps:
       - checkout
 
-      -run:
+      - run:
           name:
           command: |
             export GO111MODULE=on
