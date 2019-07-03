@@ -38,7 +38,7 @@ jobs:
             go mod download
             GOOS=linux go build
             docker build -t ovotech/cloud-key-rotator:latest .
-            docker login -u=$DOCKER_USER -p=$DOCKER_PASS
+            echo $DOCKER_PASS | docker login -u=$DOCKER_USER --password-stdin
             docker push ovotech/cloud-key-rotator
 
   go_fmt:
