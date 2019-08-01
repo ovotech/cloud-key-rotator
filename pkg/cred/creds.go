@@ -20,6 +20,7 @@ type Credentials struct {
 	GitHubAccount    GitHubAccount
 	AkrPass          string
 	KmsKey           string
+	GocdServer       GocdServer
 }
 
 // GitHubAccount type
@@ -27,4 +28,12 @@ type GitHubAccount struct {
 	GitHubAccessToken string
 	GitName           string
 	GitEmail          string
+}
+
+// GocdServer type
+type GocdServer struct {
+	Server       string
+	SkipSslCheck bool
+	Username     string
+	Password     string
 }
