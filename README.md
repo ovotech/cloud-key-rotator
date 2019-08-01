@@ -6,8 +6,10 @@ ages, and rotating said keys once they pass a specific age threshold.
 
 The tool can update keys held in the following locations:
 
-* GitHub
+
 * CircleCI
+* GitHub
+* GoCd
 * K8S (GKE only)
 
 The tool is packaged as an executable file for native invocation, and as a zip
