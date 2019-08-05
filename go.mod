@@ -3,9 +3,9 @@ module github.com/ovotech/cloud-key-rotator
 go 1.12
 
 require (
-	github.com/aws/aws-lambda-go v1.11.1
-	github.com/aws/aws-sdk-go v1.20.20
-	github.com/beamly/go-gocd v0.0.0-20190719193049-383d56afbf92
+	github.com/aws/aws-lambda-go v1.12.0
+	github.com/aws/aws-sdk-go v1.21.9
+  github.com/beamly/go-gocd v0.0.0-20190719193049-383d56afbf92
 	github.com/docker/spdystream v0.0.0-20160310174837-449fdfce4d96 // indirect
 	github.com/elazarl/goproxy v0.0.0-20170405201442-c4fc26588b6e // indirect
 	github.com/evanphx/json-patch v0.0.0-20190203023257-5858425f7550 // indirect
@@ -26,7 +26,7 @@ require (
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	google.golang.org/api v0.7.0
 	gopkg.in/inf.v0 v0.9.0 // indirect
-	gopkg.in/src-d/go-git.v4 v4.13.0
+	gopkg.in/src-d/go-git.v4 v4.13.1
 	k8s.io/api v0.0.0-20190313235455-40a48860b5ab
 	k8s.io/apimachinery v0.0.0-20190313205120-d7deff9243b1
 	k8s.io/client-go v11.0.0+incompatible
