@@ -248,6 +248,10 @@ func locationsToUpdate(keyLocation config.KeyLocations) (kws []location.KeyWrite
 		kws = append(kws, k8s)
 	}
 
+	for _, gocd := range keyLocation.Gocd {
+		kws = append(kws, gocd)
+	}
+
 	return
 }
 

@@ -46,7 +46,13 @@ func (gocd Gocd) Write(serviceAccountName string, keyWrapper KeyWrapper, creds c
 		secure); err != nil {
 		return
 	}
-	return
+
+	updated = UpdatedLocation{
+		LocationType: "Gocd",
+		LocationURI:  gocd.EnvName,
+		LocationIDs:  []string{gocd.KeyIDEnvVar, gocd.KeyEnvVar}}
+
+	return updated, nil
 }
 
 // patchGocdEnvVar removes the existing env var, and creates a new one (with the same name), in a single
@@ -90,6 +96,8 @@ func updateGocdEnvVar(targetEnvVarName, envName, key, server, user, pass string,
 	if err = patchGocdEnvVar(targetEnvVarName, envName, key, secure, c); err != nil {
 		return
 	}
+	logger.Infof("Deleted Gocd env var: %s from env: %s", targetEnvVarName, envName)
+	logger.Infof("Added Gocd env var: %s in env: %s", targetEnvVarName, envName)
 	if err = verifyGocdEnvVar(targetEnvVarName, envName, c); err != nil {
 		return
 	}
