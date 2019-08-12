@@ -23,7 +23,7 @@ require (
 	go.uber.org/zap v1.10.0
 	golang.org/x/crypto v0.0.0-20190422183909-d864b10871cd
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
-	google.golang.org/api v0.7.0
+	google.golang.org/api v0.8.0
 	gopkg.in/inf.v0 v0.9.0 // indirect
 	gopkg.in/src-d/go-git.v4 v4.13.1
 	k8s.io/api v0.0.0-20190313235455-40a48860b5ab
