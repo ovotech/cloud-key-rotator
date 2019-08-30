@@ -1,9 +1,10 @@
 package rotate
 
 import (
+	"testing"
+
 	keys "github.com/ovotech/cloud-key-client"
 	"github.com/ovotech/cloud-key-rotator/pkg/config"
-	"testing"
 )
 
 // MockProvider configuration, which keys library uses instead of AWS, GCP, etc. when accessing service account keys
@@ -39,7 +40,7 @@ func TestMetricsOnly(t *testing.T) {
 	keys.RegisterProvider("mockProvider", &m)
 
 	var locations config.KeyLocations = config.KeyLocations{RotationAgeThresholdMins: shortRotationPeriod, ServiceAccountName: "account1"}
-	err := Rotate("account1", "mockProvider", "project1", config.Config{RotationMode: false,
+	err := Rotate("account1", "mockProvider", "project1", config.Config{RotationMode: false, EnableKeyAgeLogging: true,
 		AccountKeyLocations: []config.KeyLocations{locations}})
 
 	if err != nil {
