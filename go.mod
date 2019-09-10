@@ -4,7 +4,7 @@ go 1.12
 
 require (
 	github.com/aws/aws-lambda-go v1.13.1
-	github.com/aws/aws-sdk-go v1.23.17
+	github.com/aws/aws-sdk-go v1.23.18
 	github.com/beamly/go-gocd v0.0.0-20190719193049-383d56afbf92
 	github.com/docker/spdystream v0.0.0-20160310174837-449fdfce4d96 // indirect
 	github.com/elazarl/goproxy v0.0.0-20170405201442-c4fc26588b6e // indirect
