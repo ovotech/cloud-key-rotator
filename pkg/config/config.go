@@ -38,6 +38,7 @@ type Config struct {
 	AccountKeyLocations             []KeyLocations
 	Credentials                     cred.Credentials
 	DefaultRotationAgeThresholdMins int
+	EnableKeyAgeLogging             bool
 }
 
 //CloudProvider type

@@ -98,6 +98,9 @@ func Rotate(account, provider, project string, c config.Config) (err error) {
 	logger.Infof("Filtered down to %d keys based on current app config", len(providerKeys))
 	if !c.RotationMode {
 		postMetric(providerKeys, c.DatadogAPIKey, c.Datadog)
+		if c.EnableKeyAgeLogging {
+			logger.Infow("Results of key dating", "Key ages", providerKeys)
+		}
 		return
 	}
 	var rc []rotationCandidate
