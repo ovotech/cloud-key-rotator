@@ -243,22 +243,26 @@ func locationsToUpdate(keyLocation config.KeyLocations) (kws []location.KeyWrite
 		kws = append(kws, circleCI)
 	}
 
-	if len(keyLocation.GitHub.OrgRepo) > 0 {
-		kws = append(kws, keyLocation.GitHub)
+	for _, gcs := range keyLocation.GCS {
+		kws = append(kws, gcs)
 	}
 
-	for _, k8s := range keyLocation.K8s {
-		kws = append(kws, k8s)
+	if len(keyLocation.GitHub.OrgRepo) > 0 {
+		kws = append(kws, keyLocation.GitHub)
 	}
 
 	for _, gocd := range keyLocation.Gocd {
 		kws = append(kws, gocd)
 	}
 
+	for _, k8s := range keyLocation.K8s {
+		kws = append(kws, k8s)
+	}
+
 	return
 }
 
-//updateKeyLocation updates locations specified in keyLocations with the new key, e.g. GitHub, CircleCI an K8s
+//updateKeyLocation updates locations specified in keyLocations with the new key, e.g. GitHub, CircleCI and K8s
 func updateKeyLocation(account string, keyLocations config.KeyLocations,
 	keyWrapper location.KeyWrapper, creds cred.Credentials) (err error) {
 

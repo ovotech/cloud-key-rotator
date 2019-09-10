@@ -66,6 +66,7 @@ type KeyLocations struct {
 	RotationAgeThresholdMins int
 	ServiceAccountName       string
 	CircleCI                 []location.CircleCI
+	GCS                      []location.Gcs
 	GitHub                   location.GitHub
 	Gocd                     []location.Gocd
 	K8s                      []location.K8s
