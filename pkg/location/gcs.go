@@ -8,6 +8,7 @@ import (
 	"github.com/ovotech/cloud-key-rotator/pkg/cred"
 )
 
+// Gcs type
 type Gcs struct {
 	bucketName string
 	objectName string
