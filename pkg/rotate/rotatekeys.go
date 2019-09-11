@@ -18,7 +18,9 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -26,6 +28,9 @@ import (
 
 	keys "github.com/ovotech/cloud-key-client"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/ovotech/cloud-key-rotator/pkg/config"
 	"github.com/ovotech/cloud-key-rotator/pkg/cred"
 	"github.com/ovotech/cloud-key-rotator/pkg/location"
@@ -39,7 +44,10 @@ type rotationCandidate struct {
 	rotationThresholdMins int
 }
 
-var logger = log.StdoutLogger().Sugar()
+var (
+	logger                    = log.StdoutLogger().Sugar()
+	provisionedGoogleAppCreds = false
+)
 
 const (
 	datadogURL = "https://api.datadoghq.com/api/v1/series?api_key="
@@ -117,6 +125,9 @@ func Rotate(account, provider, project string, c config.Config) (err error) {
 func rotateKey(rotationCandidate rotationCandidate, creds cred.Credentials) (err error) {
 	key := rotationCandidate.key
 	keyProvider := key.Provider.Provider
+	if keyProvider == "gcp" {
+		ensureGoogleAppCreds()
+	}
 	var newKeyID string
 	var newKey string
 	if newKeyID, newKey, err = createKey(key, keyProvider); err != nil {
@@ -234,9 +245,50 @@ func accountKeyLocation(account string,
 	return
 }
 
+//InLambda returns true if the AWS_LAMBDA_FUNCTION_NAME env var is set
+func InLambda() (isLambda bool) {
+	return len(os.Getenv("AWS_LAMBDA_FUNCTION_NAME")) > 0
+}
+
+//ensureGoogleAppCreds helps to provision a GCP service account key when running in a Lambda.
+//The key could be used for various purposes, e.g. rotating a service account's key, writing
+//a new key to GCS, or writing a new key to a Secret in GKE.
+func ensureGoogleAppCreds() (err error) {
+	if InLambda() && !provisionedGoogleAppCreds {
+		var secretValue string
+		if secretValue, err = secretsManagerValue("ckr-gcp-key", "eu-west-1"); err != nil {
+			return
+		}
+		if err = ioutil.WriteFile("/tmp/key.json", []byte(secretValue), 0644); err == nil {
+			provisionedGoogleAppCreds = true
+		}
+	}
+	return
+}
+
+//secretsManagerValue gets the value of a secret in AWS SecretsManager with the specified name,
+//in the specified region
+func secretsManagerValue(name, region string) (secretValue string, err error) {
+	sess := session.Must(session.NewSession(&aws.Config{
+		Region: aws.String(region),
+	}))
+
+	svc := secretsmanager.New(sess)
+	input := &secretsmanager.GetSecretValueInput{
+		SecretId: aws.String(name),
+	}
+	var valueOutput *secretsmanager.GetSecretValueOutput
+	if valueOutput, err = svc.GetSecretValue(input); err == nil {
+		secretValue = *valueOutput.SecretString
+	}
+	return
+}
+
 //locationsToUpdate return a slice of structs that implement the keyWriter
 // interface, based on the keyLocations supplied
 func locationsToUpdate(keyLocation config.KeyLocations) (kws []location.KeyWriter) {
+
+	var googleAppCredsRequired bool
 
 	// read locations
 	for _, circleCI := range keyLocation.CircleCI {
@@ -245,6 +297,7 @@ func locationsToUpdate(keyLocation config.KeyLocations) (kws []location.KeyWrite
 
 	for _, gcs := range keyLocation.GCS {
 		kws = append(kws, gcs)
+		googleAppCredsRequired = true
 	}
 
 	if len(keyLocation.GitHub.OrgRepo) > 0 {
@@ -257,6 +310,11 @@ func locationsToUpdate(keyLocation config.KeyLocations) (kws []location.KeyWrite
 
 	for _, k8s := range keyLocation.K8s {
 		kws = append(kws, k8s)
+		googleAppCredsRequired = true
+	}
+
+	if googleAppCredsRequired {
+		ensureGoogleAppCreds()
 	}
 
 	return
