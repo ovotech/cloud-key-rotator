@@ -15,7 +15,6 @@
 package location
 
 import (
-	b64 "encoding/base64"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -48,13 +47,8 @@ func (gitHub GitHub) Write(serviceAccountName string, keyWrapper KeyWrapper, cre
 		return
 	}
 	var key string
-	if keyWrapper.KeyProvider == "aws" {
-		key = fmt.Sprintf("[default]\naws_access_key_id = %s\naws_secret_access_key = %s", keyWrapper.KeyID, keyWrapper.Key)
-	} else {
-		var keyBytes []byte
-		if keyBytes, err = b64.StdEncoding.DecodeString(keyWrapper.Key); err == nil {
-			key = string(keyBytes)
-		}
+	if key, err = getKeyForFileBasedLocation(keyWrapper); err != nil {
+		return
 	}
 
 	const localDir = "/etc/cloud-key-rotator/cloud-key-rotator-tmp-repo"

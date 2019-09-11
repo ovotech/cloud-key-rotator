@@ -8,6 +8,7 @@ The tool can update keys held in the following locations:
 
 
 * CircleCI
+* GCS
 * GitHub
 * GoCd
 * K8S (GKE only)
@@ -86,7 +87,8 @@ ultimately be updated with the new keys that are generated.
 
 Currently, the following locations are supported:
 
-* EnvVars CircleCI
+* EnvVars in CircleCI
+* GCS 
 * Secrets in GKE
 * Files (encrypted via [mantle](https://github.com/ovotech/mantle) which
 integrates with KMS) in GitHub

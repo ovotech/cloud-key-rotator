@@ -14,6 +14,11 @@
 
 package location
 
+import (
+	b64 "encoding/base64"
+	"fmt"
+)
+
 //UpdatedLocation type
 type UpdatedLocation struct {
 	LocationType string
@@ -26,4 +31,16 @@ type KeyWrapper struct {
 	Key         string
 	KeyID       string
 	KeyProvider string
+}
+
+func getKeyForFileBasedLocation(keyWrapper KeyWrapper) (key string, err error) {
+	if keyWrapper.KeyProvider == "aws" {
+		key = fmt.Sprintf("[default]\naws_access_key_id = %s\naws_secret_access_key = %s", keyWrapper.KeyID, keyWrapper.Key)
+	} else {
+		var keyBytes []byte
+		if keyBytes, err = b64.StdEncoding.DecodeString(keyWrapper.Key); err == nil {
+			key = string(keyBytes)
+		}
+	}
+	return
 }

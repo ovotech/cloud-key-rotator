@@ -3,6 +3,7 @@ module github.com/ovotech/cloud-key-rotator
 go 1.12
 
 require (
+	cloud.google.com/go v0.38.0
 	github.com/aws/aws-lambda-go v1.13.1
 	github.com/aws/aws-sdk-go v1.23.19
 	github.com/beamly/go-gocd v0.0.0-20190719193049-383d56afbf92
