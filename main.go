@@ -46,16 +46,11 @@ func HandleRequest(ctx context.Context, name MyEvent) (string, error) {
 }
 
 func main() {
-	if isLambda() {
+	if rotate.InLambda() {
 		lambda.Start(HandleRequest)
 	} else {
 		cmd.Execute()
 	}
-}
-
-//isLambda returns true if the AWS_LAMBDA_FUNCTION_NAME env var is set
-func isLambda() (isLambda bool) {
-	return len(os.Getenv("AWS_LAMBDA_FUNCTION_NAME")) > 0
 }
 
 //getEnv returns the value of the env var matching the key, if it exists, and
