@@ -28,9 +28,6 @@ import (
 
 	keys "github.com/ovotech/cloud-key-client"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/ovotech/cloud-key-rotator/pkg/config"
 	"github.com/ovotech/cloud-key-rotator/pkg/cred"
 	"github.com/ovotech/cloud-key-rotator/pkg/location"
@@ -256,30 +253,14 @@ func InLambda() (isLambda bool) {
 func ensureGoogleAppCreds() (err error) {
 	if InLambda() && !provisionedGoogleAppCreds {
 		var secretValue string
-		if secretValue, err = secretsManagerValue("ckr-gcp-key", "eu-west-1"); err != nil {
+		if secretValue, err = config.GetSecret("ckr-gcp-key"); err != nil {
 			return
 		}
-		if err = ioutil.WriteFile("/tmp/key.json", []byte(secretValue), 0644); err == nil {
+		keyFilePath := "/tmp/key.json"
+		if err = ioutil.WriteFile(keyFilePath, []byte(secretValue), 0644); err == nil {
+			os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", keyFilePath)
 			provisionedGoogleAppCreds = true
 		}
-	}
-	return
-}
-
-//secretsManagerValue gets the value of a secret in AWS SecretsManager with the specified name,
-//in the specified region
-func secretsManagerValue(name, region string) (secretValue string, err error) {
-	sess := session.Must(session.NewSession(&aws.Config{
-		Region: aws.String(region),
-	}))
-
-	svc := secretsmanager.New(sess)
-	input := &secretsmanager.GetSecretValueInput{
-		SecretId: aws.String(name),
-	}
-	var valueOutput *secretsmanager.GetSecretValueOutput
-	if valueOutput, err = svc.GetSecretValue(input); err == nil {
-		secretValue = *valueOutput.SecretString
 	}
 	return
 }

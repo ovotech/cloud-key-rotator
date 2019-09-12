@@ -103,7 +103,7 @@ func GetConfig(configPath string) (c Config, err error) {
 // AWS Secret Manager
 func GetConfigFromAWSSecretManager(secretName, configType string) (c Config, err error) {
 	var secret string
-	if secret, err = getSecret(secretName); err != nil {
+	if secret, err = GetSecret(secretName); err != nil {
 		return
 	}
 	if len(secret) == 0 {
@@ -115,7 +115,8 @@ func GetConfigFromAWSSecretManager(secretName, configType string) (c Config, err
 	return
 }
 
-func getSecret(secretName string) (secretString string, err error) {
+//GetSecret gets the value of the secret in AWS SecretsManager with the specified name
+func GetSecret(secretName string) (secretString string, err error) {
 	//Create a Secrets Manager client
 	svc := secretsmanager.New(session.New())
 	input := &secretsmanager.GetSecretValueInput{
