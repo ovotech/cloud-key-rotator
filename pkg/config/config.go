@@ -50,9 +50,10 @@ type CloudProvider struct {
 
 //Datadog type
 type Datadog struct {
-	MetricEnv  string
-	MetricTeam string
-	MetricName string
+	MetricEnv     string
+	MetricTeam    string
+	MetricName    string
+	MetricProject string
 }
 
 //Filter type

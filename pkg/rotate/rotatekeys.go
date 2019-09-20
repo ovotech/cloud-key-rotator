@@ -471,6 +471,7 @@ func postMetric(keys []keys.Key, apiKey string, datadog config.Datadog) (err err
 					`"type":"count",` +
 					`"tags":[` +
 					`"team:` + datadog.MetricTeam + `",` +
+					`"project:` + datadog.MetricProject + `",` +
 					`"environment:` + datadog.MetricEnv + `",` +
 					`"key:` + key.Name + `",` +
 					`"provider:` + key.Provider.Provider + `",` +
