@@ -247,6 +247,10 @@ func InLambda() (isLambda bool) {
 	return len(os.Getenv("AWS_LAMBDA_FUNCTION_NAME")) > 0
 }
 
+func InCloudFunction() (isCloudFunction bool) {
+	return len(os.Getenv("GCP_PROJECT")) > 0 && len(os.Getenv("FUNCTION_NAME")) > 0
+}
+
 //ensureGoogleAppCreds helps to provision a GCP service account key when running in a Lambda.
 //The key could be used for various purposes, e.g. rotating a service account's key, writing
 //a new key to GCS, or writing a new key to a Secret in GKE.

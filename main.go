@@ -16,11 +16,14 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"net/http"
 	"os"
 
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/ovotech/cloud-key-rotator/cmd"
 	"github.com/ovotech/cloud-key-rotator/pkg/config"
+	"github.com/ovotech/cloud-key-rotator/pkg/log"
 	"github.com/ovotech/cloud-key-rotator/pkg/rotate"
 )
 
@@ -28,6 +31,8 @@ import (
 type MyEvent struct {
 	Name string `json:"name"`
 }
+
+var logger = log.StdoutLogger().Sugar()
 
 //HandleRequest allows cloud-key-rotator to be used in the Lambda program model
 func HandleRequest(ctx context.Context, name MyEvent) (string, error) {
@@ -43,6 +48,35 @@ func HandleRequest(ctx context.Context, name MyEvent) (string, error) {
 		status = "success"
 	}
 	return status, err
+}
+
+func CloudFunctionRequest(w http.ResponseWriter, r *http.Request) {
+	var c config.Config
+	var err error
+	var bucketName string
+	var ok bool
+	bucketEnvVarName := "CKR_BUCKET_NAME"
+	if bucketName, ok = os.LookupEnv(bucketEnvVarName); ok {
+		logCloudFunctionError(w, fmt.Errorf("Env var: %s is required", bucketEnvVarName))
+		return
+	}
+	if c, err = config.GetConfigFromGCS(
+		bucketName,
+		getEnv("CKR_SECRET_CONFIG_NAME", "ckr-config"),
+		getEnv("CKR_CONFIG_TYPE", "json")); err != nil {
+		logCloudFunctionError(w, err)
+		return
+	}
+	if err = rotate.Rotate("", "", "", c); err == nil {
+		logCloudFunctionError(w, err)
+		return
+	}
+}
+
+func logCloudFunctionError(w http.ResponseWriter, err error) {
+	w.WriteHeader(http.StatusInternalServerError)
+	w.Write([]byte(err.Error()))
+	logger.Error(err)
 }
 
 func main() {
