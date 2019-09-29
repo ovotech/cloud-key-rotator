@@ -4,6 +4,7 @@ go 1.12
 
 require (
 	cloud.google.com/go v0.46.3
+	cloud.google.com/go/storage v1.0.0
 	github.com/aws/aws-lambda-go v1.13.2
 	github.com/aws/aws-sdk-go v1.25.0
 	github.com/beamly/go-gocd v0.0.0-20190719193049-383d56afbf92
