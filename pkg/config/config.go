@@ -103,8 +103,8 @@ func GetConfig(configPath string) (c Config, err error) {
 	return
 }
 
-// GetConfigFromAWSSecretManager grabs the cloud-key-rotator's config from
-// AWS Secret Manager
+//GetConfigFromAWSSecretManager grabs the cloud-key-rotator's config from
+//AWS Secret Manager
 func GetConfigFromAWSSecretManager(secretName, configType string) (c Config, err error) {
 	var secret string
 	if secret, err = GetSecret(secretName); err != nil {
@@ -119,6 +119,7 @@ func GetConfigFromAWSSecretManager(secretName, configType string) (c Config, err
 	return
 }
 
+//GetConfigFromGCS grabs the cloud-key-rotator's config from GCS
 func GetConfigFromGCS(bucketName, objectName, configType string) (c Config, err error) {
 	ctx := context.Background()
 	var client *storage.Client
