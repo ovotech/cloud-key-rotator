@@ -12,13 +12,14 @@ import (
 
 var logger = log.StdoutLogger().Sugar()
 
-func CloudFunctionRequest(w http.ResponseWriter, r *http.Request) {
+// Request is the CloudFunction entrypoint
+func Request(w http.ResponseWriter, r *http.Request) {
 	var c config.Config
 	var err error
 	var bucketName string
 	var ok bool
 	bucketEnvVarName := "CKR_BUCKET_NAME"
-	if bucketName, ok = os.LookupEnv(bucketEnvVarName); ok {
+	if bucketName, ok = os.LookupEnv(bucketEnvVarName); !ok {
 		logCloudFunctionError(w, fmt.Errorf("Env var: %s is required", bucketEnvVarName))
 		return
 	}
