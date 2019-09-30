@@ -25,12 +25,12 @@ func Request(w http.ResponseWriter, r *http.Request) {
 	}
 	if c, err = config.GetConfigFromGCS(
 		bucketName,
-		getEnv("CKR_SECRET_CONFIG_NAME", "ckr-config"),
+		getEnv("CKR_SECRET_CONFIG_NAME", "ckr-config.json"),
 		getEnv("CKR_CONFIG_TYPE", "json")); err != nil {
 		logCloudFunctionError(w, err)
 		return
 	}
-	if err = rotate.Rotate("", "", "", c); err == nil {
+	if err = rotate.Rotate("", "", "", c); err != nil {
 		logCloudFunctionError(w, err)
 		return
 	}
