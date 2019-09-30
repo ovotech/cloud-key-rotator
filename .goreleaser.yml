@@ -12,7 +12,8 @@ archives:
     name_template: "{{ .ProjectName }}_{{ .Version }}_lambda"
 builds:
   - id: binary-build
-    main: ./
+    binary: cloud-key-rotator
+    main: ./cmd/
     goos:
       - windows
       - darwin
@@ -20,7 +21,8 @@ builds:
     goarch:
       - amd64
   - id: lambda-build
-    main: ./
+    binary: cloud-key-rotator
+    main: ./cmd/
     goos:
       - linux
     goarch:

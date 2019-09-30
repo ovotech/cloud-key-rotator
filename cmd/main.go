@@ -19,8 +19,9 @@ import (
 	"os"
 
 	"github.com/aws/aws-lambda-go/lambda"
-	"github.com/ovotech/cloud-key-rotator/cmd"
+	cmd "github.com/ovotech/cloud-key-rotator/cmd/cobra"
 	"github.com/ovotech/cloud-key-rotator/pkg/config"
+	"github.com/ovotech/cloud-key-rotator/pkg/log"
 	"github.com/ovotech/cloud-key-rotator/pkg/rotate"
 )
 
@@ -28,6 +29,8 @@ import (
 type MyEvent struct {
 	Name string `json:"name"`
 }
+
+var logger = log.StdoutLogger().Sugar()
 
 //HandleRequest allows cloud-key-rotator to be used in the Lambda program model
 func HandleRequest(ctx context.Context, name MyEvent) (string, error) {

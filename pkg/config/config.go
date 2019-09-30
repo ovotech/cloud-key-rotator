@@ -16,8 +16,11 @@ package config
 
 import (
 	"bytes"
+	"context"
 	"errors"
+	"io/ioutil"
 
+	"cloud.google.com/go/storage"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
@@ -100,8 +103,8 @@ func GetConfig(configPath string) (c Config, err error) {
 	return
 }
 
-// GetConfigFromAWSSecretManager grabs the cloud-key-rotator's config from
-// AWS Secret Manager
+//GetConfigFromAWSSecretManager grabs the cloud-key-rotator's config from
+//AWS Secret Manager
 func GetConfigFromAWSSecretManager(secretName, configType string) (c Config, err error) {
 	var secret string
 	if secret, err = GetSecret(secretName); err != nil {
@@ -112,6 +115,30 @@ func GetConfigFromAWSSecretManager(secretName, configType string) (c Config, err
 	}
 	viper.SetConfigType(configType)
 	viper.ReadConfig(bytes.NewBufferString(secret))
+	err = viper.Unmarshal(&c)
+	return
+}
+
+//GetConfigFromGCS grabs the cloud-key-rotator's config from GCS
+func GetConfigFromGCS(bucketName, objectName, configType string) (c Config, err error) {
+	ctx := context.Background()
+	var client *storage.Client
+	if client, err = storage.NewClient(ctx); err != nil {
+		return
+	}
+	bkt := client.Bucket(bucketName)
+	obj := bkt.Object(objectName)
+	var rc *storage.Reader
+	if rc, err = obj.NewReader(ctx); err != nil {
+		return
+	}
+	defer rc.Close()
+	var data []byte
+	if data, err = ioutil.ReadAll(rc); err != nil {
+		return
+	}
+	viper.SetConfigType(configType)
+	viper.ReadConfig(bytes.NewReader(data))
 	err = viper.Unmarshal(&c)
 	return
 }
