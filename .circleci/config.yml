@@ -28,9 +28,9 @@ jobs:
           name: "Publish Release on GitHub"
           command: |
             VERSION=$(echo ${CIRCLE_TAG} | sed 's/^v//')
-            ZIP_NAME=cloud-key-rotator_${VERSION}_cloudfunction
+            ZIP_NAME=cloud-key-rotator_${VERSION}_cloudfunction.zip
             zip -R ${ZIP_NAME} '*.go' 'go.mod'
-            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} ${CIRCLE_TAG} ${ZIP_NAME}.zip
+            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} ${CIRCLE_TAG} ${ZIP_NAME}
   docker_build_and_push:
     <<: *defaults
 
@@ -48,7 +48,7 @@ jobs:
           command: |
             export GO111MODULE=on
             go mod download
-            GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build
+            GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o cloud-key-rotator ./cmd
             docker build -t ovotech/cloud-key-rotator:latest .
             echo $DOCKER_PASS | docker login -u=$DOCKER_USER --password-stdin
             docker push ovotech/cloud-key-rotator
