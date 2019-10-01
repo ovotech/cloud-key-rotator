@@ -6,7 +6,7 @@ require (
 	cloud.google.com/go v0.46.3
 	cloud.google.com/go/storage v1.0.0
 	github.com/aws/aws-lambda-go v1.13.2
-	github.com/aws/aws-sdk-go v1.25.0
+	github.com/aws/aws-sdk-go v1.25.2
 	github.com/beamly/go-gocd v0.0.0-20190719193049-383d56afbf92
 	github.com/docker/spdystream v0.0.0-20160310174837-449fdfce4d96 // indirect
 	github.com/elazarl/goproxy v0.0.0-20170405201442-c4fc26588b6e // indirect
