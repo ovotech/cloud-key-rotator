@@ -40,7 +40,7 @@ type envVarDefaults struct {
 
 var (
 	defaultsMap = map[string]envVarDefaults{
-		"aws": envVarDefaults{
+		"aws": {
 			keyEnvVar:   "AWS_SECRET_ACCESS_KEY",
 			keyIDEnvVar: "AWS_ACCESS_KEY_ID"}}
 )
