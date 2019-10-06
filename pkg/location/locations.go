@@ -33,6 +33,18 @@ type KeyWrapper struct {
 	KeyProvider string
 }
 
+type envVarDefaults struct {
+	keyEnvVar   string
+	keyIDEnvVar string
+}
+
+var (
+	defaultsMap = map[string]envVarDefaults{
+		"aws": envVarDefaults{
+			keyEnvVar:   "AWS_SECRET_ACCESS_KEY",
+			keyIDEnvVar: "AWS_ACCESS_KEY_ID"}}
+)
+
 func getKeyForFileBasedLocation(keyWrapper KeyWrapper) (key string, err error) {
 	if keyWrapper.KeyProvider == "aws" {
 		key = fmt.Sprintf("[default]\naws_access_key_id = %s\naws_secret_access_key = %s", keyWrapper.KeyID, keyWrapper.Key)
@@ -42,5 +54,16 @@ func getKeyForFileBasedLocation(keyWrapper KeyWrapper) (key string, err error) {
 			key = string(keyBytes)
 		}
 	}
+	return
+}
+
+func envVarDefaultsFromProvider(provider string) (envVarDefaults envVarDefaults, err error) {
+	for k, v := range defaultsMap {
+		if k == provider {
+			envVarDefaults = v
+			return
+		}
+	}
+	err = fmt.Errorf("No default env var names available for provider: %s", provider)
 	return
 }
