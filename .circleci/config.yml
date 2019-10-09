@@ -15,8 +15,6 @@ jobs:
       - run:
            name: goreleaser
            command: |
-             export GO111MODULE=on
-             go mod download
              curl -sL https://git.io/goreleaser | bash
   release_cloudfunction_zip:
     docker:
