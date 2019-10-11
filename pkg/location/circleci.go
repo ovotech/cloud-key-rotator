@@ -38,18 +38,40 @@ var logger = log.StdoutLogger().Sugar()
 func (circle CircleCI) Write(serviceAccountName string, keyWrapper KeyWrapper, creds cred.Credentials) (updated UpdatedLocation, err error) {
 	logger.Info("Starting CircleCI env var updates")
 	client := &circleci.Client{Token: creds.CircleCIAPIToken}
-	keyIDEnvVarName := circle.KeyIDEnvVar
+
+	var keyEnvVar string
+	if len(circle.KeyEnvVar) > 0 {
+		keyEnvVar = circle.KeyEnvVar
+	} else {
+		var defaultEnvVar envVarDefaults
+		if defaultEnvVar, err = envVarDefaultsFromProvider(keyWrapper.KeyProvider); err != nil {
+			return
+		}
+		keyEnvVar = defaultEnvVar.keyEnvVar
+	}
+
+	var keyIDEnvVar string
+	if len(circle.KeyIDEnvVar) > 0 {
+		keyIDEnvVar = circle.KeyIDEnvVar
+	} else {
+		var defaultEnvVar envVarDefaults
+		if defaultEnvVar, err = envVarDefaultsFromProvider(keyWrapper.KeyProvider); err != nil {
+			return
+		}
+		keyIDEnvVar = defaultEnvVar.keyIDEnvVar
+	}
+
 	splitUsernameProject := strings.Split(circle.UsernameProject, "/")
 	username := splitUsernameProject[0]
 	project := splitUsernameProject[1]
 
-	if len(keyIDEnvVarName) > 0 {
-		if err = updateCircleCIEnvVar(username, project, keyIDEnvVarName, keyWrapper.KeyID, client); err != nil {
+	if len(keyIDEnvVar) > 0 {
+		if err = updateCircleCIEnvVar(username, project, keyIDEnvVar, keyWrapper.KeyID, client); err != nil {
 			return
 		}
 	}
 
-	if err = updateCircleCIEnvVar(username, project, circle.KeyEnvVar, keyWrapper.Key, client); err != nil {
+	if err = updateCircleCIEnvVar(username, project, keyEnvVar, keyWrapper.Key, client); err != nil {
 		return
 	}
 
