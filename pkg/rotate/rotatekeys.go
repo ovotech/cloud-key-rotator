@@ -294,6 +294,10 @@ func locationsToUpdate(keyLocation config.KeyLocations) (kws []location.KeyWrite
 		googleAppCredsRequired = true
 	}
 
+	for _, ssm := range keyLocation.SSM {
+		kws = append(kws, ssm)
+	}
+
 	if googleAppCredsRequired {
 		ensureGoogleAppCreds()
 	}

@@ -74,6 +74,7 @@ type KeyLocations struct {
 	GitHub                   location.GitHub
 	Gocd                     []location.Gocd
 	K8s                      []location.K8s
+	SSM                      []location.Ssm
 }
 
 //ProviderServiceAccounts type

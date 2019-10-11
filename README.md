@@ -12,6 +12,7 @@ The tool can update keys held in the following locations:
 * GitHub
 * GoCd
 * K8S (GKE only)
+* SSM (AWS Parameter Store)
 
 The tool is packaged as an executable file for native invocation, and as a zip
  file for deployment as an AWS Lambda.
@@ -88,10 +89,12 @@ ultimately be updated with the new keys that are generated.
 Currently, the following locations are supported:
 
 * EnvVars in CircleCI
+* GoCd
 * GCS 
 * Secrets in GKE
 * Files (encrypted via [mantle](https://github.com/ovotech/mantle) which
 integrates with KMS) in GitHub
+* SSM (AWS Parameter Store)
 
 ## Rotation Process
 
