@@ -30,11 +30,15 @@ type Ssm struct {
 }
 
 func (ssm Ssm) Write(serviceAccountName string, keyWrapper KeyWrapper, creds cred.Credentials) (updated UpdatedLocation, err error) {
+	var key string
+	if key, err = getKeyForFileBasedLocation(keyWrapper); err != nil {
+		return
+	}
 	svc := awsSsm.New(session.New())
 	svc.Config.Region = aws.String(ssm.region)
 	input := &awsSsm.PutParameterInput{
 		Overwrite: aws.Bool(true),
-		Name:      aws.String(ssm.parameterName),
+		Name:      aws.String(key),
 	}
 	if _, err = svc.PutParameter(input); err != nil {
 		return
