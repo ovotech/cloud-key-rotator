@@ -38,7 +38,8 @@ func (ssm Ssm) Write(serviceAccountName string, keyWrapper KeyWrapper, creds cre
 	svc.Config.Region = aws.String(ssm.region)
 	input := &awsSsm.PutParameterInput{
 		Overwrite: aws.Bool(true),
-		Name:      aws.String(key),
+		Name:      aws.String(ssm.parameterName),
+		Value:     aws.String(key),
 	}
 	if _, err = svc.PutParameter(input); err != nil {
 		return
