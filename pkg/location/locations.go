@@ -67,3 +67,16 @@ func envVarDefaultsFromProvider(provider string) (envVarDefaults envVarDefaults,
 	err = fmt.Errorf("No default env var names available for provider: %s", provider)
 	return
 }
+
+func getVarNameFromProvider(provider, suppliedVarName string) (envName string, err error) {
+	if len(suppliedVarName) > 0 {
+		envName = suppliedVarName
+	} else {
+		var defaultEnvVar envVarDefaults
+		if defaultEnvVar, err = envVarDefaultsFromProvider(provider); err != nil {
+			return
+		}
+		envName = defaultEnvVar.keyEnvVar
+	}
+	return
+}

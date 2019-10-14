@@ -38,27 +38,16 @@ var logger = log.StdoutLogger().Sugar()
 func (circle CircleCI) Write(serviceAccountName string, keyWrapper KeyWrapper, creds cred.Credentials) (updated UpdatedLocation, err error) {
 	logger.Info("Starting CircleCI env var updates")
 	client := &circleci.Client{Token: creds.CircleCIAPIToken}
+	provider := keyWrapper.KeyProvider
 
 	var keyEnvVar string
-	if len(circle.KeyEnvVar) > 0 {
-		keyEnvVar = circle.KeyEnvVar
-	} else {
-		var defaultEnvVar envVarDefaults
-		if defaultEnvVar, err = envVarDefaultsFromProvider(keyWrapper.KeyProvider); err != nil {
-			return
-		}
-		keyEnvVar = defaultEnvVar.keyEnvVar
+	if keyEnvVar, err = getVarNameFromProvider(provider, circle.KeyEnvVar); err != nil {
+		return
 	}
 
 	var keyIDEnvVar string
-	if len(circle.KeyIDEnvVar) > 0 {
-		keyIDEnvVar = circle.KeyIDEnvVar
-	} else {
-		var defaultEnvVar envVarDefaults
-		if defaultEnvVar, err = envVarDefaultsFromProvider(keyWrapper.KeyProvider); err != nil {
-			return
-		}
-		keyIDEnvVar = defaultEnvVar.keyIDEnvVar
+	if keyIDEnvVar, err = getVarNameFromProvider(provider, circle.KeyIDEnvVar); err != nil {
+		return
 	}
 
 	splitUsernameProject := strings.Split(circle.UsernameProject, "/")
@@ -78,7 +67,7 @@ func (circle CircleCI) Write(serviceAccountName string, keyWrapper KeyWrapper, c
 	updated = UpdatedLocation{
 		LocationType: "CircleCI",
 		LocationURI:  circle.UsernameProject,
-		LocationIDs:  []string{circle.KeyIDEnvVar, circle.KeyEnvVar}}
+		LocationIDs:  []string{keyIDEnvVar, keyEnvVar}}
 
 	return updated, nil
 }

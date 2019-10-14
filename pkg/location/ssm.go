@@ -15,8 +15,6 @@
 package location
 
 import (
-	"fmt"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	awsSsm "github.com/aws/aws-sdk-go/service/ssm"
@@ -25,28 +23,59 @@ import (
 
 // Ssm type
 type Ssm struct {
-	parameterName string
-	region        string
+	keyParamName   string
+	keyIDParamName string
+	region         string
+	convertToJSON  bool
 }
 
 func (ssm Ssm) Write(serviceAccountName string, keyWrapper KeyWrapper, creds cred.Credentials) (updated UpdatedLocation, err error) {
+	provider := keyWrapper.KeyProvider
 	var key string
-	if key, err = getKeyForFileBasedLocation(keyWrapper); err != nil {
+
+	if ssm.convertToJSON {
+		if key, err = getKeyForFileBasedLocation(keyWrapper); err != nil {
+			return
+		}
+	} else {
+		key = keyWrapper.Key
+	}
+
+	var keyEnvVar string
+	if keyEnvVar, err = getVarNameFromProvider(provider, ssm.keyParamName); err != nil {
 		return
 	}
+
+	var keyIDEnvVar string
+	if keyIDEnvVar, err = getVarNameFromProvider(provider, ssm.keyIDParamName); err != nil {
+		return
+	}
+
 	svc := awsSsm.New(session.New())
 	svc.Config.Region = aws.String(ssm.region)
-	input := &awsSsm.PutParameterInput{
-		Overwrite: aws.Bool(true),
-		Name:      aws.String(ssm.parameterName),
-		Value:     aws.String(key),
+
+	if len(keyIDEnvVar) > 0 {
+		if err = updateSSMParameter(keyIDEnvVar, keyWrapper.KeyID, "String", *svc); err != nil {
+			return
+		}
 	}
-	if _, err = svc.PutParameter(input); err != nil {
+	if err = updateSSMParameter(keyEnvVar, key, "SecureString", *svc); err != nil {
 		return
 	}
+
 	updated = UpdatedLocation{
 		LocationType: "SSM",
-		LocationURI:  fmt.Sprintf("%s/%s", ssm.region, ssm.parameterName),
-		LocationIDs:  []string{ssm.parameterName}}
+		LocationURI:  ssm.region,
+		LocationIDs:  []string{keyIDEnvVar, keyEnvVar}}
+	return
+}
+
+func updateSSMParameter(paramName, paramValue, paramType string, svc awsSsm.SSM) (err error) {
+	input := &awsSsm.PutParameterInput{
+		Overwrite: aws.Bool(true),
+		Name:      aws.String(paramName),
+		Value:     aws.String(paramValue),
+	}
+	_, err = svc.PutParameter(input)
 	return
 }
