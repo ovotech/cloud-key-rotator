@@ -75,6 +75,7 @@ func updateSSMParameter(paramName, paramValue, paramType string, svc awsSsm.SSM)
 		Overwrite: aws.Bool(true),
 		Name:      aws.String(paramName),
 		Value:     aws.String(paramValue),
+		Type:      aws.String(paramType),
 	}
 	_, err = svc.PutParameter(input)
 	return
