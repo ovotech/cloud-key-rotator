@@ -41,12 +41,14 @@ func (circle CircleCI) Write(serviceAccountName string, keyWrapper KeyWrapper, c
 	provider := keyWrapper.KeyProvider
 
 	var keyEnvVar string
-	if keyEnvVar, err = getVarNameFromProvider(provider, circle.KeyEnvVar); err != nil {
+	var idValue bool
+	if keyEnvVar, err = getVarNameFromProvider(provider, circle.KeyEnvVar, idValue); err != nil {
 		return
 	}
 
 	var keyIDEnvVar string
-	if keyIDEnvVar, err = getVarNameFromProvider(provider, circle.KeyIDEnvVar); err != nil {
+	idValue = true
+	if keyIDEnvVar, err = getVarNameFromProvider(provider, circle.KeyIDEnvVar, idValue); err != nil {
 		return
 	}
 
