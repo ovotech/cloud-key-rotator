@@ -68,7 +68,7 @@ func envVarDefaultsFromProvider(provider string) (envVarDefaults envVarDefaults,
 	return
 }
 
-func getVarNameFromProvider(provider, suppliedVarName string) (envName string, err error) {
+func getVarNameFromProvider(provider, suppliedVarName string, idValue bool) (envName string, err error) {
 	if len(suppliedVarName) > 0 {
 		envName = suppliedVarName
 	} else {
@@ -76,7 +76,11 @@ func getVarNameFromProvider(provider, suppliedVarName string) (envName string, e
 		if defaultEnvVar, err = envVarDefaultsFromProvider(provider); err != nil {
 			return
 		}
-		envName = defaultEnvVar.keyEnvVar
+		if idValue {
+			envName = defaultEnvVar.keyIDEnvVar
+		} else {
+			envName = defaultEnvVar.keyEnvVar
+		}
 	}
 	return
 }

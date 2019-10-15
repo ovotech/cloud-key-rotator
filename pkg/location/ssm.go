@@ -42,12 +42,14 @@ func (ssm Ssm) Write(serviceAccountName string, keyWrapper KeyWrapper, creds cre
 	}
 
 	var keyEnvVar string
-	if keyEnvVar, err = getVarNameFromProvider(provider, ssm.keyParamName); err != nil {
+	var idValue bool
+	if keyEnvVar, err = getVarNameFromProvider(provider, ssm.keyParamName, idValue); err != nil {
 		return
 	}
 
 	var keyIDEnvVar string
-	if keyIDEnvVar, err = getVarNameFromProvider(provider, ssm.keyIDParamName); err != nil {
+	idValue = true
+	if keyIDEnvVar, err = getVarNameFromProvider(provider, ssm.keyIDParamName, idValue); err != nil {
 		return
 	}
 
