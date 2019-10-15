@@ -23,17 +23,17 @@ import (
 
 // Ssm type
 type Ssm struct {
-	keyParamName   string
-	keyIDParamName string
-	region         string
-	convertToJSON  bool
+	KeyParamName   string
+	KeyIDParamName string
+	Region         string
+	ConvertToJSON  bool
 }
 
 func (ssm Ssm) Write(serviceAccountName string, keyWrapper KeyWrapper, creds cred.Credentials) (updated UpdatedLocation, err error) {
 	provider := keyWrapper.KeyProvider
 	var key string
 
-	if ssm.convertToJSON {
+	if ssm.ConvertToJSON {
 		if key, err = getKeyForFileBasedLocation(keyWrapper); err != nil {
 			return
 		}
@@ -43,18 +43,18 @@ func (ssm Ssm) Write(serviceAccountName string, keyWrapper KeyWrapper, creds cre
 
 	var keyEnvVar string
 	var idValue bool
-	if keyEnvVar, err = getVarNameFromProvider(provider, ssm.keyParamName, idValue); err != nil {
+	if keyEnvVar, err = getVarNameFromProvider(provider, ssm.KeyParamName, idValue); err != nil {
 		return
 	}
 
 	var keyIDEnvVar string
 	idValue = true
-	if keyIDEnvVar, err = getVarNameFromProvider(provider, ssm.keyIDParamName, idValue); err != nil {
+	if keyIDEnvVar, err = getVarNameFromProvider(provider, ssm.KeyIDParamName, idValue); err != nil {
 		return
 	}
 
 	svc := awsSsm.New(session.New())
-	svc.Config.Region = aws.String(ssm.region)
+	svc.Config.Region = aws.String(ssm.Region)
 
 	if len(keyIDEnvVar) > 0 {
 		if err = updateSSMParameter(keyIDEnvVar, keyWrapper.KeyID, "String", *svc); err != nil {
@@ -67,7 +67,7 @@ func (ssm Ssm) Write(serviceAccountName string, keyWrapper KeyWrapper, creds cre
 
 	updated = UpdatedLocation{
 		LocationType: "SSM",
-		LocationURI:  ssm.region,
+		LocationURI:  ssm.Region,
 		LocationIDs:  []string{keyIDEnvVar, keyEnvVar}}
 	return
 }
