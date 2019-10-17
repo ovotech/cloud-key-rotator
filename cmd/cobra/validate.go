@@ -16,39 +16,28 @@ package cmd
 
 import (
 	"github.com/ovotech/cloud-key-rotator/pkg/config"
-	"github.com/ovotech/cloud-key-rotator/pkg/rotate"
 	"github.com/spf13/cobra"
 )
 
 var (
-	rotateCmd = &cobra.Command{
-		Use:   "rotate",
-		Short: "Rotate some cloud keys",
-		Long:  `Rotate some cloud keys`,
+	validateCmd = &cobra.Command{
+		Use:   "validate",
+		Short: "Validate cloud-key-rotator config",
+		Long:  `Validate cloud-key-rotator config`,
 		Run: func(cmd *cobra.Command, args []string) {
-			logger.Info("cloud-key-rotator rotate called")
-			var err error
-			var c config.Config
+			logger.Info("validating cloud-key-rotator config")
 			logger.Info(configPath)
-			if c, err = config.GetConfig(configPath); err == nil {
-				err = rotate.Rotate(account, provider, project, c)
-			}
-			if err != nil {
+			if _, err := config.GetConfig(configPath); err != nil {
 				logger.Error(err)
+			} else {
+				logger.Infof("cloud-key-rotator config in %s is valid", configPath)
 			}
 		},
 	}
 )
 
 func init() {
-	rotateCmd.Flags().StringVarP(&account, "account", "a", defaultAccount,
-		"Account to rotate")
-	rotateCmd.Flags().StringVarP(&configPath, "config", "c", defaultConfigPath,
+	validateCmd.Flags().StringVarP(&configPath, "config", "c", defaultConfigPath,
 		"Absolute path of application config")
-	rotateCmd.Flags().StringVarP(&provider, "provider", "p", defaultProvider,
-		"Provider of account to rotate")
-	rotateCmd.Flags().StringVarP(&project, "project", "j", defaultProject,
-		"Project of account to rotate")
-	rootCmd.AddCommand(rotateCmd)
-
+	rootCmd.AddCommand(validateCmd)
 }
