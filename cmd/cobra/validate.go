@@ -26,7 +26,6 @@ var (
 		Long:  `Validate cloud-key-rotator config`,
 		Run: func(cmd *cobra.Command, args []string) {
 			logger.Info("validating cloud-key-rotator config")
-			logger.Info(configPath)
 			if _, err := config.GetConfig(configPath); err != nil {
 				logger.Error(err)
 			} else {

@@ -29,7 +29,6 @@ var (
 			logger.Info("cloud-key-rotator rotate called")
 			var err error
 			var c config.Config
-			logger.Info(configPath)
 			if c, err = config.GetConfig(configPath); err == nil {
 				err = rotate.Rotate(account, provider, project, c)
 			}
