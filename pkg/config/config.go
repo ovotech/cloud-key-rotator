@@ -93,7 +93,9 @@ func GetConfig(configPath string) (c Config, err error) {
 	viper.SetEnvPrefix("ckr")
 	viper.SetConfigName("config")
 	viper.AddConfigPath(".")
-	viper.ReadInConfig()
+	if err = viper.ReadInConfig(); err != nil {
+		return
+	}
 	if err = viper.Unmarshal(&c); err != nil {
 		return
 	}
