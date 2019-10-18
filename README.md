@@ -9,7 +9,7 @@ The tool can update keys held in the following locations:
 
 * CircleCI
 * GCS
-* GitHub
+* Git
 * GoCd
 * K8S (GKE only)
 * SSM (AWS Parameter Store)
@@ -93,7 +93,7 @@ Currently, the following locations are supported:
 * GCS 
 * Secrets in GKE
 * Files (encrypted via [mantle](https://github.com/ovotech/mantle) which
-integrates with KMS) in GitHub
+integrates with KMS) in Git
 * SSM (AWS Parameter Store)
 
 ## Rotation Process
@@ -121,7 +121,7 @@ are stored, e.g.:
 "AccountKeyLocations": [{
   "ServiceAccountName": "cloud-key-client-test",
   "RotationAgeThresholdMins": 60,
-  "GitHub": {
+  "Git": {
     "FilePath": "service-account.txt",
     "OrgRepo": "ovotech/cloud-key-rotator",
     "VerifyCircleCISuccess": true,
@@ -148,17 +148,17 @@ deployment has been successful after committing to a GitHub repository. If that
 verification isn't required, you can disable it using the `VerifyCircleCISuccess`
 boolean.
 
-For any GitHub key location, the whole process will be aborted
+For any Git key location, the whole process will be aborted
 if there is no `KmsKey` value set. Unencrypted keys should **never** be committed
 to a Git repository.
 
 ## GPG Commit Signing
 
-Commits to GitHub repositories are required to be GPG signed. In order to
+Commits to Git repositories are required to be GPG signed. In order to
 achieve this, you need to provide 4 things:
 
-* `Username` of the GitHub user commits will be made on behalf of, set in config
-* `Email` address of GitHub user, set in config
+* `Username` of the Git user commits will be made on behalf of, set in config
+* `Email` address of Git user, set in config
 * `ArmouredKeyRing`, aka GPG private key, stored in `/etc/cloud-key-rotator/akr.asc`
 * `Passphrase` to the ArmouredKeyRing
 

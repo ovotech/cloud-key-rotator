@@ -281,8 +281,8 @@ func locationsToUpdate(keyLocation config.KeyLocations) (kws []location.KeyWrite
 		googleAppCredsRequired = true
 	}
 
-	if len(keyLocation.GitHub.OrgRepo) > 0 {
-		kws = append(kws, keyLocation.GitHub)
+	if len(keyLocation.Git.OrgRepo) > 0 {
+		kws = append(kws, keyLocation.Git)
 	}
 
 	for _, gocd := range keyLocation.Gocd {
@@ -305,7 +305,7 @@ func locationsToUpdate(keyLocation config.KeyLocations) (kws []location.KeyWrite
 	return
 }
 
-//updateKeyLocation updates locations specified in keyLocations with the new key, e.g. GitHub, CircleCI and K8s
+//updateKeyLocation updates locations specified in keyLocations with the new key, e.g. Git, CircleCI and K8s
 func updateKeyLocation(account string, keyLocations config.KeyLocations,
 	keyWrapper location.KeyWrapper, creds cred.Credentials) (err error) {
 
