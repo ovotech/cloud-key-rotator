@@ -19,6 +19,7 @@ type Credentials struct {
 	CircleCIAPIToken string
 	GitAccount       GitAccount
 	AkrPass          string
+	AkrPath          string
 	KmsKey           string
 	GocdServer       GocdServer
 }
