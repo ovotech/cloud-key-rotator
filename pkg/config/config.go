@@ -71,7 +71,7 @@ type KeyLocations struct {
 	ServiceAccountName       string
 	CircleCI                 []location.CircleCI
 	GCS                      []location.Gcs
-	GitHub                   location.GitHub
+	Git                      location.Git
 	Gocd                     []location.Gocd
 	K8s                      []location.K8s
 	SSM                      []location.Ssm

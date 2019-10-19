@@ -14,7 +14,7 @@
 
 package location
 
-//keyWriter defines the function signature for writing key to a location, e.g. CircleCI, K8S cluster or GitHub.
+//keyWriter defines the function signature for writing key to a location, e.g. CircleCI, K8S cluster or Git.
 import "github.com/ovotech/cloud-key-rotator/pkg/cred"
 
 //KeyWriter interface

@@ -17,17 +17,17 @@ package cred
 // Credentials type
 type Credentials struct {
 	CircleCIAPIToken string
-	GitHubAccount    GitHubAccount
+	GitAccount       GitAccount
 	AkrPass          string
 	KmsKey           string
 	GocdServer       GocdServer
 }
 
-// GitHubAccount type
-type GitHubAccount struct {
-	GitHubAccessToken string
-	GitName           string
-	GitEmail          string
+// GitAccount type
+type GitAccount struct {
+	GitAccessToken string
+	GitName        string
+	GitEmail       string
 }
 
 // GocdServer type

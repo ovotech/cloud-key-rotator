@@ -31,15 +31,15 @@ import (
 	gitHttp "gopkg.in/src-d/go-git.v4/plumbing/transport/http"
 )
 
-//GitHub type
-type GitHub struct {
+//Git type
+type Git struct {
 	Filepath              string
 	OrgRepo               string
 	VerifyCircleCISuccess bool
 	CircleCIDeployJobName string
 }
 
-func (gitHub GitHub) Write(serviceAccountName string, keyWrapper KeyWrapper, creds cred.Credentials) (updated UpdatedLocation, err error) {
+func (git Git) Write(serviceAccountName string, keyWrapper KeyWrapper, creds cred.Credentials) (updated UpdatedLocation, err error) {
 
 	if len(creds.KmsKey) == 0 {
 		err = errors.New("Not updating un-encrypted new key in a Git repository. Use the" +
@@ -56,72 +56,72 @@ func (gitHub GitHub) Write(serviceAccountName string, keyWrapper KeyWrapper, cre
 	defer os.RemoveAll(localDir)
 
 	var signKey *openpgp.Entity
-	if signKey, err = crypt.CommitSignKey(creds.GitHubAccount.GitName, creds.GitHubAccount.GitEmail, creds.AkrPass); err != nil {
+	if signKey, err = crypt.CommitSignKey(creds.GitAccount.GitName, creds.GitAccount.GitEmail, creds.AkrPass); err != nil {
 		return
 	}
 
 	var committed *object.Commit
 	const singleLine = false
 	const disableValidation = true
-	if committed, err = writeKeyToRemoteGitRepo(gitHub, serviceAccountName,
+	if committed, err = writeKeyToRemoteGitRepo(git, serviceAccountName,
 		crypt.EncryptedServiceAccountKey(key, creds.KmsKey),
 		localDir, signKey, creds); err != nil {
 		return
 	}
 
-	if gitHub.VerifyCircleCISuccess {
-		err = verifyCircleCIJobSuccess(gitHub.OrgRepo,
+	if git.VerifyCircleCISuccess {
+		err = verifyCircleCIJobSuccess(git.OrgRepo,
 			fmt.Sprintf("%s", committed.ID()),
-			gitHub.CircleCIDeployJobName, creds.CircleCIAPIToken)
+			git.CircleCIDeployJobName, creds.CircleCIAPIToken)
 	}
 
 	updated = UpdatedLocation{
-		LocationType: "GitHub",
-		LocationURI:  gitHub.OrgRepo,
-		LocationIDs:  []string{gitHub.Filepath}}
+		LocationType: "Git",
+		LocationURI:  git.OrgRepo,
+		LocationIDs:  []string{git.Filepath}}
 
 	return
 }
 
 //writeKeyToRemoteGitRepo handles the writing of the supplied key to the *remote*
-// Git repo defined in the GitHub struct
-func writeKeyToRemoteGitRepo(gitHub GitHub, serviceAccountName string,
+// Git repo defined in the Git struct
+func writeKeyToRemoteGitRepo(gitt Git, serviceAccountName string,
 	key []byte, localDir string, signKey *openpgp.Entity, creds cred.Credentials) (committed *object.Commit, err error) {
 	var repo *git.Repository
-	if repo, err = cloneGitRepo(localDir, gitHub.OrgRepo,
-		creds.GitHubAccount.GitHubAccessToken); err != nil {
+	if repo, err = cloneGitRepo(localDir, gitt.OrgRepo,
+		creds.GitAccount.GitAccessToken); err != nil {
 		return
 	}
-	logger.Infof("Cloned git repo: %s", gitHub.OrgRepo)
+	logger.Infof("Cloned git repo: %s", gitt.OrgRepo)
 	var commit plumbing.Hash
-	if commit, err = writeKeyToLocalGitRepo(gitHub, repo, key, serviceAccountName,
+	if commit, err = writeKeyToLocalGitRepo(gitt, repo, key, serviceAccountName,
 		localDir, signKey, creds); err != nil {
 		return
 	}
 	if committed, err = repo.CommitObject(commit); err != nil {
 		return
 	}
-	logger.Infof("Committed to local git repo: %s", gitHub.OrgRepo)
+	logger.Infof("Committed to local git repo: %s", gitt.OrgRepo)
 	if err = repo.Push(&git.PushOptions{Auth: &gitHttp.BasicAuth{
 		Username: "abc123", // yes, this can be anything except an empty string
-		Password: creds.GitHubAccount.GitHubAccessToken,
+		Password: creds.GitAccount.GitAccessToken,
 	},
 		Progress: os.Stdout}); err != nil {
 		return
 	}
-	logger.Infof("Pushed to remote git repo: %s", gitHub.OrgRepo)
+	logger.Infof("Pushed to remote git repo: %s", gitt.OrgRepo)
 	return
 }
 
 //writeKeyToLocalGitRepo handles the writing of the supplied key to the *local*
-// Git repo defined in the GitHub struct
-func writeKeyToLocalGitRepo(gitHub GitHub, repo *git.Repository, key []byte,
+// Git repo defined in the Git struct
+func writeKeyToLocalGitRepo(gitt Git, repo *git.Repository, key []byte,
 	serviceAccountName, localDir string, signKey *openpgp.Entity, creds cred.Credentials) (commmit plumbing.Hash, err error) {
 	var w *git.Worktree
 	if w, err = repo.Worktree(); err != nil {
 		return
 	}
-	fullFilePath := localDir + "/" + gitHub.Filepath
+	fullFilePath := localDir + "/" + gitt.Filepath
 	if err = ioutil.WriteFile(fullFilePath, key, 0644); err != nil {
 		return
 	}
@@ -129,8 +129,8 @@ func writeKeyToLocalGitRepo(gitHub GitHub, repo *git.Repository, key []byte,
 	autoStage := true
 	return w.Commit(fmt.Sprintf("CKR updating %s", serviceAccountName), &git.CommitOptions{
 		Author: &object.Signature{
-			Name:  creds.GitHubAccount.GitName,
-			Email: creds.GitHubAccount.GitEmail,
+			Name:  creds.GitAccount.GitName,
+			Email: creds.GitAccount.GitEmail,
 			When:  time.Now(),
 		},
 		All:     autoStage,
