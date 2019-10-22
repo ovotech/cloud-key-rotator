@@ -42,7 +42,11 @@ var (
 	defaultsMap = map[string]envVarDefaults{
 		"aws": {
 			keyEnvVar:   "AWS_SECRET_ACCESS_KEY",
-			keyIDEnvVar: "AWS_ACCESS_KEY_ID"}}
+			keyIDEnvVar: "AWS_ACCESS_KEY_ID"},
+		"gcp": {
+			keyEnvVar:   "GCLOUD_SERVICE_KEY",
+			keyIDEnvVar: ""},
+	}
 )
 
 func getKeyForFileBasedLocation(keyWrapper KeyWrapper) (key string, err error) {
