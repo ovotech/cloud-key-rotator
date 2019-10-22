@@ -35,14 +35,17 @@ func EncryptedServiceAccountKey(key, kmsKey string) (encKey []byte) {
 //CommitSignKey creates an openPGP Entity based on a user's name, email,
 //armoredKeyRing and passphrase for the key ring. This commitSignKey can then
 //be used to GPG sign Git commits
-func CommitSignKey(name, email, passphrase string) (entity *openpgp.Entity,
+func CommitSignKey(name, email, passphrase, path string) (entity *openpgp.Entity,
 	err error) {
-	if passphrase == "" {
+	if len(passphrase) == 0 {
 		err = errors.New("ArmouredKeyRing passphrase must not be empty")
 		return
 	}
+	if len(path) == 0 {
+		path = "/etc/cloud-key-rotator/akr.asc"
+	}
 	var reader *os.File
-	if reader, err = os.Open("/etc/cloud-key-rotator/akr.asc"); err != nil {
+	if reader, err = os.Open(path); err != nil {
 		if reader, err = os.Open("./akr.asc"); err != nil {
 			return
 		}

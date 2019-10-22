@@ -56,7 +56,7 @@ func (git Git) Write(serviceAccountName string, keyWrapper KeyWrapper, creds cre
 	defer os.RemoveAll(localDir)
 
 	var signKey *openpgp.Entity
-	if signKey, err = crypt.CommitSignKey(creds.GitAccount.GitName, creds.GitAccount.GitEmail, creds.AkrPass); err != nil {
+	if signKey, err = crypt.CommitSignKey(creds.GitAccount.GitName, creds.GitAccount.GitEmail, creds.AkrPass, creds.AkrPath); err != nil {
 		return
 	}
 
