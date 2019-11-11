@@ -15,7 +15,7 @@ jobs:
       - run:
            name: goreleaser
            command: |
-             curl -sL https://git.io/goreleaser | VERSION=v0.106.0 bash
+             curl -sL https://git.io/goreleaser | VERSION=v0.116.0 bash
   release_cloudfunction_zip:
     docker:
       - image: cibuilds/github
