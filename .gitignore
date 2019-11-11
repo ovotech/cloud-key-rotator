@@ -4,3 +4,4 @@ ckr.yaml
 *.asc
 *cloud-key-rotator*
 key.json
+.vscode
