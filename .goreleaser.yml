@@ -26,11 +26,7 @@ builds:
     goarch:
       - amd64
     ldflags:
-     - -s -w
-     - -X github.com/ovotech/cloud-key-rotator/cmd/cobra.version={{.Version}}
-     - -X github.com/ovotech/cloud-key-rotator/cmd/cobra.commit={{.ShortCommit}}
-     - -X github.com/ovotech/cloud-key-rotator/cmd/cobra.date={{.Date}}
-     - -X github.com/ovotech/cloud-key-rotator/cmd/cobra.osArch={{.Os}}
+     - -s -w -X github.com/ovotech/cloud-key-rotator/cmd/cobra.version={{.Version}} -X github.com/ovotech/cloud-key-rotator/cmd/cobra.commit={{.ShortCommit}} -X github.com/ovotech/cloud-key-rotator/cmd/cobra.date={{.Date}} -X github.com/ovotech/cloud-key-rotator/cmd/cobra.osArch={{.Os}}
   - id: lambda-build
     binary: cloud-key-rotator
     main: ./cmd/
