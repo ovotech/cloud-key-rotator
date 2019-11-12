@@ -28,6 +28,7 @@ import (
 
 	keys "github.com/ovotech/cloud-key-client"
 
+	"github.com/ovotech/cloud-key-rotator/pkg/build"
 	"github.com/ovotech/cloud-key-rotator/pkg/config"
 	"github.com/ovotech/cloud-key-rotator/pkg/cred"
 	"github.com/ovotech/cloud-key-rotator/pkg/location"
@@ -93,6 +94,7 @@ func keysOfProviders(account, provider, project string, c config.Config) (accoun
 func Rotate(account, provider, project string, c config.Config) (err error) {
 	defer logger.Sync()
 
+	logger.Infof("cloud-key-rotator %s rotate called", build.Version)
 	if err = validateFlags(account, provider, project); err != nil {
 		return
 	}

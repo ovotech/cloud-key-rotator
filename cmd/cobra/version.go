@@ -1,27 +1,37 @@
+// Copyright 2019 OVO Technology
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package cmd
 
 import (
 	"fmt"
 	"strconv"
 
+	"github.com/ovotech/cloud-key-rotator/pkg/build"
 	"github.com/spf13/cobra"
 )
 
 var (
-	defaultLdFlag  = "-"
-	version        = defaultLdFlag
-	commit         = defaultLdFlag
-	date           = defaultLdFlag
-	osArch         = defaultLdFlag
 	versionField   = "Version"
 	gitCommitField = "Git commit"
 	builtField     = "Built"
 	osArchField    = "OS/Arch"
 	ldFlags        = map[string]string{
-		versionField:   version,
-		gitCommitField: commit,
-		builtField:     date,
-		osArchField:    osArch}
+		versionField:   build.Version,
+		gitCommitField: build.Commit,
+		builtField:     build.Date,
+		osArchField:    build.OsArch}
 	//map insertion order isn't maintained, so use a slice for that
 	ldFlagOrder  = []string{versionField, gitCommitField, builtField, osArchField}
 	formatString = "%-" + strconv.Itoa(maxLength(ldFlagOrder)+2) + "v%s\n"

@@ -27,10 +27,10 @@ builds:
       - amd64
     ldflags:
       - -s -w
-      - -X github.com/ovotech/cloud-key-rotator/cmd/cobra.version={{.Version}}
-      - -X github.com/ovotech/cloud-key-rotator/cmd/cobra.commit={{.ShortCommit}}
-      - -X github.com/ovotech/cloud-key-rotator/cmd/cobra.date={{.Date}}
-      - -X github.com/ovotech/cloud-key-rotator/cmd/cobra.osArch={{.Os}}/{{.Arch}}
+      - -X github.com/ovotech/cloud-key-rotator/pkg/build.Version={{.Version}}
+      - -X github.com/ovotech/cloud-key-rotator/pkg/build.Commit={{.ShortCommit}}
+      - -X github.com/ovotech/cloud-key-rotator/pkg/build.Date={{.Date}}
+      - -X github.com/ovotech/cloud-key-rotator/pkg/build.OsArch={{.Os}}/{{.Arch}}
   - id: lambda-build
     binary: cloud-key-rotator
     main: ./cmd/
@@ -38,5 +38,23 @@ builds:
       - linux
     goarch:
       - amd64
+    ldflags:
+      - -s -w
+      - -X github.com/ovotech/cloud-key-rotator/pkg/build.Version={{.Version}}
+      - -X github.com/ovotech/cloud-key-rotator/pkg/build.Commit={{.ShortCommit}}
+      - -X github.com/ovotech/cloud-key-rotator/pkg/build.Date={{.Date}}
+      - -X github.com/ovotech/cloud-key-rotator/pkg/build.OsArch={{.Os}}/{{.Arch}}
 checksum:
   name_template: "{{ .ProjectName }}_checksums.txt"
+dockers:
+  -
+    goos: linux
+    goarch: amd64
+    binaries:
+    - cloud-key-rotator
+    image_templates:
+    - "ovotech/cloud-key-rotator:{{ .Tag }}"
+    - "ovotech/cloud-key-rotator:v{{ .Major }}"
+    - "ovotech/cloud-key-rotator:v{{ .Major }}.{{ .Minor }}"
+    - "ovotech/cloud-key-rotator:latest"
+
