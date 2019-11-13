@@ -32,7 +32,7 @@ builds:
       - -X github.com/ovotech/cloud-key-rotator/pkg/build.Date={{.Date}}
       - -X github.com/ovotech/cloud-key-rotator/pkg/build.OsArch={{.Os}}/{{.Arch}}
   - id: lambda-build
-    binary: cloud-key-rotator
+    binary: cloud-key-rotator-lambda
     main: ./cmd/
     goos:
       - linux
