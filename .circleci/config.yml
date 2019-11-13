@@ -12,9 +12,13 @@ jobs:
     steps:
       - checkout
 
+      - setup_remote_docker:
+          docker_layer_caching: true
+
       - run:
            name: goreleaser
            command: |
+             echo $DOCKER_PASS | docker login -u=$DOCKER_USER --password-stdin
              curl -sL https://git.io/goreleaser | VERSION=v0.116.0 bash
   release_cloudfunction_zip:
     docker:
@@ -29,27 +33,6 @@ jobs:
             ZIP_NAME=cloud-key-rotator_${VERSION}_cloudfunction.zip
             zip -R ${ZIP_NAME} '*.go' 'go.mod'
             ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} ${CIRCLE_TAG} ${ZIP_NAME}
-  docker_build_and_push:
-    <<: *defaults
-
-    docker:
-      - image: circleci/golang
-
-    steps:
-      - checkout
-
-      - setup_remote_docker:
-          docker_layer_caching: true
-
-      - run:
-          name:
-          command: |
-            export GO111MODULE=on
-            go mod download
-            GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o cloud-key-rotator ./cmd
-            docker build -t ovotech/cloud-key-rotator:latest .
-            echo $DOCKER_PASS | docker login -u=$DOCKER_USER --password-stdin
-            docker push ovotech/cloud-key-rotator
 
   go_fmt:
     <<: *defaults
@@ -148,12 +131,6 @@ workflows:
             branches:
               ignore: /.*/
       - release_cloudfunction_zip:
-          filters:
-            tags:
-              only: /v[0-9]+(\.[0-9]+)*(-.*)*/
-            branches:
-              ignore: /.*/
-      - docker_build_and_push:
           filters:
             tags:
               only: /v[0-9]+(\.[0-9]+)*(-.*)*/

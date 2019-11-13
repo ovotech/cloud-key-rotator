@@ -26,7 +26,6 @@ var (
 		Short: "Rotate some cloud keys",
 		Long:  `Rotate some cloud keys`,
 		Run: func(cmd *cobra.Command, args []string) {
-			logger.Info("cloud-key-rotator rotate called")
 			var err error
 			var c config.Config
 			if c, err = config.GetConfig(configPath); err == nil {
