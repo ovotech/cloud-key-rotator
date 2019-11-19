@@ -7,7 +7,7 @@ require (
 	cloud.google.com/go/bigquery v1.1.0 // indirect
 	cloud.google.com/go/storage v1.4.0
 	github.com/aws/aws-lambda-go v1.13.3
-	github.com/aws/aws-sdk-go v1.25.17
+	github.com/aws/aws-sdk-go v1.25.38
 	github.com/beamly/go-gocd v0.0.0-20190719193049-383d56afbf92
 	github.com/creack/pty v1.1.9 // indirect
 	github.com/golang/groupcache v0.0.0-20191002201903-404acd9df4cc // indirect
@@ -28,7 +28,7 @@ require (
 	github.com/spf13/viper v1.5.0
 	go.opencensus.io v0.22.1 // indirect
 	go.uber.org/multierr v1.2.0 // indirect
-	go.uber.org/zap v1.11.0
+	go.uber.org/zap v1.13.0
 	golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550
 	golang.org/x/exp v0.0.0-20191014171548-69215a2ee97e // indirect
 	golang.org/x/image v0.0.0-20191009234506-e7c1f5e7dbb8 // indirect
