@@ -24,14 +24,14 @@ import (
 
 // Gcs type
 type Gcs struct {
-	bucketName string
-	objectName string
-	fileType   string
+	BucketName string
+	ObjectName string
+	FileType   string
 }
 
 func (gcs Gcs) Write(serviceAccountName string, keyWrapper KeyWrapper, creds cred.Credentials) (updated UpdatedLocation, err error) {
 	var key string
-	if key, err = getKeyForFileBasedLocation(keyWrapper, gcs.fileType); err != nil {
+	if key, err = getKeyForFileBasedLocation(keyWrapper, gcs.FileType); err != nil {
 		return
 	}
 	ctx := context.Background()
@@ -39,8 +39,8 @@ func (gcs Gcs) Write(serviceAccountName string, keyWrapper KeyWrapper, creds cre
 	if client, err = storage.NewClient(ctx); err != nil {
 		return
 	}
-	bkt := client.Bucket(gcs.bucketName)
-	obj := bkt.Object(gcs.objectName)
+	bkt := client.Bucket(gcs.BucketName)
+	obj := bkt.Object(gcs.ObjectName)
 	w := obj.NewWriter(ctx)
 	if _, err = fmt.Fprintf(w, key); err != nil {
 		return
@@ -50,7 +50,7 @@ func (gcs Gcs) Write(serviceAccountName string, keyWrapper KeyWrapper, creds cre
 	}
 	updated = UpdatedLocation{
 		LocationType: "GCS",
-		LocationURI:  gcs.bucketName,
-		LocationIDs:  []string{gcs.objectName}}
+		LocationURI:  gcs.BucketName,
+		LocationIDs:  []string{gcs.ObjectName}}
 	return
 }
