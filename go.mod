@@ -6,7 +6,7 @@ require (
 	cloud.google.com/go v0.47.0 // indirect
 	cloud.google.com/go/bigquery v1.1.0 // indirect
 	cloud.google.com/go/storage v1.4.0
-	github.com/aws/aws-lambda-go v1.13.2
+	github.com/aws/aws-lambda-go v1.13.3
 	github.com/aws/aws-sdk-go v1.25.38
 	github.com/beamly/go-gocd v0.0.0-20190719193049-383d56afbf92
 	github.com/creack/pty v1.1.9 // indirect
