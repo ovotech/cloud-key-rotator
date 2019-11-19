@@ -25,7 +25,7 @@ require (
 	github.com/ovotech/mantle v0.0.0-20190313113039-b525d8003135
 	github.com/rogpeppe/go-internal v1.5.0 // indirect
 	github.com/spf13/cobra v0.0.5
-	github.com/spf13/viper v1.4.0
+	github.com/spf13/viper v1.5.0
 	go.opencensus.io v0.22.1 // indirect
 	go.uber.org/multierr v1.2.0 // indirect
 	go.uber.org/zap v1.11.0
