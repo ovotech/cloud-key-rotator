@@ -34,6 +34,7 @@ import (
 //Git type
 type Git struct {
 	Filepath              string
+	FileType              string
 	OrgRepo               string
 	VerifyCircleCISuccess bool
 	CircleCIDeployJobName string
@@ -47,7 +48,7 @@ func (git Git) Write(serviceAccountName string, keyWrapper KeyWrapper, creds cre
 		return
 	}
 	var key string
-	if key, err = getKeyForFileBasedLocation(keyWrapper); err != nil {
+	if key, err = getKeyForFileBasedLocation(keyWrapper, git.FileType); err != nil {
 		return
 	}
 

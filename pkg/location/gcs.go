@@ -26,11 +26,12 @@ import (
 type Gcs struct {
 	bucketName string
 	objectName string
+	fileType   string
 }
 
 func (gcs Gcs) Write(serviceAccountName string, keyWrapper KeyWrapper, creds cred.Credentials) (updated UpdatedLocation, err error) {
 	var key string
-	if key, err = getKeyForFileBasedLocation(keyWrapper); err != nil {
+	if key, err = getKeyForFileBasedLocation(keyWrapper, gcs.fileType); err != nil {
 		return
 	}
 	ctx := context.Background()
