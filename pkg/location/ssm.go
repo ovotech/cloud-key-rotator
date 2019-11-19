@@ -27,6 +27,7 @@ type Ssm struct {
 	KeyIDParamName string
 	Region         string
 	ConvertToJSON  bool
+	FileType       string
 }
 
 func (ssm Ssm) Write(serviceAccountName string, keyWrapper KeyWrapper, creds cred.Credentials) (updated UpdatedLocation, err error) {
@@ -34,7 +35,7 @@ func (ssm Ssm) Write(serviceAccountName string, keyWrapper KeyWrapper, creds cre
 	var key string
 
 	if ssm.ConvertToJSON {
-		if key, err = getKeyForFileBasedLocation(keyWrapper); err != nil {
+		if key, err = getKeyForFileBasedLocation(keyWrapper, ssm.FileType); err != nil {
 			return
 		}
 	} else {

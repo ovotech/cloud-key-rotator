@@ -15,8 +15,12 @@
 package location
 
 import (
+	"bytes"
 	b64 "encoding/base64"
+	"encoding/json"
 	"fmt"
+
+	"gopkg.in/ini.v1"
 )
 
 //UpdatedLocation type
@@ -36,27 +40,59 @@ type KeyWrapper struct {
 type envVarDefaults struct {
 	keyEnvVar   string
 	keyIDEnvVar string
+	fileType    string
 }
 
 var (
 	defaultsMap = map[string]envVarDefaults{
 		"aws": {
+			fileType:    "ini",
 			keyEnvVar:   "AWS_SECRET_ACCESS_KEY",
 			keyIDEnvVar: "AWS_ACCESS_KEY_ID"},
 		"gcp": {
+			fileType:    "b64",
 			keyEnvVar:   "GCLOUD_SERVICE_KEY",
 			keyIDEnvVar: ""},
 	}
 )
 
-func getKeyForFileBasedLocation(keyWrapper KeyWrapper) (key string, err error) {
-	if keyWrapper.KeyProvider == "aws" {
-		key = fmt.Sprintf("[default]\naws_access_key_id = %s\naws_secret_access_key = %s", keyWrapper.KeyID, keyWrapper.Key)
-	} else {
+func getKeyForFileBasedLocation(keyWrapper KeyWrapper, suppliedFileType string) (key string, err error) {
+	provider := keyWrapper.KeyProvider
+	var fileType string
+	if fileType, err = getFileTypeFromProvider(provider, suppliedFileType); err != nil {
+		return
+	}
+	switch fileType {
+	case "b64":
 		var keyBytes []byte
 		if keyBytes, err = b64.StdEncoding.DecodeString(keyWrapper.Key); err == nil {
 			key = string(keyBytes)
 		}
+	case "ini":
+		cfg := ini.Empty()
+		section := "default"
+		cfg.NewSection(section)
+		if _, err = cfg.Section(section).NewKey("aws_access_key_id",
+			keyWrapper.KeyID); err != nil {
+			return
+		}
+		if _, err = cfg.Section(section).NewKey("aws_secret_access_key",
+			keyWrapper.Key); err != nil {
+			return
+		}
+		buf := new(bytes.Buffer)
+		cfg.WriteTo(buf)
+		key = buf.String()
+	case "json":
+		creds := map[string]string{
+			"aws_access_key_id":     keyWrapper.KeyID,
+			"aws_secret_access_key": keyWrapper.Key,
+		}
+		var jsonCreds []byte
+		if jsonCreds, err = json.Marshal(creds); err != nil {
+			return
+		}
+		key = string(jsonCreds)
 	}
 	return
 }
@@ -69,6 +105,17 @@ func envVarDefaultsFromProvider(provider string) (envVarDefaults envVarDefaults,
 		}
 	}
 	err = fmt.Errorf("No default env var names available for provider: %s", provider)
+	return
+}
+
+func getFileTypeFromProvider(provider, suppliedFileType string) (fileType string, err error) {
+	if len(suppliedFileType) > 0 {
+		fileType = suppliedFileType
+	} else {
+		if providerDefault, err := envVarDefaultsFromProvider(provider); err == nil {
+			fileType = providerDefault.fileType
+		}
+	}
 	return
 }
 
