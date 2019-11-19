@@ -17,6 +17,7 @@ package location
 import (
 	"bytes"
 	b64 "encoding/base64"
+	"encoding/json"
 	"fmt"
 
 	"gopkg.in/ini.v1"
@@ -82,6 +83,16 @@ func getKeyForFileBasedLocation(keyWrapper KeyWrapper, suppliedFileType string) 
 		buf := new(bytes.Buffer)
 		cfg.WriteTo(buf)
 		key = buf.String()
+	case "json":
+		creds := map[string]string{
+			"aws_access_key_id":     keyWrapper.KeyID,
+			"aws_secret_access_key": keyWrapper.Key,
+		}
+		var jsonCreds []byte
+		if jsonCreds, err = json.Marshal(creds); err != nil {
+			return
+		}
+		key = string(jsonCreds)
 	}
 	return
 }
