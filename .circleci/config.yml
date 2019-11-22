@@ -1,7 +1,11 @@
 defaults: &defaults
   working_directory: /go/src/github.com/ovotech/cloud-key-rotator
 
-version: 2
+version: 2.1
+
+orbs:
+  terraform: ovotech/terraform@1.5
+
 jobs:
   goreleaser:
     <<: *defaults
@@ -33,6 +37,16 @@ jobs:
             ZIP_NAME=cloud-key-rotator_${VERSION}_cloudfunction.zip
             zip -R ${ZIP_NAME} '*.go' 'go.mod'
             ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} ${CIRCLE_TAG} ${ZIP_NAME}
+            cp $ZIP_NAME ./tf_module/ckr/latest.zip
+
+  publish_tf_module:
+    executor: terraform/terraform-0_12
+    steps:
+    - checkout
+    - terraform/publish-module:
+          path: /tf_module/ckr
+          module_name: pe/ckr/aws
+          version_file_path: /tf_module/ckr/module_version.txt
 
   go_fmt:
     <<: *defaults
@@ -119,6 +133,7 @@ jobs:
              export GO111MODULE=on
              go mod download
              go test ./... -v
+  
 
 workflows:
   version: 2
@@ -131,6 +146,12 @@ workflows:
             branches:
               ignore: /.*/
       - release_cloudfunction_zip:
+          filters:
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*(-.*)*/
+            branches:
+              ignore: /.*/
+      - publish_tf_module:
           filters:
             tags:
               only: /v[0-9]+(\.[0-9]+)*(-.*)*/
