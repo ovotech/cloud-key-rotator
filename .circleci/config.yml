@@ -29,7 +29,6 @@ jobs:
       - image: cibuilds/github
     steps:
       - checkout
-
       - run:
           name: "Publish Release on GitHub"
           command: |
@@ -37,7 +36,6 @@ jobs:
             ZIP_NAME=cloud-key-rotator_${VERSION}_cloudfunction.zip
             zip -R ${ZIP_NAME} '*.go' 'go.mod'
             ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} ${CIRCLE_TAG} ${ZIP_NAME}
-            cp $ZIP_NAME ./tf_module/ckr/latest.zip
 
   publish_tf_module:
     executor: terraform/terraform-0_12

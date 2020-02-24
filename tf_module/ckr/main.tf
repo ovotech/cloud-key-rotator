@@ -1,3 +1,4 @@
+
 data "aws_caller_identity" "current" {}
 
 locals {
@@ -39,14 +40,14 @@ resource "aws_iam_policy" "ckr_log_policy" {
                 "logs:PutLogEvents"
             ],
             "Resource": [
-                "arn:aws:logs:eu-west-1:${var.account_id}:log-stream:*:*:*",
-                "arn:aws:logs:eu-west-1:${var.account_id}:log-group:/aws/lambda/cloud-key-*"
+                "arn:aws:logs:eu-west-1:${local.account_id}:log-stream:*:*:*",
+                "arn:aws:logs:eu-west-1:${local.account_id}:log-group:/aws/lambda/cloud-key-*"
             ]
         },
         {
             "Effect": "Allow",
             "Action": "logs:CreateLogGroup",
-            "Resource": "arn:aws:logs:eu-west-1:${var.account_id}:*"
+            "Resource": "arn:aws:logs:eu-west-1:${local.account_id}:*"
         }
     ]
 }
@@ -68,10 +69,9 @@ resource "aws_iam_policy" "ckr_ssm_policy" {
                 "ssm:PutParameter"
             ],
             "Resource": [
-                "arn:aws:ssm:eu-west-1:${var.account_id}:parameter/*"
+                "arn:aws:ssm:eu-west-1:${local.account_id}:parameter/*"
             ]
         }
-
     ]
 }
 EOF
@@ -99,7 +99,8 @@ resource "aws_iam_role_policy_attachment" "attach-ckr-ssm-policy" {
 
 resource "aws_lambda_function" "cloud_key_rotator" {
 
-  filename = "latest.zip"
+  s3_bucket     = "ckr-terraform-module-code"
+  s3_key        = "cloud-key-rotator_${var.ckr_version}_lambda.zip"
   function_name = "cloud-key-rotator"
   role          = aws_iam_role.cloudkeyrotator_role.arn
   handler       = "cloud-key-rotator"
@@ -110,21 +111,19 @@ resource "aws_lambda_function" "cloud_key_rotator" {
 resource "aws_cloudwatch_event_rule" "cloud-key-rotator-trigger" {
     name = "cloud-key-rotator-trigger"
     description = "Daily at 10am"
-    schedule_expression = "cron(0 10 ? * MON-FRI *)"
+    schedule_expression = var.ckr_schedule
 }
 
 resource "aws_cloudwatch_event_target" "check_every_five_minutes" {
     rule = aws_cloudwatch_event_rule.cloud-key-rotator-trigger.name
     target_id = "cloud_key_rotator"
     arn = aws_lambda_function.cloud_key_rotator.arn
-}
+}   
 
-resource "aws_secretsmanager_secret" "ckr-config-secret" {
-  name = "ckr-config"
-  description = "Config for cloud-key-rotator running in 'rotation' mode" 
-}
-
-resource "aws_secretsmanager_secret_version" "ckr-config-json" {
-  secret_id     = aws_secretsmanager_secret.ckr-config-secret.id
-  secret_string = file(var.config_file_path)
+resource "aws_lambda_permission" "allow_cloudwatch_to_call_lambda" {
+    statement_id = "AllowExecutionFromCloudWatch"
+    action = "lambda:InvokeFunction"
+    function_name = aws_lambda_function.cloud_key_rotator.function_name
+    principal = "events.amazonaws.com"
+    source_arn = aws_cloudwatch_event_rule.cloud-key-rotator-trigger.arn
 }
