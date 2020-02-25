@@ -5,6 +5,8 @@ locals {
   account_id = data.aws_caller_identity.current.account_id
 }
 
+# IAM roles
+
 resource "aws_iam_role" "cloudkeyrotator_role" {
   name = "CloudKeyRotatorRole"
 
