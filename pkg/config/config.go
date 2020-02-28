@@ -69,6 +69,7 @@ type Filter struct {
 type KeyLocations struct {
 	RotationAgeThresholdMins int
 	ServiceAccountName       string
+	Atlas                    []location.Atlas
 	CircleCI                 []location.CircleCI
 	GCS                      []location.Gcs
 	Git                      location.Git
