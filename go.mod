@@ -8,7 +8,7 @@ require (
 	cloud.google.com/go/pubsub v1.1.0 // indirect
 	cloud.google.com/go/storage v1.5.0
 	github.com/aws/aws-lambda-go v1.14.0
-	github.com/aws/aws-sdk-go v1.28.9
+	github.com/aws/aws-sdk-go v1.29.14
 	github.com/beamly/go-gocd v0.0.0-20190719193049-383d56afbf92
 	github.com/creack/pty v1.1.9 // indirect
 	github.com/envoyproxy/go-control-plane v0.9.1 // indirect
