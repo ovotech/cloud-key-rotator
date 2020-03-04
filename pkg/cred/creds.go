@@ -40,7 +40,7 @@ type GocdServer struct {
 	Password     string
 }
 
-// Atlas type
+// AtlasKeys type
 type AtlasKeys struct {
 	PublicKey  string
 	PrivateKey string
