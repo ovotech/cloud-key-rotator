@@ -1,3 +1,9 @@
 variable "config_file_path" {
-    description = "The path to the location of the C-K-R config.json"
+}
+
+variable "ckr_version" {
+}
+
+variable "ckr_schedule" {
+    default = "cron(0 10 ? * MON-FRI *)"
 }

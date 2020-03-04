@@ -1,0 +1,49 @@
+{
+  "RotationMode": true,
+  "CloudProviders": [
+    {
+      "Name": "aws",
+      "Self": ""
+    }
+  ],
+  "AccountFilter": {
+    "Mode": "include",
+    "Accounts": [
+      {
+        "Provider": {
+          "Name": "aws"
+        },
+        "ProviderAccounts": [
+          "anIamUser",
+          "AnotherIamUser"
+        ]
+      }
+    ]
+  },
+  "AccountKeyLocations": [
+    {
+      "ServiceAccountName": "circleci",
+      "CircleCI": [
+        {
+          "UsernameProject": "ovotech/aRepo",
+          "KeyIDEnvVar": "AWS_ACCESS_KEY_ID",
+          "KeyEnvVar": "AWS_SECRET_ACCESS_KEY"
+        }
+      ]
+    },
+    {
+      "ServiceAccountName": "aService",
+      "Ssm": [
+        {
+          "KeyIDParamName": "/parampath/aws_access_key/access_key_id",
+          "KeyParamName": "/parampath/aws_access_key/secret_access_key",
+          "Region": "eu-west-1"
+        }
+      ]
+    }
+  ],
+  "Credentials": {
+    "CircleCIAPIToken": "${circle_api_key}"
+  },
+  "DefaultRotationAgeThresholdMins": 5
+}
