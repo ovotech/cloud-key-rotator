@@ -115,7 +115,15 @@ func Rotate(account, provider, project string, c config.Config) (err error) {
 		c.Credentials, c.DefaultRotationAgeThresholdMins); err != nil {
 		return
 	}
-	logger.Infof("Finalised %d keys that are candidates for rotation", len(rc))
+
+	var rcStrings []string
+	for _, rcKey := range rc {
+		rcStrings = append(rcStrings, rcKey.key.Account)
+	}
+
+	logger.Infof("Finalised %d keys that are candidates for rotation: %v",
+		len(rc), rcStrings)
+
 	return rotateKeys(rc, c.Credentials)
 }
 
