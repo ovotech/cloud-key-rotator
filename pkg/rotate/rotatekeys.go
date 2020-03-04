@@ -282,6 +282,10 @@ func locationsToUpdate(keyLocation config.KeyLocations) (kws []location.KeyWrite
 	var googleAppCredsRequired bool
 
 	// read locations
+	for _, atlas := range keyLocation.Atlas {
+		kws = append(kws, atlas)
+	}
+
 	for _, circleCI := range keyLocation.CircleCI {
 		kws = append(kws, circleCI)
 	}

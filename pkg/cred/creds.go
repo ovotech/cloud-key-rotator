@@ -22,6 +22,7 @@ type Credentials struct {
 	AkrPath          string
 	KmsKey           string
 	GocdServer       GocdServer
+	AtlasKeys        AtlasKeys
 }
 
 // GitAccount type
@@ -37,4 +38,10 @@ type GocdServer struct {
 	SkipSslCheck bool
 	Username     string
 	Password     string
+}
+
+// AtlasKeys type
+type AtlasKeys struct {
+	PublicKey  string
+	PrivateKey string
 }
