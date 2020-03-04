@@ -42,9 +42,9 @@ jobs:
     steps:
     - checkout
     - terraform/publish-module:
-          path: /tf_module/ckr
+          path: tf_module/ckr
           module_name: pe/ckr/aws
-          version_file_path: /tf_module/ckr/module_version.txt
+          version_file_path: tf_module/ckr/module_version.txt
 
   go_fmt:
     <<: *defaults
