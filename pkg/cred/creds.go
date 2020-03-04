@@ -22,7 +22,7 @@ type Credentials struct {
 	AkrPath          string
 	KmsKey           string
 	GocdServer       GocdServer
-	AtlasKeys		 AtlasKeys
+	AtlasKeys        AtlasKeys
 }
 
 // GitAccount type
@@ -42,6 +42,6 @@ type GocdServer struct {
 
 // Atlas type
 type AtlasKeys struct {
-	PublicKey	string
-	PrivateKey	string
+	PublicKey  string
+	PrivateKey string
 }

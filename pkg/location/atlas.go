@@ -16,19 +16,20 @@ package location
 
 import (
 	"context"
-	"fmt"
-	"log"
+	"time"
 
 	"github.com/Sectorbob/mlab-ns2/gae/ns/digest"
 	"github.com/mongodb/go-client-mongodb-atlas/mongodbatlas"
 	"github.com/ovotech/cloud-key-rotator/pkg/cred"
 )
 
+const (
+	secretAccessKeyWaitSecs = 20
+)
+
 // Atlas type
 type Atlas struct {
-	BucketName string
-	ObjectName string
-	FileType   string
+	ProjectID string
 }
 
 func newClient(publicKey, privateKey string) (*mongodbatlas.Client, error) {
@@ -46,35 +47,25 @@ func newClient(publicKey, privateKey string) (*mongodbatlas.Client, error) {
 	return mongodbatlas.NewClient(client), nil
 }
 
-func (atlas Atlas) Write(serviceAccountName string, keyWrapper KeyWrapper, 
+func (atlas Atlas) Write(serviceAccountName string, keyWrapper KeyWrapper,
 	creds cred.Credentials) (updated UpdatedLocation, err error) {
 
-	var err error
 	var client *mongodbatlas.Client
 	if client, err = newClient(creds.AtlasKeys.PublicKey, creds.AtlasKeys.PrivateKey); err != nil {
-		return
-	}
-
-	var ear *mongodbatlas.EncryptionAtRest
-	if ear, _, err = client.EncryptionsAtRest.Get(context.Background(), projectID); err != nil {
 		return
 	}
 
 	provider := keyWrapper.KeyProvider
 
 	switch provider {
-	case "gcp":
-		writeGcp()
 	case "aws":
-		writeAws(client, keyWrapper.KeyID, keyWrapper.Key )
-	} 
+		err = writeAws(client, keyWrapper.KeyID, keyWrapper.Key, atlas.ProjectID)
+	}
+	return
 }
 
-func writeGcp() {
-
-}
-
-func writeAws(client *mongodbatlas.Client, accessKeyID, secretAccessKey string) (err error) {
+func writeAws(client *mongodbatlas.Client, accessKeyID, secretAccessKey, projectID string) (err error) {
+	time.Sleep(secretAccessKeyWaitSecs * time.Second)
 	createRequest := &mongodbatlas.EncryptionAtRest{
 		GroupID: projectID,
 		AwsKms: mongodbatlas.AwsKms{
@@ -82,7 +73,6 @@ func writeAws(client *mongodbatlas.Client, accessKeyID, secretAccessKey string) 
 			SecretAccessKey: secretAccessKey,
 		},
 	}
-	_, _, err = client.EncryptionsAtRest.Create(context.Background(), createRequest); err != nil {
+	_, _, err = client.EncryptionsAtRest.Create(context.Background(), createRequest)
 	return
 }
-
