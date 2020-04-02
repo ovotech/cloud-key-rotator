@@ -5,7 +5,7 @@ locals {
   account_id = data.aws_caller_identity.current.account_id
 }
 
-# IAM roles
+# IAM
 
 resource "aws_iam_role" "cloudkeyrotator_role" {
   name = "CloudKeyRotatorRole"
@@ -28,8 +28,8 @@ EOF
 }
 
 resource "aws_iam_policy" "ckr_log_policy" {
-  name        = "CloudKeyRotatorLogPolicy"
-  path        = "/"
+  name = "CloudKeyRotatorLogPolicy"
+  path = "/"
 
   policy = <<EOF
 {
@@ -58,8 +58,8 @@ EOF
 
 
 resource "aws_iam_policy" "ckr_ssm_policy" {
-  name        = "CloudKeyRotatorSsmPolicy"
-  path        = "/"
+  name = "CloudKeyRotatorSsmPolicy"
+  path = "/"
 
   policy = <<EOF
 {
@@ -99,33 +99,63 @@ resource "aws_iam_role_policy_attachment" "attach-ckr-ssm-policy" {
   policy_arn = aws_iam_policy.ckr_ssm_policy.arn
 }
 
+# Lambda
+
 resource "aws_lambda_function" "cloud_key_rotator" {
 
   s3_bucket     = "ckr-terraform-module-code"
   s3_key        = "cloud-key-rotator_${var.ckr_version}_lambda.zip"
   function_name = "cloud-key-rotator"
   role          = aws_iam_role.cloudkeyrotator_role.arn
-  handler       = "cloud-key-rotator"
-  timeout = 300
-  runtime = "go1.x"
+  handler       = "cloud-key-rotator-lambda"
+  timeout       = 300
+  runtime       = "go1.x"
 }
 
 resource "aws_cloudwatch_event_rule" "cloud-key-rotator-trigger" {
-    name = "cloud-key-rotator-trigger"
-    description = "Daily at 10am"
-    schedule_expression = var.ckr_schedule
+  name                = "cloud-key-rotator-trigger"
+  description         = "Daily at 10am"
+  schedule_expression = var.ckr_schedule
 }
 
 resource "aws_cloudwatch_event_target" "check_every_five_minutes" {
-    rule = aws_cloudwatch_event_rule.cloud-key-rotator-trigger.name
-    target_id = "cloud_key_rotator"
-    arn = aws_lambda_function.cloud_key_rotator.arn
-}   
+  rule      = aws_cloudwatch_event_rule.cloud-key-rotator-trigger.name
+  target_id = "cloud_key_rotator"
+  arn       = aws_lambda_function.cloud_key_rotator.arn
+}
 
 resource "aws_lambda_permission" "allow_cloudwatch_to_call_lambda" {
-    statement_id = "AllowExecutionFromCloudWatch"
-    action = "lambda:InvokeFunction"
-    function_name = aws_lambda_function.cloud_key_rotator.function_name
-    principal = "events.amazonaws.com"
-    source_arn = aws_cloudwatch_event_rule.cloud-key-rotator-trigger.arn
+  statement_id  = "AllowExecutionFromCloudWatch"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.cloud_key_rotator.function_name
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.cloud-key-rotator-trigger.arn
+}
+
+# Secret and config file
+
+resource "aws_secretsmanager_secret" "ckr-config" {
+  # Create a correctly named secret
+  name        = "ckr-config"
+  description = "A JSON file that configures Cloud Key Rotator"
+}
+
+resource "aws_secretsmanager_secret_version" "placeholder_config" {
+  count = var.config_data ? 0 : 1
+  # If config_data is unset (or false), create placeholder secret
+  secret_id     = aws_secretsmanager_secret.ckr-config.id
+  secret_string = "placeholder"
+
+  lifecycle {
+    ignore_changes = [
+      secret_string
+    ]
+  }
+}
+
+resource "aws_secretsmanager_secret_version" "ckr-config-string" {
+  count = var.config_data ? 1 : 0
+  # If config_data is set, use as secret string
+  secret_id     = aws_secretsmanager_secret.ckr-config.id
+  secret_string = var.config_file
 }
