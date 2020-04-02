@@ -1,9 +1,10 @@
-variable "config_file_path" {
+variable "config_data" {
+  default = false
 }
 
 variable "ckr_version" {
 }
 
 variable "ckr_schedule" {
-    default = "cron(0 10 ? * MON-FRI *)"
+  default = "cron(0 10 ? * MON-FRI *)"
 }
