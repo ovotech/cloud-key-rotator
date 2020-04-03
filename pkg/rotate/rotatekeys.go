@@ -111,8 +111,14 @@ func Rotate(account, provider, project string, c config.Config) (err error) {
 		return
 	}
 	var rc []rotationCandidate
+	var defaultAgeThreshold int
+	if c.DefaultRotationAgeThresholdMins > 0 {
+		defaultAgeThreshold = c.DefaultRotationAgeThresholdMins
+	} else {
+		defaultAgeThreshold = 5
+	}
 	if rc, err = rotationCandidates(providerKeys, c.AccountKeyLocations,
-		c.Credentials, c.DefaultRotationAgeThresholdMins); err != nil {
+		c.Credentials, defaultAgeThreshold); err != nil {
 		return
 	}
 

@@ -26,6 +26,5 @@
   }],
   "Credentials": {
     "CircleCIAPIToken": "**change_me**"
-  },
-  "DefaultRotationAgeThresholdMins": 5
+  }
 }
