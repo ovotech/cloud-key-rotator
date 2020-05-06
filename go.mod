@@ -14,7 +14,7 @@ require (
 	github.com/jszwedko/go-circleci v0.3.0
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.1 // indirect
-	github.com/mongodb/go-client-mongodb-atlas v0.1.3
+	github.com/mongodb/go-client-mongodb-atlas v0.2.0
 	github.com/ovotech/cloud-key-client v0.0.0-20191119224032-d4d5f5354584
 	github.com/ovotech/mantle v0.0.0-20190313113039-b525d8003135
 	github.com/spf13/cobra v0.0.7
