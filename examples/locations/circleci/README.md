@@ -15,32 +15,7 @@ env vars).
 
 ## Configuration
 
-### AWS
-
-If you're rotating AWS keys, you could specify something like this:
-
 ```json
-{
-  "RotationMode": true,
-  "CloudProviders": [
-    {
-      "Name": "aws",
-      "Self": ""
-    }
-  ],
-  "AccountFilter": {
-    "Mode": "include",
-    "Accounts": [
-      {
-        "Provider": {
-          "Name": "aws"
-        },
-        "ProviderAccounts": [
-          "my_aws_machine_user"
-        ]
-      }
-    ]
-  },
   "AccountKeyLocations": [
     {
       "ServiceAccountName": "my_aws_machine_user",
@@ -54,18 +29,9 @@ If you're rotating AWS keys, you could specify something like this:
   "Credentials": {
     "CircleCIAPIToken": "my_circle_ci_api_token"
   }
-}
 ```
 
-The `AccountFilter` struct is where you specify the users for which you're
-rotating keys.
-
-The `AccountKeyLocations` struct is where you specify where the rotating keys
-are being stored. The `ServiceAccountName` value here must match an entry in
-`AccountFilter.Accounts[].ProviderAccounts[]` for that user's key to be
-rotated.
-
-In the `AccountKeyLocations.CircleCI` struct, there are some optional fields,
+When rotating AWS keys, there are some optional fields,
 `keyIDEnvVar` and `keyEnvVar`, that represent the env var names in CircleCI,
 defaulting to values `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`
 respectively.
@@ -81,53 +47,7 @@ named differently, you could set something like this instead:
     }]
 ```
 
-### GCP
-
-Here's an example GCP config:
-
-```json
-{
-  "RotationMode": true,
-  "CloudProviders": [
-    {
-      "Name": "gcp",
-      "Project": "my_project",
-      "Self": ""
-    }
-  ],
-  "AccountFilter": {
-    "Mode": "include",
-    "Accounts": [
-      {
-        "Provider": {
-          "Name": "gcp"
-        },
-        "ProviderAccounts": [
-          "my_gcp_machine_user"
-        ]
-      }
-    ]
-  },
-  "AccountKeyLocations": [
-    {
-      "ServiceAccountName": "my_gcp_machine_user",
-      "CircleCI": [
-        {
-          "UsernameProject": "my_org/my_repo"
-        }
-      ]
-    }
-  ],
-  "Credentials": {
-    "CircleCIAPIToken": "my_circle_ci_api_token"
-  }
-}
-```
-
-Very similar to AWS config, but differs in a couple of subtle ways:
-
-* `Project` field needs setting
-* If overriding the default CircleCI env var name (`GCLOUD_SERVICE_KEY`), 
+When rotating GCP keys, to override the default CircleCI env var name (`GCLOUD_SERVICE_KEY`), 
 you only need to override the `KeyEnvVar` value (as only a single value,
 the key, is needed for GCP)
 

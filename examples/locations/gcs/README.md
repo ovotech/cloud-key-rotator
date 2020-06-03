@@ -14,27 +14,6 @@ In order to rotate a key that's stored in a GCS bucket, you'll need:
 If you're rotating AWS keys, you could specify something like this:
 
 ```json
-{
-  "RotationMode": true,
-  "CloudProviders": [
-    {
-      "Name": "aws",
-      "Self": ""
-    }
-  ],
-  "AccountFilter": {
-    "Mode": "include",
-    "Accounts": [
-      {
-        "Provider": {
-          "Name": "aws"
-        },
-        "ProviderAccounts": [
-          "my_aws_machine_user"
-        ]
-      }
-    ]
-  },
   "AccountKeyLocations": [
     {
       "ServiceAccountName": "my_aws_machine_user",
@@ -46,10 +25,9 @@ If you're rotating AWS keys, you could specify something like this:
       ]
     }
   ]
-}
 ```
 
-By default, the key and key ID will be delivered to your GCS bucket in .ini format, e.g.:
+For AWS keys, by default, the key and key ID will be delivered to your GCS bucket in .ini format, e.g.:
 
 ```ini
 [default]
@@ -69,47 +47,7 @@ If you prefer a JSON file, you can override like so:
       ]
 ```
 
-### GCP
-
-Here's an example GCP config:
-
-```json
-{
-  "RotationMode": true,
-  "CloudProviders": [
-    {
-      "Name": "gcp",
-      "Project": "my_project"
-    }
-  ],
-  "AccountFilter": {
-    "Mode": "include",
-    "Accounts": [
-      {
-        "Provider": {
-          "Name": "gcp"
-        },
-        "ProviderAccounts": [
-          "my_gcp_machine_user"
-        ]
-      }
-    ]
-  },
-  "AccountKeyLocations": [
-    {
-      "ServiceAccountName": "my_gcp_machine_user",
-      "Gcs": [
-        {
-          "BucketName": "my_gcs_bucket_name",
-          "ObjectName": "key.json"
-        }
-      ]
-    }
-  ]
-}
-```
-
-By default, the key will be delivered to your GCS bucket in .json format, e.g.:
+For GCP keys, the key will be delivered to your GCS bucket in .json format, e.g.:
 
 ```json
 {

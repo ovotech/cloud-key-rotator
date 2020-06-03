@@ -12,31 +12,9 @@ hand).
 
 The Atlas integration can currently only update AWS keys. Please raise a PR for GCP.
 
-### AWS
-
 Example of config to rotate an AWS key:
 
 ```json
-{
-  "RotationMode": true,
-  "CloudProviders": [
-    {
-      "Name": "aws"
-    }
-  ],
-  "AccountFilter": {
-    "Mode": "include",
-    "Accounts": [
-      {
-        "Provider": {
-          "Name": "aws"
-        },
-        "ProviderAccounts": [
-          "my_aws_machine_user"
-        ]
-      }
-    ]
-  },
   "AccountKeyLocations": [
     {
       "ServiceAccountName": "my_aws_machine_user",
@@ -53,5 +31,4 @@ Example of config to rotate an AWS key:
       "PrivateKey": "atlas_private_key"
     }
   }
-}
 ```
