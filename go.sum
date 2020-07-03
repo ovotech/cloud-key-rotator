@@ -301,10 +301,13 @@ github.com/mongodb/go-client-mongodb-atlas v0.1.3 h1:/l36BomZ93+YTQhqcnJLhgphP5+
 github.com/mongodb/go-client-mongodb-atlas v0.1.3/go.mod h1:LS8O0YLkA+sbtOb3fZLF10yY3tJM+1xATXMJ3oU35LU=
 github.com/mongodb/go-client-mongodb-atlas v0.2.0 h1:UH02byrzAlboirAMgV0sMIJqXbEfmGXIBa5IniwUZNI=
 github.com/mongodb/go-client-mongodb-atlas v0.2.0/go.mod h1:LS8O0YLkA+sbtOb3fZLF10yY3tJM+1xATXMJ3oU35LU=
+github.com/mongodb/go-client-mongodb-atlas v0.3.0 h1:G2sNi2M/8ovfqSDmvOuxusXmafSqu4qOcQBwjoJiuKg=
+github.com/mongodb/go-client-mongodb-atlas v0.3.0/go.mod h1:182DADO+2ZDWQyW25uIxzop3U0rrQdeNEzqvs6w9kTI=
 github.com/mwielbut/pointy v1.1.0 h1:U5/YEfoIkaGCHv0St3CgjduqXID4FNRoyZgLM1kY9vg=
 github.com/mwielbut/pointy v1.1.0/go.mod h1:MvvO+uMFj9T5DMda33HlvogsFBX7pWWKAkFIn4teYwY=
 github.com/mwitkow/go-conntrack v0.0.0-20161129095857-cc309e4a2223/go.mod h1:qRWi+5nqEBWmkhHvq77mSJWrCKwh8bxhgT7d/eI7P4U=
 github.com/oklog/ulid v1.3.1/go.mod h1:CirwcVhetQ6Lv90oh/F+FBtV6XMibvdAFo93nm5qn4U=
+github.com/openlyinc/pointy v1.1.2/go.mod h1:w2Sytx+0FVuMKn37xpXIAyBNhFNBIJGR/v2m7ik1WtM=
 github.com/ovotech/cloud-key-client v0.0.0-20191119224032-d4d5f5354584 h1:+YQ1FxmXbvIk9RCyrVh+2dVSJb8fQLHLVnqIAnteptE=
 github.com/ovotech/cloud-key-client v0.0.0-20191119224032-d4d5f5354584/go.mod h1:WPE9Ll6KljLpfzR7tbY6ocR1406aXJhtB56Y8jEYQv8=
 github.com/ovotech/mantle v0.0.0-20190313113039-b525d8003135 h1:8+bIeyKtZuUzspiQAuItJZY2Jbos+qxhA7O5+6JVF8k=

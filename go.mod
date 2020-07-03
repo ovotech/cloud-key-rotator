@@ -10,7 +10,7 @@ require (
 	github.com/beamly/go-gocd v0.0.0-20190719193049-383d56afbf92
 	github.com/googleapis/gnostic v0.0.0-20170729233727-0c5108395e2d // indirect
 	github.com/jszwedko/go-circleci v0.3.0
-	github.com/mongodb/go-client-mongodb-atlas v0.2.0
+	github.com/mongodb/go-client-mongodb-atlas v0.3.0
 	github.com/ovotech/cloud-key-client v0.0.0-20191119224032-d4d5f5354584
 	github.com/ovotech/mantle v0.0.0-20190313113039-b525d8003135
 	github.com/spf13/cobra v0.0.7
