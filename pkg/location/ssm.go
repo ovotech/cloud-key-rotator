@@ -26,32 +26,31 @@ type Ssm struct {
 	KeyParamName   string
 	KeyIDParamName string
 	Region         string
-	ConvertToJSON  bool
+	ConvertToFile  bool
 	FileType       string
 }
 
 func (ssm Ssm) Write(serviceAccountName string, keyWrapper KeyWrapper, creds cred.Credentials) (updated UpdatedLocation, err error) {
 	provider := keyWrapper.KeyProvider
 	var key string
+	var keyEnvVar string
+	var keyIDEnvVar string
+	var idValue bool
 
-	if ssm.ConvertToJSON {
+	if keyEnvVar, err = getVarNameFromProvider(provider, ssm.KeyParamName, idValue); err != nil {
+		return
+	}
+
+	if ssm.ConvertToFile || provider == "gcp" {
 		if key, err = getKeyForFileBasedLocation(keyWrapper, ssm.FileType); err != nil {
 			return
 		}
 	} else {
 		key = keyWrapper.Key
-	}
-
-	var keyEnvVar string
-	var idValue bool
-	if keyEnvVar, err = getVarNameFromProvider(provider, ssm.KeyParamName, idValue); err != nil {
-		return
-	}
-
-	var keyIDEnvVar string
-	idValue = true
-	if keyIDEnvVar, err = getVarNameFromProvider(provider, ssm.KeyIDParamName, idValue); err != nil {
-		return
+		idValue = true
+		if keyIDEnvVar, err = getVarNameFromProvider(provider, ssm.KeyIDParamName, idValue); err != nil {
+			return
+		}
 	}
 
 	svc := awsSsm.New(session.New())

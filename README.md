@@ -6,7 +6,7 @@ ages, and rotating said keys once they pass a specific age threshold.
 
 The tool can update keys held in the following locations:
 
-
+* Atlas (mongoDB)
 * CircleCI
 * GCS
 * Git
