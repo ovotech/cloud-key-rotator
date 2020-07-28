@@ -296,6 +296,10 @@ func locationsToUpdate(keyLocation config.KeyLocations) (kws []location.KeyWrite
 		kws = append(kws, circleCI)
 	}
 
+	for _, circleCIContext := range keyLocation.CircleCIContext {
+		kws = append(kws, circleCIContext)
+	}
+
 	for _, gcs := range keyLocation.GCS {
 		kws = append(kws, gcs)
 		googleAppCredsRequired = true
