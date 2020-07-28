@@ -89,13 +89,14 @@ ultimately be updated with the new keys that are generated.
 
 Currently, the following locations are supported:
 
+* Atlas (mongoDB)
 * CircleCI env vars
 * CircleCI contexts
+* GCS
+* Git (files encrypted with [mantle](https://github.com/ovotech/mantle) which
+integrates with KMS))
 * GoCd
-* GCS 
-* Secrets in GKE
-* Files (encrypted via [mantle](https://github.com/ovotech/mantle) which
-integrates with KMS) in Git
+* K8S (GKE only)
 * SSM (AWS Parameter Store)
 
 ## Rotation Process
