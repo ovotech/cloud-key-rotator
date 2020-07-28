@@ -7,7 +7,8 @@ ages, and rotating said keys once they pass a specific age threshold.
 The tool can update keys held in the following locations:
 
 * Atlas (mongoDB)
-* CircleCI
+* CircleCI env vars
+* CircleCI contexts
 * GCS
 * Git
 * GoCd
@@ -88,7 +89,8 @@ ultimately be updated with the new keys that are generated.
 
 Currently, the following locations are supported:
 
-* EnvVars in CircleCI
+* CircleCI env vars
+* CircleCI contexts
 * GoCd
 * GCS 
 * Secrets in GKE
