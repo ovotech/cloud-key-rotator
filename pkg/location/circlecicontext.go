@@ -19,7 +19,7 @@ func (circleContext CircleCIContext) Write(serviceAccountName string, keyWrapper
 
 	gqlclient := graphqlclient.NewClient(
 		"https://circleci.com",
-		"graphql-unstable",
+		"graphql",
 		creds.CircleCIAPIToken,
 		false,
 	)
