@@ -29,7 +29,7 @@ func EncryptedServiceAccountKey(key, kmsKey string) (encKey []byte) {
 	const singleLine = false
 	const disableValidation = true
 	return enc.CipherBytesFromPrimitives([]byte(key), singleLine,
-		disableValidation, "", "", "", "", kmsKey)
+		disableValidation, "", "", "", "", kmsKey, enc.GcpKms{})
 }
 
 //CommitSignKey creates an openPGP Entity based on a user's name, email,
