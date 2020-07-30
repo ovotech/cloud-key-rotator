@@ -4,7 +4,7 @@
 
 In order to rotate a key that's stored in CircleCI contexts, you'll need:
 
-1. A GitHub user (preferably a dedicated machine-user, rather than a human user)
+1. A GitHub machine user (**not a human user**)
 with write access to the GitHub repository that the CircleCI project is linked
 to. Note: the GitHub user must be part of a team that has access to the context,
 see the CircleCI [docs](https://circleci.com/docs/2.0/contexts/) for more info.
