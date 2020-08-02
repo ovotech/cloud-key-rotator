@@ -1,5 +1,5 @@
 variable "config_data" {
-  default = false
+  default = ""
 }
 
 variable "ckr_version" {
