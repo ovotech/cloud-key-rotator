@@ -141,7 +141,7 @@ resource "aws_secretsmanager_secret" "ckr-config" {
 }
 
 resource "aws_secretsmanager_secret_version" "placeholder_config" {
-  count = var.config_data ? 0 : 1
+  count = var.config_data == "" ? 1 : 0
   # If config_data is unset (or false), create placeholder secret
   secret_id     = aws_secretsmanager_secret.ckr-config.id
   secret_string = "placeholder"
@@ -154,7 +154,7 @@ resource "aws_secretsmanager_secret_version" "placeholder_config" {
 }
 
 resource "aws_secretsmanager_secret_version" "ckr-config-string" {
-  count = var.config_data ? 1 : 0
+  count = var.config_data != "" ? 1 : 0
   # If config_data is set, use as secret string
   secret_id     = aws_secretsmanager_secret.ckr-config.id
   secret_string = var.config_data
