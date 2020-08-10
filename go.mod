@@ -8,8 +8,8 @@ require (
 	cloud.google.com/go/storage v1.10.0
 	github.com/CircleCI-Public/circleci-cli v0.1.8764
 	github.com/Sectorbob/mlab-ns2 v0.0.0-20171030222938-d3aa0c295a8a
-	github.com/aws/aws-lambda-go v1.17.0
 	github.com/aws/aws-sdk-go v1.33.17
+	github.com/aws/aws-lambda-go v1.18.0
 	github.com/beamly/go-gocd v0.0.0-20190719193049-383d56afbf92
 	github.com/census-instrumentation/opencensus-proto v0.3.0 // indirect
 	github.com/cncf/udpa/go v0.0.0-20200629203442-efcf912fb354 // indirect
@@ -29,7 +29,7 @@ require (
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/spf13/afero v1.3.2 // indirect
 	github.com/spf13/cobra v0.0.7
-	github.com/spf13/viper v1.7.0
+	github.com/spf13/viper v1.7.1
 	github.com/stretchr/objx v0.3.0 // indirect
 	github.com/stretchr/testify v1.6.1 // indirect
 	github.com/yuin/goldmark v1.2.0 // indirect
