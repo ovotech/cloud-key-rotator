@@ -5,7 +5,6 @@ go 1.12
 require (
 	cloud.google.com/go v0.61.0 // indirect
 	cloud.google.com/go/bigquery v1.10.0 // indirect
-	cloud.google.com/go/pubsub v1.3.1 // indirect
 	cloud.google.com/go/storage v1.10.0
 	github.com/CircleCI-Public/circleci-cli v0.1.8764
 	github.com/Sectorbob/mlab-ns2 v0.0.0-20171030222938-d3aa0c295a8a
@@ -30,13 +29,12 @@ require (
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/spf13/afero v1.3.2 // indirect
 	github.com/spf13/cobra v0.0.7
-	github.com/spf13/viper v1.7.0
+	github.com/spf13/viper v1.7.1
 	github.com/stretchr/objx v0.3.0 // indirect
 	github.com/stretchr/testify v1.6.1 // indirect
 	github.com/yuin/goldmark v1.2.0 // indirect
 	go.uber.org/zap v1.15.0
 	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
-	golang.org/x/exp v0.0.0-20200224162631-6cc2880d07d6 // indirect
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/sys v0.0.0-20200728102440-3e129f6d46b1 // indirect
 	golang.org/x/tools v0.0.0-20200727233628-55644ead90ce // indirect
