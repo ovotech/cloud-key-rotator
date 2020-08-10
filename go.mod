@@ -6,7 +6,7 @@ require (
 	cloud.google.com/go v0.61.0 // indirect
 	cloud.google.com/go/bigquery v1.10.0 // indirect
 	cloud.google.com/go/storage v1.10.0
-	github.com/CircleCI-Public/circleci-cli v0.1.8764
+	github.com/CircleCI-Public/circleci-cli v0.1.9066
 	github.com/Sectorbob/mlab-ns2 v0.0.0-20171030222938-d3aa0c295a8a
 	github.com/aws/aws-sdk-go v1.33.17
 	github.com/aws/aws-lambda-go v1.18.0
