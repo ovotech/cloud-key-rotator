@@ -8,7 +8,7 @@ require (
 	cloud.google.com/go/storage v1.10.0
 	github.com/CircleCI-Public/circleci-cli v0.1.9399
 	github.com/Sectorbob/mlab-ns2 v0.0.0-20171030222938-d3aa0c295a8a
-	github.com/aws/aws-lambda-go v1.18.0
+	github.com/aws/aws-lambda-go v1.19.1
 	github.com/aws/aws-sdk-go v1.34.10
 	github.com/beamly/go-gocd v0.0.0-20190719193049-383d56afbf92
 	github.com/census-instrumentation/opencensus-proto v0.3.0 // indirect
@@ -31,7 +31,6 @@ require (
 	github.com/spf13/cobra v0.0.7
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/objx v0.3.0 // indirect
-	github.com/stretchr/testify v1.6.1 // indirect
 	github.com/yuin/goldmark v1.2.0 // indirect
 	go.uber.org/zap v1.15.0
 	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
@@ -46,7 +45,6 @@ require (
 	gopkg.in/ini.v1 v1.57.0
 	gopkg.in/src-d/go-git.v4 v4.13.1
 	gopkg.in/yaml.v2 v2.2.7 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776 // indirect
 	k8s.io/api v0.0.0-20190313235455-40a48860b5ab
 	k8s.io/apimachinery v0.0.0-20190313205120-d7deff9243b1
 	k8s.io/client-go v11.0.0+incompatible
