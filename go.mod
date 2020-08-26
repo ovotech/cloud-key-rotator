@@ -42,7 +42,7 @@ require (
 	google.golang.org/genproto v0.0.0-20200728010541-3dc8dca74b7b // indirect
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 	gopkg.in/inf.v0 v0.9.0 // indirect
-	gopkg.in/ini.v1 v1.57.0
+	gopkg.in/ini.v1 v1.60.1
 	gopkg.in/src-d/go-git.v4 v4.13.1
 	gopkg.in/yaml.v2 v2.2.7 // indirect
 	k8s.io/api v0.0.0-20190313235455-40a48860b5ab
