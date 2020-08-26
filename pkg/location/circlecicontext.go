@@ -4,7 +4,6 @@ import (
 	"github.com/ovotech/cloud-key-rotator/pkg/cred"
 
 	"github.com/CircleCI-Public/circleci-cli/api"
-	"github.com/CircleCI-Public/circleci-cli/api/graphql"
 )
 
 // CircleCIContext type
@@ -17,7 +16,7 @@ type CircleCIContext struct {
 func (circleContext CircleCIContext) Write(serviceAccountName string, keyWrapper KeyWrapper, creds cred.Credentials) (updated UpdatedLocation, err error) {
 	logger.Info("Starting CircleCI context env var updates")
 
-	gqlclient := graphql.NewClient(
+	gqlclient := api.NewContextGraphqlClient(
 		"https://circleci.com",
 		"graphql",
 		creds.CircleCIAPIToken,
@@ -59,14 +58,10 @@ func (circleContext CircleCIContext) Write(serviceAccountName string, keyWrapper
 }
 
 func updateCircleCIContext(contextID, envVarName, envVarValue string,
-	gqlclient *graphqlclient.Client) (err error) {
-	if err = api.DeleteEnvironmentVariable(gqlclient,
-		contextID,
-		envVarName); err != nil {
+	gqlclient *api.GraphQLContextClient) (err error) {
+
+	if err = gqlclient.DeleteEnvironmentVariable(contextID, envVarName); err != nil {
 		return
 	}
-	return api.StoreEnvironmentVariable(gqlclient,
-		contextID,
-		envVarName,
-		envVarValue)
+	return gqlclient.CreateEnvironmentVariable(contextID, envVarName, envVarValue)
 }
