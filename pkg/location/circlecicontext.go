@@ -4,7 +4,7 @@ import (
 	"github.com/ovotech/cloud-key-rotator/pkg/cred"
 
 	"github.com/CircleCI-Public/circleci-cli/api"
-	graphqlclient "github.com/CircleCI-Public/circleci-cli/client"
+	"github.com/CircleCI-Public/circleci-cli/api/graphql"
 )
 
 // CircleCIContext type
@@ -17,7 +17,7 @@ type CircleCIContext struct {
 func (circleContext CircleCIContext) Write(serviceAccountName string, keyWrapper KeyWrapper, creds cred.Credentials) (updated UpdatedLocation, err error) {
 	logger.Info("Starting CircleCI context env var updates")
 
-	gqlclient := graphqlclient.NewClient(
+	gqlclient := graphql.NewClient(
 		"https://circleci.com",
 		"graphql",
 		creds.CircleCIAPIToken,
