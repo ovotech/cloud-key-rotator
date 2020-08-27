@@ -8,7 +8,7 @@ require (
 	github.com/CircleCI-Public/circleci-cli v0.1.9399
 	github.com/Sectorbob/mlab-ns2 v0.0.0-20171030222938-d3aa0c295a8a
 	github.com/aws/aws-lambda-go v1.19.1
-	github.com/aws/aws-sdk-go v1.34.10
+	github.com/aws/aws-sdk-go v1.34.11
 	github.com/beamly/go-gocd v0.0.0-20190719193049-383d56afbf92
 	github.com/census-instrumentation/opencensus-proto v0.3.0 // indirect
 	github.com/cncf/udpa/go v0.0.0-20200629203442-efcf912fb354 // indirect
@@ -32,7 +32,6 @@ require (
 	github.com/yuin/goldmark v1.2.0 // indirect
 	go.uber.org/zap v1.15.0
 	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
-	golang.org/x/exp v0.0.0-20200224162631-6cc2880d07d6 // indirect
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e // indirect
 	google.golang.org/api v0.30.0
