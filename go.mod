@@ -21,8 +21,8 @@ require (
 	github.com/jszwedko/go-circleci v0.3.0
 	github.com/lyft/protoc-gen-star v0.4.15 // indirect
 	github.com/mongodb/go-client-mongodb-atlas v0.3.0
-	github.com/ovotech/cloud-key-client v0.0.0-20191119224032-d4d5f5354584
-	github.com/ovotech/mantle v0.0.0-20200728120419-bc55cf6d1d7a
+	github.com/ovotech/cloud-key-client v0.2.0
+	github.com/ovotech/mantle v0.32.1
 	github.com/pkg/sftp v1.11.0 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/spf13/afero v1.3.2 // indirect
@@ -32,6 +32,7 @@ require (
 	github.com/yuin/goldmark v1.2.0 // indirect
 	go.uber.org/zap v1.15.0
 	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
+	golang.org/x/exp v0.0.0-20200224162631-6cc2880d07d6 // indirect
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e // indirect
 	google.golang.org/api v0.30.0
