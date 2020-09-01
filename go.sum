@@ -71,6 +71,8 @@ github.com/CircleCI-Public/circleci-cli v0.1.9066 h1:XRg67G9k8IWEjlLQcThZMCcHQbB
 github.com/CircleCI-Public/circleci-cli v0.1.9066/go.mod h1:8hUnJpd0C6leVGKPB/7zHVqEbfttqG2RISShdHnHe3c=
 github.com/CircleCI-Public/circleci-cli v0.1.9399 h1:DQNtb+eHpHCtGzdCHGjNu3lwfYY8qpjiRYQUjwJmBDs=
 github.com/CircleCI-Public/circleci-cli v0.1.9399/go.mod h1:8hUnJpd0C6leVGKPB/7zHVqEbfttqG2RISShdHnHe3c=
+github.com/CircleCI-Public/circleci-cli v0.1.9431 h1:aWFpO9B1YS18pBAjFduzxW5Z/xKnIdOHcxVQVyZdYBw=
+github.com/CircleCI-Public/circleci-cli v0.1.9431/go.mod h1:8hUnJpd0C6leVGKPB/7zHVqEbfttqG2RISShdHnHe3c=
 github.com/Masterminds/semver v1.4.2 h1:WBLTQ37jOCzSLtXNdoo8bNM8876KhNqOKvrlGITgsTc=
 github.com/Masterminds/semver v1.4.2/go.mod h1:MB6lktGJrhw8PrUyiEoblNEGEQ+RzHPF078ddwwvV3Y=
 github.com/Netflix/go-expect v0.0.0-20180615182759-c93bf25de8e8/go.mod h1:oX5x61PbNXchhh0oikYAH+4Pcfw5LKv21+Jnpr6r6Pc=
@@ -1076,11 +1078,13 @@ golang.org/x/tools v0.0.0-20200727233628-55644ead90ce/go.mod h1:njjCfa9FT2d7l9Bc
 golang.org/x/tools v0.0.0-20200729194436-6467de6f59a7/go.mod h1:njjCfa9FT2d7l9Bc6FUM5FLjQPp3cFF28FI3qnDFljA=
 golang.org/x/tools v0.0.0-20200804011535-6c149bb5ef0d h1:szSOL78iTCl0LF1AMjhSWJj8tIM0KixlUUnBtYXsmd8=
 golang.org/x/tools v0.0.0-20200804011535-6c149bb5ef0d/go.mod h1:njjCfa9FT2d7l9Bc6FUM5FLjQPp3cFF28FI3qnDFljA=
+golang.org/x/tools v0.0.0-20200817023811-d00afeaade8f h1:33yHANSyO/TeglgY9rBhUpX43wtonTXoFOsMRtNB6qE=
 golang.org/x/tools v0.0.0-20200817023811-d00afeaade8f/go.mod h1:njjCfa9FT2d7l9Bc6FUM5FLjQPp3cFF28FI3qnDFljA=
 golang.org/x/xerrors v0.0.0-20190717185122-a985d3407aa7/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
 golang.org/x/xerrors v0.0.0-20191011141410-1b5146add898/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
 golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543 h1:E7g+9GITq07hpfrRu66IVDexMakfv52eLZ2CXBWiKr4=
 golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
+golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 h1:go1bK/D/BFZV2I8cIQd1NKEZ+0owSTG1fDTci4IqFcE=
 golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
 google.golang.org/api v0.0.0-20180831000444-b810576d88a0/go.mod h1:4mhQ8q/RsB7i+udVvVy5NUi08OU8ZlA0gRVgrF7VFY0=
 google.golang.org/api v0.4.0/go.mod h1:8k5glujaEP+g9n7WNsDg8QP6cUVNI86fCNMcbazEtwE=
