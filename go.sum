@@ -617,6 +617,8 @@ github.com/ovotech/cloud-key-client v0.0.0-20191119224032-d4d5f5354584 h1:+YQ1Fx
 github.com/ovotech/cloud-key-client v0.0.0-20191119224032-d4d5f5354584/go.mod h1:WPE9Ll6KljLpfzR7tbY6ocR1406aXJhtB56Y8jEYQv8=
 github.com/ovotech/cloud-key-client v0.2.0 h1:clW3UrN9ZkygiFM4Mfj7WfYALQzSyY24dtFwNJd0zZg=
 github.com/ovotech/cloud-key-client v0.2.0/go.mod h1:vPslTq19lO6KPf5GrEZkiZQD9FgUhAlkbzeMf0LBXSI=
+github.com/ovotech/cloud-key-client v0.2.1 h1:rHqaEd3/dcdaUVXvtH2gs9mkT3IlwyvPlRl3YrDyJ3c=
+github.com/ovotech/cloud-key-client v0.2.1/go.mod h1:vPslTq19lO6KPf5GrEZkiZQD9FgUhAlkbzeMf0LBXSI=
 github.com/ovotech/mantle v0.0.0-20190313113039-b525d8003135 h1:8+bIeyKtZuUzspiQAuItJZY2Jbos+qxhA7O5+6JVF8k=
 github.com/ovotech/mantle v0.0.0-20190313113039-b525d8003135/go.mod h1:GPJjHM562HB62MRjNzakWN+LXmIoXcYKOG51D2uT6Kw=
 github.com/ovotech/mantle v0.0.0-20200728120419-bc55cf6d1d7a h1:0BqffE/o4oV0ogJnbjHq1GT/ik1aCSwAWPZUBm6DL1M=

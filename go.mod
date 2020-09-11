@@ -21,7 +21,7 @@ require (
 	github.com/jszwedko/go-circleci v0.3.0
 	github.com/lyft/protoc-gen-star v0.4.15 // indirect
 	github.com/mongodb/go-client-mongodb-atlas v0.3.0
-	github.com/ovotech/cloud-key-client v0.2.0
+	github.com/ovotech/cloud-key-client v0.2.1
 	github.com/ovotech/mantle v0.32.1
 	github.com/pkg/sftp v1.11.0 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect
