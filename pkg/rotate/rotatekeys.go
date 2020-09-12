@@ -170,7 +170,7 @@ func rotateKeys(rotationCandidates []rotationCandidate, creds cred.Credentials) 
 		logger.Infow("Rotation process started",
 			"keyProvider", key.Provider.Provider,
 			"account", key.FullAccount,
-			"keyID", key.ID,
+			"keyID", obfuscate(key.ID),
 			"keyAge", fmt.Sprintf("%f", key.Age),
 			"keyAgeThreshold", strconv.Itoa(rc.rotationThresholdMins))
 
@@ -227,7 +227,7 @@ func createKey(key keys.Key, keyProvider string) (newKeyID, newKey string, err e
 	logger.Infow("New key created",
 		"keyProvider", keyProvider,
 		"account", key.FullAccount,
-		"keyID", newKeyID)
+		"keyID", obfuscate(newKeyID))
 	return
 }
 
@@ -239,7 +239,7 @@ func deleteKey(key keys.Key, keyProvider string) (err error) {
 	logger.Infow("Old key deleted",
 		"keyProvider", keyProvider,
 		"account", key.FullAccount,
-		"keyID", key.ID)
+		"keyID", obfuscate(key.ID))
 	return
 }
 
@@ -351,7 +351,7 @@ func updateKeyLocation(account string, keyLocations config.KeyLocations,
 	logger.Infow("Key locations updated",
 		"keyProvider", keyWrapper.KeyProvider,
 		"account", account,
-		"keyID", keyWrapper.KeyID,
+		"keyID", obfuscate(keyWrapper.KeyID),
 		"keyLocationUpdates", updatedLocations)
 
 	return
@@ -521,6 +521,21 @@ func postMetric(keys []keys.Key, apiKey string, datadog config.Datadog) (err err
 				err = fmt.Errorf("non-202 status code (%d) returned by Datadog", resp.StatusCode)
 			}
 		}
+	}
+	return
+}
+
+func obfuscate(source string) (obfString string) {
+	if len(source) >= 8 {
+		for i, char := range source {
+			obfChar := char
+			if i < len(source)-4 {
+				obfChar = '*'
+			}
+			obfString = obfString + string(obfChar)
+		}
+	} else {
+		obfString = source
 	}
 	return
 }
