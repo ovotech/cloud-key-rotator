@@ -61,6 +61,8 @@ github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/CircleCI-Public/circleci-cli v0.1.9431 h1:aWFpO9B1YS18pBAjFduzxW5Z/xKnIdOHcxVQVyZdYBw=
 github.com/CircleCI-Public/circleci-cli v0.1.9431/go.mod h1:8hUnJpd0C6leVGKPB/7zHVqEbfttqG2RISShdHnHe3c=
+github.com/CircleCI-Public/circleci-cli v0.1.9527 h1:9JUCNiN9kIi6899kKOUZbffq61aAST5pXPERTnENkm0=
+github.com/CircleCI-Public/circleci-cli v0.1.9527/go.mod h1:8hUnJpd0C6leVGKPB/7zHVqEbfttqG2RISShdHnHe3c=
 github.com/Masterminds/semver v1.4.2 h1:WBLTQ37jOCzSLtXNdoo8bNM8876KhNqOKvrlGITgsTc=
 github.com/Masterminds/semver v1.4.2/go.mod h1:MB6lktGJrhw8PrUyiEoblNEGEQ+RzHPF078ddwwvV3Y=
 github.com/Netflix/go-expect v0.0.0-20180615182759-c93bf25de8e8/go.mod h1:oX5x61PbNXchhh0oikYAH+4Pcfw5LKv21+Jnpr6r6Pc=
