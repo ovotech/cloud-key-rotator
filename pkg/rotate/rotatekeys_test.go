@@ -258,3 +258,21 @@ func TestValidateFlags(t *testing.T) {
 		}
 	}
 }
+
+var obfuscationTests = []struct {
+	keyID    string
+	expected string
+}{
+	{"", ""},
+	{"abcd", "abcd"},
+	{"abcd12345", "*****2345"},
+}
+
+func TestObfuscate(t *testing.T) {
+	for _, obfuscationTest := range obfuscationTests {
+		actual := obfuscate(obfuscationTest.keyID)
+		if actual != obfuscationTest.expected {
+			t.Errorf("Incorrect obfuscation result, want %s, got %s", obfuscationTest.expected, actual)
+		}
+	}
+}

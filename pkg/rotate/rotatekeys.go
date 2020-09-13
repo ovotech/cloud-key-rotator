@@ -106,7 +106,12 @@ func Rotate(account, provider, project string, c config.Config) (err error) {
 	if !c.RotationMode {
 		postMetric(providerKeys, c.DatadogAPIKey, c.Datadog)
 		if c.EnableKeyAgeLogging {
-			logger.Infow("Results of key dating", "Key ages", providerKeys)
+			obfuscatedKeys := []keys.Key{}
+			for _, key := range providerKeys {
+				key.ID = obfuscate(key.ID)
+				obfuscatedKeys = append(obfuscatedKeys, key)
+			}
+			logger.Infow("Results of key dating", "Key ages", obfuscatedKeys)
 		}
 		return
 	}
@@ -198,14 +203,14 @@ func rotationCandidates(accountKeys []keys.Key, keyLoc []config.KeyLocations,
 
 		if contains(processedItems, key.FullAccount) {
 			logger.Infof("Skipping SA: %s, key: %s as a key for this account has already been added as a candidate for rotation",
-				key.FullAccount, key.ID)
+				key.FullAccount, obfuscate(key.ID))
 			continue
 		}
 
 		rotationThresholdMins := rotationAgeThreshold(locations, defaultRotationAgeThresholdMins)
 		if float64(rotationThresholdMins) > key.Age {
 			logger.Infof("Skipping SA: %s, key: %s as it's only %f minutes old (threshold: %d mins)",
-				key.FullAccount, key.ID, key.Age, rotationThresholdMins)
+				key.FullAccount, obfuscate(key.ID), key.Age, rotationThresholdMins)
 			continue
 		}
 
