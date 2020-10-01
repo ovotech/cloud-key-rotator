@@ -106,7 +106,12 @@ func Rotate(account, provider, project string, c config.Config) (err error) {
 	if !c.RotationMode {
 		postMetric(providerKeys, c.DatadogAPIKey, c.Datadog)
 		if c.EnableKeyAgeLogging {
-			logger.Infow("Results of key dating", "Key ages", providerKeys)
+			obfuscatedKeys := []keys.Key{}
+			for _, key := range providerKeys {
+				key.ID = obfuscate(key.ID)
+				obfuscatedKeys = append(obfuscatedKeys, key)
+			}
+			logger.Infow("Results of key dating", "Key ages", obfuscatedKeys)
 		}
 		return
 	}
@@ -170,7 +175,7 @@ func rotateKeys(rotationCandidates []rotationCandidate, creds cred.Credentials) 
 		logger.Infow("Rotation process started",
 			"keyProvider", key.Provider.Provider,
 			"account", key.FullAccount,
-			"keyID", key.ID,
+			"keyID", obfuscate(key.ID),
 			"keyAge", fmt.Sprintf("%f", key.Age),
 			"keyAgeThreshold", strconv.Itoa(rc.rotationThresholdMins))
 
@@ -198,14 +203,14 @@ func rotationCandidates(accountKeys []keys.Key, keyLoc []config.KeyLocations,
 
 		if contains(processedItems, key.FullAccount) {
 			logger.Infof("Skipping SA: %s, key: %s as a key for this account has already been added as a candidate for rotation",
-				key.FullAccount, key.ID)
+				key.FullAccount, obfuscate(key.ID))
 			continue
 		}
 
 		rotationThresholdMins := rotationAgeThreshold(locations, defaultRotationAgeThresholdMins)
 		if float64(rotationThresholdMins) > key.Age {
 			logger.Infof("Skipping SA: %s, key: %s as it's only %f minutes old (threshold: %d mins)",
-				key.FullAccount, key.ID, key.Age, rotationThresholdMins)
+				key.FullAccount, obfuscate(key.ID), key.Age, rotationThresholdMins)
 			continue
 		}
 
@@ -227,7 +232,7 @@ func createKey(key keys.Key, keyProvider string) (newKeyID, newKey string, err e
 	logger.Infow("New key created",
 		"keyProvider", keyProvider,
 		"account", key.FullAccount,
-		"keyID", newKeyID)
+		"keyID", obfuscate(newKeyID))
 	return
 }
 
@@ -239,7 +244,7 @@ func deleteKey(key keys.Key, keyProvider string) (err error) {
 	logger.Infow("Old key deleted",
 		"keyProvider", keyProvider,
 		"account", key.FullAccount,
-		"keyID", key.ID)
+		"keyID", obfuscate(key.ID))
 	return
 }
 
@@ -351,7 +356,7 @@ func updateKeyLocation(account string, keyLocations config.KeyLocations,
 	logger.Infow("Key locations updated",
 		"keyProvider", keyWrapper.KeyProvider,
 		"account", account,
-		"keyID", keyWrapper.KeyID,
+		"keyID", obfuscate(keyWrapper.KeyID),
 		"keyLocationUpdates", updatedLocations)
 
 	return
@@ -521,6 +526,21 @@ func postMetric(keys []keys.Key, apiKey string, datadog config.Datadog) (err err
 				err = fmt.Errorf("non-202 status code (%d) returned by Datadog", resp.StatusCode)
 			}
 		}
+	}
+	return
+}
+
+func obfuscate(source string) (obfString string) {
+	if len(source) >= 8 {
+		for i, char := range source {
+			obfChar := char
+			if i < len(source)-4 {
+				obfChar = '*'
+			}
+			obfString = obfString + string(obfChar)
+		}
+	} else {
+		obfString = source
 	}
 	return
 }

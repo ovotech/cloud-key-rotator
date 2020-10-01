@@ -14,7 +14,7 @@ type MockProvider struct {
 }
 
 func (m *MockProvider) Keys(project string, includeInactiveKeys bool) (keysArr []keys.Key, err error) {
-	k := keys.Key{Account: "account1", ID: "1234", Age: keyAge, Provider: keys.Provider{Provider: "mockProvider"}}
+	k := keys.Key{Account: "account1", ID: "abcd1234", Age: keyAge, Provider: keys.Provider{Provider: "mockProvider"}}
 	keysArr = append(keysArr, k)
 
 	return
