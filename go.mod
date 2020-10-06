@@ -3,7 +3,7 @@ module github.com/ovotech/cloud-key-rotator
 go 1.12
 
 require (
-	cloud.google.com/go/storage v1.11.0
+	cloud.google.com/go/storage v1.12.0
 	github.com/CircleCI-Public/circleci-cli v0.1.10021
 	github.com/Sectorbob/mlab-ns2 v0.0.0-20171030222938-d3aa0c295a8a
 	github.com/aws/aws-lambda-go v1.19.1
