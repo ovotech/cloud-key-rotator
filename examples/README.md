@@ -15,7 +15,7 @@ If running in GCP CloudFunctions, store the config in GCS, e.g. in
 `CKR_BUCKET_NAME=your_bucket`.
 
 Otherwise, when running the binary or code directly, pop the config into
-a file called `config.json` in the same directory as your binary/code.
+a file called `config.json` in `/etc/cloud-key-rotator/`.
 
 ### Config Contents
 
