@@ -66,3 +66,10 @@ for help. Otherwise, the rest of the config can remain the same.
 You can specify multiple `ProviderAccounts`, and you can set multiple
 `AccountKeyLocations` for each provider account. This means it's possible 
 to store a single key in many places.
+
+If you're using a GCP service account to rotate the keys you will need to give it
+the permissions:
+ - iam.serviceAccountKeys.create
+ - iam.serviceAccountKeys.delete
+ - iam.serviceAccountKeys.list
+ - iam.serviceAccounts.list
