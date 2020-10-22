@@ -424,7 +424,12 @@ func filterKey(account string, config config.Config, key keys.Key) (eligible boo
 		//this means an overriding account has been supplied, i.e. from CLI
 		eligible = key.Account == account
 	} else if !config.RotationMode {
-		//rotation mode is false, so include the key so its age can be used
+		// rotation mode is false, we still want to filter down to specific
+		// service accounts if the AccountFilter has been set
+		if len(config.AccountFilter.Mode) > 0 {
+			eligible, err = isKeyEligible(config, key)
+			return
+		}
 		eligible = true
 	} else {
 		if eligible, err = isKeyEligible(config, key); err != nil {
