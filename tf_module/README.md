@@ -29,14 +29,15 @@ provider "aws" {
 
 module "cloud-key-rotator" {
   source         = "terraform.ovotech.org.uk/pe/ckr/aws"
-  version = "0.0.5"
-  ckr_version = "0.27.18"
+  version = "0.1.0"
+  ckr_version = "0.27.28"
 }
 ```
 
 ## Variables
 
-* `version = "0.0.5"` -> The Terraform module version to use
-* `ckr_version = "0.27.18"` -> The Cloud Key Rotator binary version to use
-* (Optional) `ckr_schedule = "cron(0 10 ? * MON-FRI *)"` -> defaults to triggering 10am Monday-Friday
-* (OptionaL) `config_data = <string>` -> Pass a json blob from any source containing your config file.
+* `version = "0.1.0"` -> The Terraform module version to use.
+* `ckr_version = "0.27.28"` -> The Cloud Key Rotator binary version to use.
+* (Optional) `ckr_schedule = "cron(0 10 ? * MON-FRI *)"` -> Defaults to triggering 10am Monday-Friday.
+* (Optional) `config_data = <string>` -> Pass a json blob from any source containing your config file.
+* (Optional) `enable_ssm_location = false` -> Whether to create an IAM policy allowing `ssm:PutParameter`.
