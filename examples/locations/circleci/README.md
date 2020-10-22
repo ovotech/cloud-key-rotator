@@ -23,6 +23,9 @@ env vars).
       "CircleCI": [
         {
           "UsernameProject": "my_org/my_repo"
+        },
+        {
+          "UsernameProject": "my_org/my_other_repo"
         }
       ]
     }
