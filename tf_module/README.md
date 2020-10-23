@@ -41,3 +41,4 @@ module "cloud-key-rotator" {
 * (Optional) `ckr_schedule = "cron(0 10 ? * MON-FRI *)"` -> Defaults to triggering 10am Monday-Friday.
 * (Optional) `config_data = <string>` -> Pass a json blob from any source containing your config file.
 * (Optional) `enable_ssm_location = false` -> Whether to create an IAM policy allowing `ssm:PutParameter`.
+Set this to `true` if using SSM as a `cloud-key-rotator` location.
