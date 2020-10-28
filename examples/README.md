@@ -60,6 +60,8 @@ If you add a Datadog struct to the config, you can get `cloud-key-rotator` to po
   "DatadogAPIKey": "okj23434poz3j4o324p455oz3j4o324",
 ```
 
+All the fields in the DataDog struct are required.
+
 ### Authentication
 
 Regardless of where you run the `cloud-key-rotator` application, you'll need

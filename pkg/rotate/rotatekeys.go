@@ -104,7 +104,11 @@ func Rotate(account, provider, project string, c config.Config) (err error) {
 	}
 	logger.Infof("Filtered down to %d keys based on current app config", len(providerKeys))
 	if !c.RotationMode {
-		postMetric(providerKeys, c.DatadogAPIKey, c.Datadog)
+		if isDatadogKeySet(c.DatadogAPIKey) {
+			if metricErr := postMetric(providerKeys, c.DatadogAPIKey, c.Datadog); metricErr != nil {
+				logger.Infow("Posting metrics errored", metricErr)
+			}
+		}
 		if c.EnableKeyAgeLogging {
 			obfuscatedKeys := []keys.Key{}
 			for _, key := range providerKeys {
@@ -135,10 +139,20 @@ func Rotate(account, provider, project string, c config.Config) (err error) {
 	logger.Infof("Finalised %d keys that are candidates for rotation: %v",
 		len(rc), rcStrings)
 
-	return rotateKeys(rc, c.Credentials)
+	if err = rotateKeys(rc, c.Credentials); err != nil {
+		return
+	}
+	if isDatadogKeySet(c.DatadogAPIKey) {
+		// Refresh key ages post rotation
+		if providerKeys, err = keysOfProviders(account, provider, project, c); err != nil {
+			return
+		}
+		return postMetric(providerKeys, c.DatadogAPIKey, c.Datadog)
+	}
+	return
 }
 
-//rotatekey creates a new key for the rotation candidate, updates its key locations,
+//rotateKey creates a new key for the rotation candidate, updates its key locations,
 // and deletes the old key iff the key location update is successful
 func rotateKey(rotationCandidate rotationCandidate, creds cred.Credentials) (err error) {
 	key := rotationCandidate.key
@@ -495,41 +509,43 @@ func validAwsKey(key keys.Key, config config.Config) (valid bool) {
 	return
 }
 
+func isDatadogKeySet(apiKey string) bool {
+	return len(apiKey) > 0
+}
+
 //postMetric posts details of each keys.Key to a metrics api
 func postMetric(keys []keys.Key, apiKey string, datadog config.Datadog) (err error) {
-	if len(apiKey) > 0 {
-		url := strings.Join([]string{datadogURL, apiKey}, "")
-		for _, key := range keys {
-			var jsonString = []byte(
-				`{ "series" :[{"metric":"` + datadog.MetricName + `",` +
-					`"points":[[` +
-					strconv.FormatInt(time.Now().Unix(), 10) +
-					`, ` + strconv.FormatFloat(key.Age, 'f', 2, 64) +
-					`]],` +
-					`"type":"count",` +
-					`"tags":[` +
-					`"team:` + datadog.MetricTeam + `",` +
-					`"project:` + datadog.MetricProject + `",` +
-					`"environment:` + datadog.MetricEnv + `",` +
-					`"key:` + key.Name + `",` +
-					`"provider:` + key.Provider.Provider + `",` +
-					`"status:` + key.Status + `",` +
-					`"account:` + key.Account +
-					`"]}]}`)
-			var req *http.Request
-			if req, err = http.NewRequest("POST", url, bytes.NewBuffer(jsonString)); err != nil {
-				return
-			}
-			req.Header.Set("Content-type", "application/json")
-			client := &http.Client{}
-			var resp *http.Response
-			if resp, err = client.Do(req); err != nil {
-				return
-			}
-			defer resp.Body.Close()
-			if resp.StatusCode != 202 {
-				err = fmt.Errorf("non-202 status code (%d) returned by Datadog", resp.StatusCode)
-			}
+	url := strings.Join([]string{datadogURL, apiKey}, "")
+	for _, key := range keys {
+		var jsonString = []byte(
+			`{ "series" :[{"metric":"` + datadog.MetricName + `",` +
+				`"points":[[` +
+				strconv.FormatInt(time.Now().Unix(), 10) +
+				`, ` + strconv.FormatFloat(key.Age, 'f', 2, 64) +
+				`]],` +
+				`"type":"count",` +
+				`"tags":[` +
+				`"team:` + datadog.MetricTeam + `",` +
+				`"project:` + datadog.MetricProject + `",` +
+				`"environment:` + datadog.MetricEnv + `",` +
+				`"key:` + key.Name + `",` +
+				`"provider:` + key.Provider.Provider + `",` +
+				`"status:` + key.Status + `",` +
+				`"account:` + key.Account +
+				`"]}]}`)
+		var req *http.Request
+		if req, err = http.NewRequest("POST", url, bytes.NewBuffer(jsonString)); err != nil {
+			return
+		}
+		req.Header.Set("Content-type", "application/json")
+		client := &http.Client{}
+		var resp *http.Response
+		if resp, err = client.Do(req); err != nil {
+			return
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != 202 {
+			err = fmt.Errorf("non-202 status code (%d) returned by Datadog", resp.StatusCode)
 		}
 	}
 	return
