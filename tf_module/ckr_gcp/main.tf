@@ -1,5 +1,5 @@
 locals {
-  key_rotator_filename = "cloud-key-rotator.zip"
+  key_rotator_filename = "cloud-key-rotator-${var.ckr_version}.zip"
 }
 
 resource "google_service_account" "key_rotator_service_account" {
