@@ -104,6 +104,7 @@ func Rotate(account, provider, project string, c config.Config) (err error) {
 	}
 	logger.Infof("Filtered down to %d keys based on current app config", len(providerKeys))
 	if !c.RotationMode {
+		// Don't check for datadog struct to maintain backwards compatibility
 		postMetric(providerKeys, c.DatadogAPIKey, c.Datadog)
 		if c.EnableKeyAgeLogging {
 			obfuscatedKeys := []keys.Key{}
@@ -135,7 +136,17 @@ func Rotate(account, provider, project string, c config.Config) (err error) {
 	logger.Infof("Finalised %d keys that are candidates for rotation: %v",
 		len(rc), rcStrings)
 
-	return rotateKeys(rc, c.Credentials)
+	if err = rotateKeys(rc, c.Credentials); err != nil {
+		return
+	}
+	if isDatadogInUse(c.Datadog) {
+		// Refresh providerKeys post rotation
+		if providerKeys, err = keysOfProviders(account, provider, project, c); err != nil {
+			return
+		}
+		return postMetric(providerKeys, c.DatadogAPIKey, c.Datadog)
+	}
+	return
 }
 
 //rotatekey creates a new key for the rotation candidate, updates its key locations,
@@ -493,6 +504,11 @@ func validAwsKey(key keys.Key, config config.Config) (valid bool) {
 		valid = !match
 	}
 	return
+}
+
+func isDatadogInUse(datadog config.Datadog) bool {
+	// If no metric name has been set, we assume the datadog config struct is not in use
+	return datadog.MetricName != ""
 }
 
 //postMetric posts details of each keys.Key to a metrics api
