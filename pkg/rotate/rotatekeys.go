@@ -104,8 +104,12 @@ func Rotate(account, provider, project string, c config.Config) (err error) {
 	}
 	logger.Infof("Filtered down to %d keys based on current app config", len(providerKeys))
 	if !c.RotationMode {
-		// Don't check for datadog struct to maintain backwards compatibility
-		postMetric(providerKeys, c.DatadogAPIKey, c.Datadog)
+		// Don't call isDatadogSet to maintain backwards compatibility
+		// Previously users have been permitted to send metrics to datadog with
+		// Datadog config structs that do not set the MetricName field
+		if metricErr := postMetric(providerKeys, c.DatadogAPIKey, c.Datadog); metricErr != nil {
+			logger.Infow("Posting metrics errored", metricErr)
+		}
 		if c.EnableKeyAgeLogging {
 			obfuscatedKeys := []keys.Key{}
 			for _, key := range providerKeys {
@@ -139,8 +143,8 @@ func Rotate(account, provider, project string, c config.Config) (err error) {
 	if err = rotateKeys(rc, c.Credentials); err != nil {
 		return
 	}
-	if isDatadogInUse(c.Datadog) {
-		// Refresh providerKeys post rotation
+	if isDatadogSet(c.Datadog) {
+		// Refresh key ages post rotation
 		if providerKeys, err = keysOfProviders(account, provider, project, c); err != nil {
 			return
 		}
@@ -506,7 +510,7 @@ func validAwsKey(key keys.Key, config config.Config) (valid bool) {
 	return
 }
 
-func isDatadogInUse(datadog config.Datadog) bool {
+func isDatadogSet(datadog config.Datadog) bool {
 	// If no metric name has been set, we assume the datadog config struct is not in use
 	return datadog.MetricName != ""
 }
