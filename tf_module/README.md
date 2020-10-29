@@ -1,6 +1,8 @@
 # Cloud Key Rotator: Terraform Module
 
-A Terraform module hosted on the ovotech repository that creates an AWS Lambda to run Cloud Key Rotator.
+Terraform modules hosted on the ovotech repository that creates serverless
+functions and their associated resources in order to run `cloud-key-rotator` in
+either AWS or GCP.
 
 ## Usage - AWS
 
@@ -30,15 +32,64 @@ provider "aws" {
 module "cloud-key-rotator" {
   source         = "terraform.ovotech.org.uk/pe/ckr/aws"
   version = "0.1.0"
-  ckr_version = "0.27.28"
+  ckr_version = "0.27.29"
 }
 ```
 
-## Variables
+### Variables
 
 * `version = "0.1.0"` -> The Terraform module version to use.
-* `ckr_version = "0.27.28"` -> The Cloud Key Rotator binary version to use.
+* `ckr_version = "0.27.29"` -> The Cloud Key Rotator binary version to use.
 * (Optional) `ckr_schedule = "cron(0 10 ? * MON-FRI *)"` -> Defaults to triggering 10am Monday-Friday.
 * (Optional) `config_data = <string>` -> Pass a json blob from any source containing your config file.
 * (Optional) `enable_ssm_location = false` -> Whether to create an IAM policy allowing `ssm:PutParameter`.
 Set this to `true` if using SSM as a `cloud-key-rotator` location.
+
+## Usage - GCP
+
+This module creates a Cloud Function to run the Cloud Key Rotator and a job in Cloud Scheduler to run the Cloud Function.
+
+You will need the following APIs enabled in your project:
+
+* cloudbuild.googleapis.com
+* cloudscheduler.googleapis.com
+* cloudfunctions.googleapis.com
+* appengine.googleapis.com
+
+### Terraform usage
+
+```
+provider "google" {
+  version = "~> 3.22.0"
+  region  = "europe-west1"
+  project = "your-project"
+}
+
+module "cloud-key-rotator" {
+  source = "terraform.ovotech.org.uk/pe/ckr/gcp"
+  version = "0.0.1"
+  ckr_version = "0.27.29"
+  ckr_resource_suffix = "my-project-name"
+  ckr_config = <<EOF
+{
+  "EnableKeyAgeLogging": true,
+  "RotationMode": false,
+  "CloudProviders": [{
+    "Project":"${var.project_name}",
+    "Name": "gcp"
+  }],
+}
+EOF
+}
+
+```
+
+### Variables
+
+* `version = "0.0.1"` -> The Terraform module version to use.
+* `ckr_version = "0.27.29"` -> The Cloud Key Rotator binary version to use.
+* `ckr_config = <string>` -> Pass a json blob from any source containing your config file.
+* `ckr_resource_suffix = "my-project-name"` -> Will be appended to the bucket, cloud function, custom role
+  service account and scheduler job names to prevent naming conflicts
+* (Optional) `ckr_schedule = "0 10 * * 1-5"` -> Defaults to triggering 10am Monday-Friday.
+* (Optional) `ckr_schedule_time_zone = "Europe/London"` -> The time zone for the scheduler job. Defaults to Europe/London
