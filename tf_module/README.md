@@ -1,6 +1,8 @@
 # Cloud Key Rotator: Terraform Module
 
-A Terraform module hosted on the ovotech repository that creates an AWS Lambda to run Cloud Key Rotator.
+Terraform modules hosted on the ovotech repository that creates serverless
+functions and their associated resources in order to run `cloud-key-rotator` in
+either AWS or GCP.
 
 ## Usage - AWS
 
@@ -30,14 +32,14 @@ provider "aws" {
 module "cloud-key-rotator" {
   source         = "terraform.ovotech.org.uk/pe/ckr/aws"
   version = "0.1.0"
-  ckr_version = "0.27.28"
+  ckr_version = "0.27.29"
 }
 ```
 
 ### Variables
 
 * `version = "0.1.0"` -> The Terraform module version to use.
-* `ckr_version = "0.27.28"` -> The Cloud Key Rotator binary version to use.
+* `ckr_version = "0.27.29"` -> The Cloud Key Rotator binary version to use.
 * (Optional) `ckr_schedule = "cron(0 10 ? * MON-FRI *)"` -> Defaults to triggering 10am Monday-Friday.
 * (Optional) `config_data = <string>` -> Pass a json blob from any source containing your config file.
 * (Optional) `enable_ssm_location = false` -> Whether to create an IAM policy allowing `ssm:PutParameter`.
@@ -66,7 +68,7 @@ provider "google" {
 module "cloud-key-rotator" {
   source = "terraform.ovotech.org.uk/pe/ckr/gcp"
   version = "0.0.1"
-  ckr_version = "0.27.28"
+  ckr_version = "0.27.29"
   ckr_resource_suffix = "my-project-name"
   ckr_config = <<EOF
 {
@@ -84,8 +86,8 @@ EOF
 
 ### Variables
 
-* `version = "0.1.0"` -> The Terraform module version to use.
-* `ckr_version = "0.27.28"` -> The Cloud Key Rotator binary version to use.
+* `version = "0.0.1"` -> The Terraform module version to use.
+* `ckr_version = "0.27.29"` -> The Cloud Key Rotator binary version to use.
 * `ckr_config = <string>` -> Pass a json blob from any source containing your config file.
 * `ckr_resource_suffix = "my-project-name"` -> Will be appended to the bucket, cloud function, custom role
   service account and scheduler job names to prevent naming conflicts
