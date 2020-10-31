@@ -12,17 +12,23 @@ data "google_client_config" "current_provider" {}
 resource "google_storage_bucket" "key_rotator_bucket" {
   name     = "ckr-${var.ckr_resource_suffix}"
   location = data.google_client_config.current_provider.region
+
+  uniform_bucket_level_access = true
+}
+
+// Give the key rotator service account access to the whole bucket, not just
+// the config object, as there is an issue in terraform: if you recreate
+// an object then the associated object ACL is not recreated unless the terraform
+// is run twice. https://github.com/hashicorp/terraform-provider-google/issues/7671
+// is the google provider issue raised on this.
+resource "google_storage_bucket_access_control" "key_rotator_bucket_access" {
+  bucket = google_storage_bucket.key_rotator_bucket.name
+  role   = "READER"
+  entity = "user-${google_service_account.key_rotator_service_account.email}"
 }
 
 data "external" "key_rotator_zip" {
   program = ["${path.module}/download-zip.sh", var.ckr_version, local.key_rotator_filename]
-}
-
-resource "google_storage_object_access_control" "key_rotator_config_access" {
-  object   = google_storage_bucket_object.key_rotator_cloud_function_config.output_name
-  bucket   = google_storage_bucket.key_rotator_bucket.name
-  role     = "READER"
-  entity   = "user-${google_service_account.key_rotator_service_account.email}"
 }
 
 resource "google_storage_bucket_object" "key_rotator_cloud_function_zip" {
