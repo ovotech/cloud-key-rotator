@@ -67,7 +67,7 @@ provider "google" {
 
 module "cloud-key-rotator" {
   source = "terraform.ovotech.org.uk/pe/ckr/gcp"
-  version = "0.1.0"
+  version = "0.1.1"
   ckr_version = "0.27.29"
   ckr_resource_suffix = "my-project-name"
   ckr_config = <<EOF
