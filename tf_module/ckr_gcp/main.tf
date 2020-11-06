@@ -21,10 +21,10 @@ resource "google_storage_bucket" "key_rotator_bucket" {
 // an object then the associated object ACL is not recreated unless the terraform
 // is run twice. https://github.com/hashicorp/terraform-provider-google/issues/7671
 // is the google provider issue raised on this.
-resource "google_storage_bucket_access_control" "key_rotator_bucket_access" {
+resource "google_storage_bucket_iam_member" "key_rotator_bucket_access" {
   bucket = google_storage_bucket.key_rotator_bucket.name
-  role   = "READER"
-  entity = "user-${google_service_account.key_rotator_service_account.email}"
+  role   = "roles/storage.legacyObjectReader"
+  member = "serviceAccount:${google_service_account.key_rotator_service_account.email}"
 }
 
 data "external" "key_rotator_zip" {
