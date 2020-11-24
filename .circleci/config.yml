@@ -37,6 +37,24 @@ jobs:
             zip -R ${ZIP_NAME} '*.go' 'go.mod'
             ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} ${CIRCLE_TAG} ${ZIP_NAME}
 
+  tf_check_aws:
+    executor: terraform/terraform-0_12
+    steps:
+    - checkout
+    - terraform/fmt-check:
+        path: tf_module/ckr_aws
+    - terraform/validate:
+        path: tf_module/ckr_aws
+
+  tf_check_gcp:
+    executor: terraform/terraform-0_12
+    steps:
+    - checkout
+    - terraform/fmt-check:
+        path: tf_module/ckr_gcp
+    - terraform/validate:
+        path: tf_module/ckr_gcp
+
   publish_tf_module:
     executor: terraform/terraform-0_12
     steps:
@@ -179,6 +197,14 @@ workflows:
           filters:
             branches:
               ignore: master
+      - tf_check_aws:
+          filters:
+            branches:
+              ignore: master
+      - tf_check_gcp:
+          filters:
+            branches:
+              ignore: master
   master_pipeline:
     jobs:
       - go_fmt:
@@ -202,6 +228,14 @@ workflows:
             branches:
               only: master
       - go_test:
+          filters:
+            branches:
+              only: master
+      - tf_check_aws:
+          filters:
+            branches:
+              only: master
+      - tf_check_gcp:
           filters:
             branches:
               only: master
