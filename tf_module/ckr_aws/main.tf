@@ -60,8 +60,8 @@ EOF
 # if enabled
 resource "aws_iam_policy" "ckr_ssm_policy" {
   count = var.enable_ssm_location ? 1 : 0
-  name = "CloudKeyRotatorSsmPolicy"
-  path = "/"
+  name  = "CloudKeyRotatorSsmPolicy"
+  path  = "/"
 
   policy = <<EOF
 {
@@ -82,38 +82,38 @@ EOF
 }
 
 resource "aws_iam_policy" "ckr_policy" {
-    name   = "CloudKeyRotatorPolicy"
-    path   = "/"
-    policy = jsonencode(
+  name = "CloudKeyRotatorPolicy"
+  path = "/"
+  policy = jsonencode(
+    {
+      Statement = [
         {
-            Statement = [
-                {
-                    Action   = [
-                        "iam:DeleteAccessKey",
-                        "iam:CreateAccessKey",
-                        "iam:ListAccessKeys",
-                    ]
-                    Effect   = "Allow"
-                    Resource = [
-                        "arn:aws:iam::*:user/*",
-                    ]
-                },
-                {
-                    Action   = "iam:ListUsers"
-                    Effect   = "Allow"
-                    Resource = "arn:aws:iam::*:*"
-                },
-                {
-                    Action   = "secretsmanager:GetSecretValue"
-                    Effect   = "Allow"
-                    Resource = [
-                        aws_secretsmanager_secret.ckr-config.arn,
-                    ]
-                },
-            ]
-            Version   = "2012-10-17"
-        }
-    )
+          Action = [
+            "iam:DeleteAccessKey",
+            "iam:CreateAccessKey",
+            "iam:ListAccessKeys",
+          ]
+          Effect = "Allow"
+          Resource = [
+            "arn:aws:iam::*:user/*",
+          ]
+        },
+        {
+          Action   = "iam:ListUsers"
+          Effect   = "Allow"
+          Resource = "arn:aws:iam::*:*"
+        },
+        {
+          Action = "secretsmanager:GetSecretValue"
+          Effect = "Allow"
+          Resource = [
+            aws_secretsmanager_secret.ckr-config.arn,
+          ]
+        },
+      ]
+      Version = "2012-10-17"
+    }
+  )
 }
 
 resource "aws_iam_role_policy_attachment" "attach-ckr-log-policy" {
@@ -129,7 +129,7 @@ resource "aws_iam_role_policy_attachment" "attach-ckr-policy" {
 # only create ssm attachment if SSM is enabled (indicating it's being used
 # as a cloud-key-rotator location)
 resource "aws_iam_role_policy_attachment" "attach-ckr-ssm-policy" {
-  count = var.enable_ssm_location ? 1 : 0
+  count      = var.enable_ssm_location ? 1 : 0
   role       = aws_iam_role.cloudkeyrotator_role.name
   policy_arn = aws_iam_policy.ckr_ssm_policy[0].arn
 }

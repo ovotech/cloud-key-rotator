@@ -32,9 +32,9 @@ data "external" "key_rotator_zip" {
 }
 
 resource "google_storage_bucket_object" "key_rotator_cloud_function_zip" {
-  name     = local.key_rotator_filename
-  bucket   = google_storage_bucket.key_rotator_bucket.name
-  source   = data.external.key_rotator_zip.result.output_filename
+  name   = local.key_rotator_filename
+  bucket = google_storage_bucket.key_rotator_bucket.name
+  source = data.external.key_rotator_zip.result.output_filename
 }
 
 resource "google_cloudfunctions_function" "key_rotator_cloud_function" {
@@ -71,8 +71,8 @@ resource "google_cloudfunctions_function_iam_member" "key_rotator_invoker_perms"
 }
 
 resource "google_project_iam_member" "key_rotator_cloud_run_perms" {
-  role     = "roles/run.invoker"
-  member   = "serviceAccount:${google_service_account.key_rotator_service_account.email}"
+  role   = "roles/run.invoker"
+  member = "serviceAccount:${google_service_account.key_rotator_service_account.email}"
 }
 
 resource "google_project_iam_custom_role" "key_rotator_custom_role" {
@@ -88,8 +88,8 @@ resource "google_project_iam_custom_role" "key_rotator_custom_role" {
 }
 
 resource "google_project_iam_member" "key_rotator_custom_perms" {
-  role     = google_project_iam_custom_role.key_rotator_custom_role.id
-  member   = "serviceAccount:${google_service_account.key_rotator_service_account.email}"
+  role   = google_project_iam_custom_role.key_rotator_custom_role.id
+  member = "serviceAccount:${google_service_account.key_rotator_service_account.email}"
 }
 
 resource "google_cloud_scheduler_job" "key_rotator_scheduled_job" {
@@ -110,7 +110,7 @@ resource "google_cloud_scheduler_job" "key_rotator_scheduled_job" {
 }
 
 resource "google_storage_bucket_object" "key_rotator_cloud_function_config" {
-  name     = "ckr-config.json"
-  bucket   = google_storage_bucket.key_rotator_bucket.name
-  content  = var.ckr_config
+  name    = "ckr-config.json"
+  bucket  = google_storage_bucket.key_rotator_bucket.name
+  content = var.ckr_config
 }

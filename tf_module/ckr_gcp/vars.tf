@@ -1,5 +1,5 @@
 variable "ckr_resource_suffix" {
-    default = ""
+  default = ""
 }
 
 variable "ckr_schedule" {
