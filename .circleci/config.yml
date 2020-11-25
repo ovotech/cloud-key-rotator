@@ -41,13 +41,12 @@ jobs:
     executor: terraform/terraform-0_12
     steps:
     - checkout
-    - run: 
-        name: trymanually
-        command: cd tf_module/ckr_aws && terraform fmt -diff
     - terraform/fmt-check:
         path: tf_module/ckr_aws
-    - terraform/validate:
-        path: tf_module/ckr_aws
+    # Not running validate for AWS as the AWS provider requires
+    # a region to be set in order for the config to be valid. We
+    # don't want to provide a region because the upstream caller
+    # of the module needs to do that.
 
   tf_check_gcp:
     executor: terraform/terraform-0_12

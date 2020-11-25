@@ -117,7 +117,7 @@ resource "aws_iam_policy" "ckr_policy" {
 }
 
 resource "aws_iam_role_policy_attachment" "attach-ckr-log-policy" {
-  role  = aws_iam_role.cloudkeyrotator_role.name
+  role = aws_iam_role.cloudkeyrotator_role.name
   policy_arn = aws_iam_policy.ckr_log_policy.arn
 }
 
