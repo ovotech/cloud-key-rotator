@@ -177,8 +177,8 @@ resource "aws_iam_policy" "ckr_policy" {
           ]
         },
         {
-          Action   = "iam:ListUsers"
-          Effect   = "Allow"
+          Action = "iam:ListUsers"
+          Effect = "Allow"
           Resource = "arn:aws:iam::*:*"
         },
         {
