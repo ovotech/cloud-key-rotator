@@ -41,6 +41,9 @@ jobs:
     executor: terraform/terraform-0_12
     steps:
     - checkout
+    - run: 
+        name: trymanually
+        command: cd tf_module/ckr_aws && terraform fmt -diff
     - terraform/fmt-check:
         path: tf_module/ckr_aws
     # Not running validate for AWS as the AWS provider requires
