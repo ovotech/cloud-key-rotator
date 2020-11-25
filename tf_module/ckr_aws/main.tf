@@ -99,8 +99,8 @@ resource "aws_iam_policy" "ckr_policy" {
           ]
         },
         {
-          Action   = "iam:ListUsers"
-          Effect   = "Allow"
+          Action = "iam:ListUsers"
+          Effect = "Allow"
           Resource = "arn:aws:iam::*:*"
         },
         {
@@ -117,67 +117,67 @@ resource "aws_iam_policy" "ckr_policy" {
 }
 
 resource "aws_iam_role_policy_attachment" "attach-ckr-log-policy" {
-  role       = aws_iam_role.cloudkeyrotator_role.name
+  role  = aws_iam_role.cloudkeyrotator_role.name
   policy_arn = aws_iam_policy.ckr_log_policy.arn
 }
 
 resource "aws_iam_role_policy_attachment" "attach-ckr-policy" {
-  role       = aws_iam_role.cloudkeyrotator_role.name
+  role = aws_iam_role.cloudkeyrotator_role.name
   policy_arn = aws_iam_policy.ckr_policy.arn
 }
 
 # only create ssm attachment if SSM is enabled (indicating it's being used
 # as a cloud-key-rotator location)
 resource "aws_iam_role_policy_attachment" "attach-ckr-ssm-policy" {
-  count      = var.enable_ssm_location ? 1 : 0
-  role       = aws_iam_role.cloudkeyrotator_role.name
+  count = var.enable_ssm_location ? 1 : 0
+  role = aws_iam_role.cloudkeyrotator_role.name
   policy_arn = aws_iam_policy.ckr_ssm_policy[0].arn
 }
 
 
 resource "aws_lambda_function" "cloud_key_rotator" {
-  description   = "A function for rotating cloud keys"
-  s3_bucket     = "ckr-terraform-module-code"
-  s3_key        = "cloud-key-rotator_${var.ckr_version}_lambda.zip"
+  description = "A function for rotating cloud keys"
+  s3_bucket = "ckr-terraform-module-code"
+  s3_key = "cloud-key-rotator_${var.ckr_version}_lambda.zip"
   function_name = "cloud-key-rotator"
-  role          = aws_iam_role.cloudkeyrotator_role.arn
-  handler       = "cloud-key-rotator-lambda"
-  timeout       = 300
-  runtime       = "go1.x"
+  role = aws_iam_role.cloudkeyrotator_role.arn
+  handler = "cloud-key-rotator-lambda"
+  timeout = 300
+  runtime = "go1.x"
 }
 
 resource "aws_cloudwatch_event_rule" "cloud-key-rotator-trigger" {
-  name                = "cloud-key-rotator-trigger"
-  description         = "Daily at 10am"
+  name = "cloud-key-rotator-trigger"
+  description = "Daily at 10am"
   schedule_expression = var.ckr_schedule
 }
 
 resource "aws_cloudwatch_event_target" "check_every_five_minutes" {
-  rule      = aws_cloudwatch_event_rule.cloud-key-rotator-trigger.name
+  rule = aws_cloudwatch_event_rule.cloud-key-rotator-trigger.name
   target_id = "cloud_key_rotator"
-  arn       = aws_lambda_function.cloud_key_rotator.arn
+  arn = aws_lambda_function.cloud_key_rotator.arn
 }
 
 resource "aws_lambda_permission" "allow_cloudwatch_to_call_lambda" {
-  statement_id  = "AllowExecutionFromCloudWatch"
-  action        = "lambda:InvokeFunction"
+  statement_id = "AllowExecutionFromCloudWatch"
+  action = "lambda:InvokeFunction"
   function_name = aws_lambda_function.cloud_key_rotator.function_name
-  principal     = "events.amazonaws.com"
-  source_arn    = aws_cloudwatch_event_rule.cloud-key-rotator-trigger.arn
+  principal = "events.amazonaws.com"
+  source_arn = aws_cloudwatch_event_rule.cloud-key-rotator-trigger.arn
 }
 
 # Secret and config file
 
 resource "aws_secretsmanager_secret" "ckr-config" {
   # Create a correctly named secret
-  name        = "ckr-config"
+  name = "ckr-config"
   description = "A JSON file that configures Cloud Key Rotator"
 }
 
 resource "aws_secretsmanager_secret_version" "placeholder_config" {
   count = var.config_data == "" ? 1 : 0
   # If config_data is unset (or false), create placeholder secret
-  secret_id     = aws_secretsmanager_secret.ckr-config.id
+  secret_id = aws_secretsmanager_secret.ckr-config.id
   secret_string = "placeholder"
 
   lifecycle {
@@ -190,6 +190,6 @@ resource "aws_secretsmanager_secret_version" "placeholder_config" {
 resource "aws_secretsmanager_secret_version" "ckr-config-string" {
   count = var.config_data != "" ? 1 : 0
   # If config_data is set, use as secret string
-  secret_id     = aws_secretsmanager_secret.ckr-config.id
+  secret_id = aws_secretsmanager_secret.ckr-config.id
   secret_string = var.config_data
 }
