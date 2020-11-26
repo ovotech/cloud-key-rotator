@@ -10,6 +10,6 @@ variable "ckr_schedule" {
 }
 
 variable "enable_ssm_location" {
-  type = bool
+  type    = bool
   default = false
 }
