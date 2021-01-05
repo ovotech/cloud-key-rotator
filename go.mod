@@ -6,7 +6,7 @@ require (
 	cloud.google.com/go/storage v1.12.0
 	github.com/CircleCI-Public/circleci-cli v0.1.11508
 	github.com/Sectorbob/mlab-ns2 v0.0.0-20171030222938-d3aa0c295a8a
-	github.com/aws/aws-lambda-go v1.20.0
+	github.com/aws/aws-lambda-go v1.22.0
 	github.com/aws/aws-sdk-go v1.35.36
 	github.com/beamly/go-gocd v0.0.0-20190719193049-383d56afbf92
 	github.com/google/gofuzz v1.1.0 // indirect
