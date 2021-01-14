@@ -13,3 +13,7 @@ variable "enable_ssm_location" {
   type    = bool
   default = false
 }
+
+variable "ckr_trigger_description" {
+  default = "Scheduled cloud key rotation"
+}
