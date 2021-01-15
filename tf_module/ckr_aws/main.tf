@@ -1,4 +1,3 @@
-
 data "aws_caller_identity" "current" {}
 
 locals {
@@ -37,11 +36,11 @@ resource "aws_lambda_function" "cloud_key_rotator" {
 
 resource "aws_cloudwatch_event_rule" "cloud-key-rotator-trigger" {
   name                = "cloud-key-rotator-trigger"
-  description         = "Daily at 10am"
+  description         = var.ckr_trigger_description
   schedule_expression = var.ckr_schedule
 }
 
-resource "aws_cloudwatch_event_target" "check_every_five_minutes" {
+resource "aws_cloudwatch_event_target" "cloud-key-rotator-target" {
   rule      = aws_cloudwatch_event_rule.cloud-key-rotator-trigger.name
   target_id = "cloud_key_rotator"
   arn       = aws_lambda_function.cloud_key_rotator.arn
