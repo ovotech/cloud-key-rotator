@@ -4,7 +4,7 @@ go 1.12
 
 require (
 	cloud.google.com/go/storage v1.12.0
-	github.com/CircleCI-Public/circleci-cli v0.1.11540
+	github.com/CircleCI-Public/circleci-cli v0.1.11756
 	github.com/Sectorbob/mlab-ns2 v0.0.0-20171030222938-d3aa0c295a8a
 	github.com/aws/aws-lambda-go v1.22.0
 	github.com/aws/aws-sdk-go v1.36.20
@@ -26,7 +26,6 @@ require (
 	gopkg.in/inf.v0 v0.9.0 // indirect
 	gopkg.in/ini.v1 v1.62.0
 	gopkg.in/src-d/go-git.v4 v4.13.1
-	honnef.co/go/tools v0.0.1-2020.1.4 // indirect
 	k8s.io/api v0.0.0-20190313235455-40a48860b5ab
 	k8s.io/apimachinery v0.0.0-20190313205120-d7deff9243b1
 	k8s.io/client-go v11.0.0+incompatible
