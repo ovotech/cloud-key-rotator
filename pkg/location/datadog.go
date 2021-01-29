@@ -18,15 +18,15 @@ type Datadog struct {
 
 var (
 	// ErrMissingDatadogCredentials is returned when the datadog authentication details are missing
-	ErrMissingDatadogCredentials  = errors.New("missing datadog credentials")
+	ErrMissingDatadogCredentials = errors.New("missing datadog credentials")
 	// ErrInvalidDatadogCredentials is returned when the datadog authentication details are invalid
-	ErrInvalidDatadogCredentials  = errors.New("invalid datadog credentials")
+	ErrInvalidDatadogCredentials = errors.New("invalid datadog credentials")
 	// ErrDatadogBadRequest is returned when the datadog API rejects the update request
-	ErrDatadogBadRequest          = errors.New("bad request")
+	ErrDatadogBadRequest = errors.New("bad request")
 	// ErrDatadogIntegrationNotFound is returned when the existing integration
 	ErrDatadogIntegrationNotFound = errors.New("existing datadog integration not found")
 	// ErrIncorrectGCPKeyProvider is returned when attempting to use this location with a non-GCP key
-	ErrIncorrectGCPKeyProvider    = errors.New("this location only supports GCP service account keys")
+	ErrIncorrectGCPKeyProvider = errors.New("this location only supports GCP service account keys")
 )
 
 //Write
