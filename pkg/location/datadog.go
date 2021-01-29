@@ -16,11 +16,11 @@ type Datadog struct {
 }
 
 var (
-	ErrMissingDatadogCredentials = errors.New("missing datadog credentials")
-	ErrInvalidDatadogCredentials = errors.New("invalid datadog credentials")
-	ErrDatadogBadRequest = errors.New("bad request")
+	ErrMissingDatadogCredentials  = errors.New("missing datadog credentials")
+	ErrInvalidDatadogCredentials  = errors.New("invalid datadog credentials")
+	ErrDatadogBadRequest          = errors.New("bad request")
 	ErrDatadogIntegrationNotFound = errors.New("existing datadog integration not found")
-	ErrIncorrectGCPKeyProvider = errors.New("this location only supports GCP service account keys")
+	ErrIncorrectGCPKeyProvider    = errors.New("this location only supports GCP service account keys")
 )
 
 func (dd Datadog) Write(serviceAccountName string, wrapper KeyWrapper, creds cred.Credentials) (updated UpdatedLocation, err error) {
@@ -102,7 +102,7 @@ func updateDatadogGCPAccount(integration datadog.GCPAccount, wrapper KeyWrapper)
 
 	type gcpPrivateKeyData struct {
 		PrivateKeyId string `json:"private_key_id"`
-		PrivateKey string `json:"private_key"`
+		PrivateKey   string `json:"private_key"`
 	}
 	key := &gcpPrivateKeyData{}
 	if err = json.Unmarshal(keyBytes, key); err != nil {
