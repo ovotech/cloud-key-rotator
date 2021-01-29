@@ -17,12 +17,18 @@ package cred
 // Credentials type
 type Credentials struct {
 	CircleCIAPIToken string
+	Datadog          Datadog
 	GitAccount       GitAccount
 	AkrPass          string
 	AkrPath          string
 	KmsKey           string
 	GocdServer       GocdServer
 	AtlasKeys        AtlasKeys
+}
+
+type Datadog struct {
+	APIKey string
+	AppKey string
 }
 
 // GitAccount type
