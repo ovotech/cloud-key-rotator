@@ -26,6 +26,7 @@ type Credentials struct {
 	AtlasKeys        AtlasKeys
 }
 
+// Datadog type holds the API and App key for Datadog authentication
 type Datadog struct {
 	APIKey string
 	AppKey string
