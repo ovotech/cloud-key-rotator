@@ -72,6 +72,7 @@ type KeyLocations struct {
 	Atlas                    []location.Atlas
 	CircleCI                 []location.CircleCI
 	CircleCIContext          []location.CircleCIContext
+	DatadogGCPIntegration    []location.Datadog
 	GCS                      []location.Gcs
 	Git                      location.Git
 	Gocd                     []location.Gocd
