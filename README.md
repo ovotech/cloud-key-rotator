@@ -9,6 +9,7 @@ The tool can update keys held in the following locations:
 * Atlas (mongoDB)
 * CircleCI env vars
 * CircleCI contexts
+* Datadog (GCP Integration)
 * GCS
 * Git
 * GoCd
@@ -92,6 +93,7 @@ Currently, the following locations are supported:
 * Atlas (mongoDB)
 * CircleCI env vars
 * CircleCI contexts
+* Datadog (GCP Integration)
 * GCS
 * Git (files encrypted with [mantle](https://github.com/ovotech/mantle) which
 integrates with KMS))
