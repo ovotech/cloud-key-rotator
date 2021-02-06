@@ -4,11 +4,11 @@ go 1.12
 
 require (
 	cloud.google.com/go/storage v1.13.0
-	github.com/CircleCI-Public/circleci-cli v0.1.11540
+	github.com/CircleCI-Public/circleci-cli v0.1.12331
 	github.com/DataDog/datadog-api-client-go v1.0.0-beta.14
 	github.com/Sectorbob/mlab-ns2 v0.0.0-20171030222938-d3aa0c295a8a
 	github.com/aws/aws-lambda-go v1.22.0
-	github.com/aws/aws-sdk-go v1.36.20
+	github.com/aws/aws-sdk-go v1.37.5
 	github.com/beamly/go-gocd v0.0.0-20190719193049-383d56afbf92
 	github.com/google/gofuzz v1.1.0 // indirect
 	github.com/googleapis/gnostic v0.0.0-20170729233727-0c5108395e2d // indirect
@@ -23,7 +23,7 @@ require (
 	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
 	golang.org/x/oauth2 v0.0.0-20210113205817-d3ed898aa8a3
 	golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e // indirect
-	google.golang.org/api v0.38.0
+	google.golang.org/api v0.39.0
 	gopkg.in/inf.v0 v0.9.0 // indirect
 	gopkg.in/ini.v1 v1.62.0
 	gopkg.in/src-d/go-git.v4 v4.13.1
