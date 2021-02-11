@@ -185,6 +185,14 @@ workflows:
               only: /v[0-9]+(\.[0-9]+)*(-.*)*/
             branches:
               ignore: /.*/
+      - publish_tf_lambda_zip:
+          requires:
+            - goreleaser
+          filters:
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*(-.*)*/
+            branches:
+              ignore: /.*/
   pr_pipeline:
     jobs:
       - go_fmt:
