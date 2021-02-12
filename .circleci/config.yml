@@ -36,7 +36,19 @@ jobs:
             ZIP_NAME=cloud-key-rotator_${VERSION}_cloudfunction.zip
             zip -R ${ZIP_NAME} '*.go' 'go.mod'
             ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} ${CIRCLE_TAG} ${ZIP_NAME}
-
+  publish_tf_lambda_zip:
+    docker:
+      - image: python:3
+    steps:
+      - checkout
+      - run:
+          name: publish
+          command: |
+            VERSION=$(echo ${CIRCLE_TAG} | sed 's/^v//')
+            TARGET_FILE=cloud-key-rotator_${VERSION}_lambda.zip
+            curl -L https://github.com/ovotech/cloud-key-rotator/releases/download/v${VERSION}/${TARGET_FILE} -O
+            pip3 install awscli
+            aws s3 cp $TARGET_FILE s3://ckr-terraform-module-code --acl public-read
   tf_check_aws:
     executor: terraform/terraform-0_12
     steps:
@@ -168,6 +180,14 @@ workflows:
             branches:
               ignore: /.*/
       - release_cloudfunction_zip:
+          filters:
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*(-.*)*/
+            branches:
+              ignore: /.*/
+      - publish_tf_lambda_zip:
+          requires:
+            - goreleaser
           filters:
             tags:
               only: /v[0-9]+(\.[0-9]+)*(-.*)*/
