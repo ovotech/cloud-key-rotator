@@ -67,8 +67,8 @@ github.com/AlecAivazis/survey/v2 v2.1.1/go.mod h1:9FJRdMdDm8rnT+zHVbvQT2RTSTLq0T
 github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
-github.com/CircleCI-Public/circleci-cli v0.1.12331 h1:BPSD+EUiEhtqF+1Hbcmgg8POYaDODEsY60ci0Jh8dxs=
-github.com/CircleCI-Public/circleci-cli v0.1.12331/go.mod h1:DuTKeuAG/CW0Bkw+iosfVYeseU2ZBn6jwD7nUfGAE1Q=
+github.com/CircleCI-Public/circleci-cli v0.1.14827 h1:ZUGGH/ACjFIbKsHUWaPbw4DZ5jl6mBJzazPvJyxEOK8=
+github.com/CircleCI-Public/circleci-cli v0.1.14827/go.mod h1:DuTKeuAG/CW0Bkw+iosfVYeseU2ZBn6jwD7nUfGAE1Q=
 github.com/DataDog/datadog-api-client-go v1.0.0-beta.14 h1:NbJeCxYBhThksWgk6Z9QpaFc/z2k0mcs7ZVnCRREeZU=
 github.com/DataDog/datadog-api-client-go v1.0.0-beta.14/go.mod h1:/bMeu+q33QzX2JuO5PkGkhU1VYOXIXKEPF6Ck4yR06M=
 github.com/DataDog/datadog-go v3.6.0+incompatible h1:ILg7c5Y1KvZFDOaVS0higGmJ5Fal5O1KQrkrT9j6dSM=
