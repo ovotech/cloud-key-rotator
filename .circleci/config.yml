@@ -4,7 +4,7 @@ defaults: &defaults
 version: 2.1
 
 orbs:
-  terraform: ovotech/terraform@1.5
+  terraform: ovotech/terraform@1
 
 jobs:
   goreleaser:
@@ -64,8 +64,6 @@ jobs:
     executor: terraform/terraform-0_12
     steps:
     - checkout
-    - terraform/version:
-        path: tf_module/ckr_gcp
     - terraform/fmt-check:
         path: tf_module/ckr_gcp
     - terraform/validate:
