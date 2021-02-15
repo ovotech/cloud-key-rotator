@@ -1,3 +1,7 @@
+terraform {
+  required_version = ">= 0.12.6"
+}
+
 locals {
   key_rotator_filename = "cloud-key-rotator-${var.ckr_version}.zip"
 }

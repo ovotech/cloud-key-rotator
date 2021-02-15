@@ -56,6 +56,8 @@ You will need the following APIs enabled in your project:
 * cloudfunctions.googleapis.com
 * appengine.googleapis.com
 
+The module supports Terraform version 0.12.6 and up.
+
 ### Terraform usage
 
 ```
