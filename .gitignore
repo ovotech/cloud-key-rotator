@@ -5,4 +5,4 @@ ckr.yaml
 *cloud-key-rotator*
 key.json
 .vscode
-tf_module/**/.terraform
+tf_module/**/.terraform*
