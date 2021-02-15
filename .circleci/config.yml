@@ -64,6 +64,8 @@ jobs:
     executor: terraform/terraform-0_12
     steps:
     - checkout
+    - terraform/version:
+        path: tf_module/ckr_gcp
     - terraform/fmt-check:
         path: tf_module/ckr_gcp
     - terraform/validate:
