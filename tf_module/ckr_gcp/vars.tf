@@ -10,6 +10,11 @@ variable "ckr_schedule_time_zone" {
   default = "Europe/London"
 }
 
+variable "deploying_accounts" {
+  default = []
+  type    = list(string)
+}
+
 variable "ckr_version" {}
 
 variable "ckr_config" {}

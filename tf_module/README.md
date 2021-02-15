@@ -67,7 +67,7 @@ provider "google" {
 
 module "cloud-key-rotator" {
   source = "terraform.ovotech.org.uk/pe/ckr/gcp"
-  version = "0.1.1"
+  version = "0.2.0"
   ckr_version = "0.27.29"
   ckr_resource_suffix = "my-project-name"
   ckr_config = <<EOF
@@ -86,10 +86,14 @@ EOF
 
 ### Variables
 
-* `version = "0.0.1"` -> The Terraform module version to use.
+* `version = "0.2.0"` -> The Terraform module version to use.
 * `ckr_version = "0.27.29"` -> The Cloud Key Rotator binary version to use.
 * `ckr_config = <string>` -> Pass a json blob from any source containing your config file.
 * `ckr_resource_suffix = "my-project-name"` -> Will be appended to the bucket, cloud function, custom role
   service account and scheduler job names to prevent naming conflicts
 * (Optional) `ckr_schedule = "0 10 * * 1-5"` -> Defaults to triggering 10am Monday-Friday.
 * (Optional) `ckr_schedule_time_zone = "Europe/London"` -> The time zone for the scheduler job. Defaults to Europe/London
+* (Optional) `deploying_accounts = ["serviceAccount:terraform@myproject.iam.gserviceaccount.com"]` -> Any accounts which 
+  will be deploying the CKR terraform but do not have the iam.serviceAccountUser permission for the whole project. This 
+  gives the supplied accounts iam.serviceAccountUser permissions for the Cloud Key Rotator service account which is 
+  necessary to deploy the terraform module. Defaults to an empty list
