@@ -144,7 +144,9 @@ func GetConfigFromGCS(bucketName, objectName, configType string) (c Config, err 
 		return
 	}
 	viper.SetConfigType(configType)
-	viper.ReadConfig(bytes.NewReader(data))
+	if err = viper.ReadConfig(bytes.NewReader(data)); err != nil {
+		return
+	}
 	err = viper.Unmarshal(&c)
 	return
 }
