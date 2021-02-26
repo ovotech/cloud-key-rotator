@@ -1,3 +1,7 @@
+terraform {
+  required_version = ">= 0.12.6"
+}
+
 locals {
   key_rotator_filename = "cloud-key-rotator-${var.ckr_version}.zip"
 }
@@ -5,6 +9,13 @@ locals {
 resource "google_service_account" "key_rotator_service_account" {
   account_id   = "ckr-${var.ckr_resource_suffix}"
   display_name = "Service account which runs the cloud key rotation cloud function"
+}
+
+resource "google_service_account_iam_member" "key_rotator_deployment" {
+  for_each           = toset(var.deploying_accounts)
+  service_account_id = google_service_account.key_rotator_service_account.name
+  role               = "roles/iam.serviceAccountUser"
+  member             = each.key
 }
 
 data "google_client_config" "current_provider" {}
