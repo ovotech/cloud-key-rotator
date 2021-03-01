@@ -69,8 +69,6 @@ github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/CircleCI-Public/circleci-cli v0.1.14827 h1:ZUGGH/ACjFIbKsHUWaPbw4DZ5jl6mBJzazPvJyxEOK8=
 github.com/CircleCI-Public/circleci-cli v0.1.14827/go.mod h1:DuTKeuAG/CW0Bkw+iosfVYeseU2ZBn6jwD7nUfGAE1Q=
-github.com/DataDog/datadog-api-client-go v1.0.0-beta.14 h1:NbJeCxYBhThksWgk6Z9QpaFc/z2k0mcs7ZVnCRREeZU=
-github.com/DataDog/datadog-api-client-go v1.0.0-beta.14/go.mod h1:/bMeu+q33QzX2JuO5PkGkhU1VYOXIXKEPF6Ck4yR06M=
 github.com/DataDog/datadog-api-client-go v1.0.0-beta.15 h1:LDqEvKkBSchv09WUGCol8DLlm05O0RJy0V8YG3r0HZY=
 github.com/DataDog/datadog-api-client-go v1.0.0-beta.15/go.mod h1:8d96upv05/AXyn/0ftvml/+hD6Rt/tKnUdMX00iSP7A=
 github.com/DataDog/datadog-go v3.6.0+incompatible h1:ILg7c5Y1KvZFDOaVS0higGmJ5Fal5O1KQrkrT9j6dSM=
@@ -100,8 +98,8 @@ github.com/aws/aws-lambda-go v1.22.0 h1:X7BKqIdfoJcbsEIi+Lrt5YjX1HnZexIbNWOQgkYK
 github.com/aws/aws-lambda-go v1.22.0/go.mod h1:jJmlefzPfGnckuHdXX7/80O3BvUUi12XOkbv4w9SGLU=
 github.com/aws/aws-sdk-go v1.34.4/go.mod h1:5zCpMtNQVjRREroY7sYe8lOMRSxkhG6MZveU8YkpAk0=
 github.com/aws/aws-sdk-go v1.34.9/go.mod h1:5zCpMtNQVjRREroY7sYe8lOMRSxkhG6MZveU8YkpAk0=
-github.com/aws/aws-sdk-go v1.37.11 h1:W1gUQxt6jmiUsk2jkTVAlYsd3Sg8bNL2VDcWjrXmD+0=
-github.com/aws/aws-sdk-go v1.37.11/go.mod h1:hcU610XS61/+aQV88ixoOzUoG7v3b31pl2zKMmprdro=
+github.com/aws/aws-sdk-go v1.37.20 h1:CJCXpMYmBJrRH8YwoSE0oB9S3J5ax+62F14sYlDCztg=
+github.com/aws/aws-sdk-go v1.37.20/go.mod h1:hcU610XS61/+aQV88ixoOzUoG7v3b31pl2zKMmprdro=
 github.com/beamly/go-gocd v0.0.0-20190719193049-383d56afbf92 h1:4cZnjWx0qjkJwyY+sFO37SFYgS3M8gAe3KARSlpPsY4=
 github.com/beamly/go-gocd v0.0.0-20190719193049-383d56afbf92/go.mod h1:pksG9m+PD4EGQOXi+SRJErSZDDPb5nodJsTRWm4I7To=
 github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24TaqPxmxbtue+5NUziq4I4S80YR8gNf3Q=
