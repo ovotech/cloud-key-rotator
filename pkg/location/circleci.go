@@ -48,9 +48,12 @@ func (circle CircleCI) Write(serviceAccountName string, keyWrapper KeyWrapper, c
 	key := keyWrapper.Key
 	// if configured, base64 decode the key (GCP return encoded keys)
 	if circle.Base64Decode {
-		if key, err = base64.StdEncoding.DecodeString(key); err != nil {
+		var keyb []byte
+		keyb, err = base64.StdEncoding.DecodeString(key)
+		if err != nil {
 			return
 		}
+		key = string(keyb)
 	}
 
 	var keyEnvVar string
