@@ -12,6 +12,7 @@ require (
 	github.com/beamly/go-gocd v0.0.0-20190719193049-383d56afbf92
 	github.com/google/gofuzz v1.1.0 // indirect
 	github.com/googleapis/gnostic v0.0.0-20170729233727-0c5108395e2d // indirect
+	github.com/hashicorp/golang-lru v0.5.1 // indirect
 	github.com/jszwedko/go-circleci v0.3.0
 	github.com/mongodb/go-client-mongodb-atlas v0.3.0
 	github.com/ovotech/cloud-key-client v0.2.1
@@ -21,6 +22,7 @@ require (
 	github.com/spf13/viper v1.7.1
 	go.uber.org/zap v1.16.0
 	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
+	golang.org/x/exp v0.0.0-20200224162631-6cc2880d07d6 // indirect
 	golang.org/x/oauth2 v0.0.0-20210218202405-ba52d332ba99
 	google.golang.org/api v0.40.0
 	gopkg.in/inf.v0 v0.9.0 // indirect
