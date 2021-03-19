@@ -15,6 +15,7 @@
 package location
 
 import (
+	"encoding/base64"
 	"fmt"
 	"strings"
 	"time"
@@ -29,6 +30,7 @@ type CircleCI struct {
 	UsernameProject string
 	KeyIDEnvVar     string
 	KeyEnvVar       string
+	Base64Decode    bool
 }
 
 var logger = log.StdoutLogger().Sugar()
@@ -43,6 +45,16 @@ func (circle CircleCI) Write(serviceAccountName string, keyWrapper KeyWrapper, c
 		username, project)
 	client := &circleci.Client{Token: creds.CircleCIAPIToken}
 	provider := keyWrapper.KeyProvider
+	key := keyWrapper.Key
+	// if configured, base64 decode the key (GCP return encoded keys)
+	if circle.Base64Decode {
+		var keyb []byte
+		keyb, err = base64.StdEncoding.DecodeString(key)
+		if err != nil {
+			return
+		}
+		key = string(keyb)
+	}
 
 	var keyEnvVar string
 	var idValue bool
@@ -62,7 +74,7 @@ func (circle CircleCI) Write(serviceAccountName string, keyWrapper KeyWrapper, c
 		}
 	}
 
-	if err = updateCircleCIEnvVar(username, project, keyEnvVar, keyWrapper.Key, client); err != nil {
+	if err = updateCircleCIEnvVar(username, project, keyEnvVar, key, client); err != nil {
 		return
 	}
 
