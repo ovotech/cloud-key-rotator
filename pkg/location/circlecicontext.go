@@ -1,6 +1,7 @@
 package location
 
 import (
+	"encoding/base64"
 	"github.com/ovotech/cloud-key-rotator/pkg/cred"
 
 	"github.com/CircleCI-Public/circleci-cli/api"
@@ -8,9 +9,10 @@ import (
 
 // CircleCIContext type
 type CircleCIContext struct {
-	ContextID   string
-	KeyIDEnvVar string
-	KeyEnvVar   string
+	ContextID    string
+	KeyIDEnvVar  string
+	KeyEnvVar    string
+	Base64Decode bool
 }
 
 func (circleContext CircleCIContext) Write(serviceAccountName string, keyWrapper KeyWrapper, creds cred.Credentials) (updated UpdatedLocation, err error) {
@@ -25,6 +27,16 @@ func (circleContext CircleCIContext) Write(serviceAccountName string, keyWrapper
 
 	provider := keyWrapper.KeyProvider
 	contextID := circleContext.ContextID
+	key := keyWrapper.Key
+	// if configured, base64 decode the key (GCP return encoded keys)
+	if circle.Base64Decode {
+		var keyb []byte
+		keyb, err = base64.StdEncoding.DecodeString(key)
+		if err != nil {
+			return
+		}
+		key = string(keyb)
+	}
 
 	var keyEnvVar string
 	var idValue bool
@@ -44,7 +56,7 @@ func (circleContext CircleCIContext) Write(serviceAccountName string, keyWrapper
 		}
 	}
 
-	if err = updateCircleCIContext(contextID, keyEnvVar, keyWrapper.Key, gqlclient); err != nil {
+	if err = updateCircleCIContext(contextID, keyEnvVar, key, gqlclient); err != nil {
 		return
 	}
 
