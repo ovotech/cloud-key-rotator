@@ -44,6 +44,7 @@ module "cloud-key-rotator" {
 * (Optional) `config_data = <string>` -> Pass a json blob from any source containing your config file.
 * (Optional) `enable_ssm_location = false` -> Whether to create an IAM policy allowing `ssm:PutParameter`.
 Set this to `true` if using SSM as a `cloud-key-rotator` location.
+* (Optional) `region = <string>` -> specify an AWS region. Defaults to `eu-west-1`.
 
 ## Usage - GCP
 
@@ -95,7 +96,7 @@ EOF
   service account and scheduler job names to prevent naming conflicts
 * (Optional) `ckr_schedule = "0 10 * * 1-5"` -> Defaults to triggering 10am Monday-Friday.
 * (Optional) `ckr_schedule_time_zone = "Europe/London"` -> The time zone for the scheduler job. Defaults to Europe/London
-* (Optional) `deploying_accounts = ["serviceAccount:terraform@myproject.iam.gserviceaccount.com"]` -> Any accounts which 
-  will be deploying the CKR terraform but do not have the iam.serviceAccountUser permission for the whole project. This 
-  gives the supplied accounts iam.serviceAccountUser permissions for the Cloud Key Rotator service account which is 
+* (Optional) `deploying_accounts = ["serviceAccount:terraform@myproject.iam.gserviceaccount.com"]` -> Any accounts which
+  will be deploying the CKR terraform but do not have the iam.serviceAccountUser permission for the whole project. This
+  gives the supplied accounts iam.serviceAccountUser permissions for the Cloud Key Rotator service account which is
   necessary to deploy the terraform module. Defaults to an empty list

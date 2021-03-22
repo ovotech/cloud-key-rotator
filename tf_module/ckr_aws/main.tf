@@ -119,14 +119,14 @@ resource "aws_iam_policy" "ckr_log_policy" {
                 "logs:PutLogEvents"
             ],
             "Resource": [
-                "arn:aws:logs:eu-west-1:${local.account_id}:log-stream:*:*:*",
-                "arn:aws:logs:eu-west-1:${local.account_id}:log-group:/aws/lambda/cloud-key-*"
+                "arn:aws:logs:${var.region}:${local.account_id}:log-stream:*:*:*",
+                "arn:aws:logs:${var.region}:${local.account_id}:log-group:/aws/lambda/cloud-key-*"
             ]
         },
         {
             "Effect": "Allow",
             "Action": "logs:CreateLogGroup",
-            "Resource": "arn:aws:logs:eu-west-1:${local.account_id}:*"
+            "Resource": "arn:aws:logs:${var.region}:${local.account_id}:*"
         }
     ]
 }
@@ -150,7 +150,7 @@ resource "aws_iam_policy" "ckr_ssm_policy" {
                 "ssm:PutParameter"
             ],
             "Resource": [
-                "arn:aws:ssm:eu-west-1:${local.account_id}:parameter/*"
+                "arn:aws:ssm:${var.region}:${local.account_id}:parameter/*"
             ]
         }
     ]

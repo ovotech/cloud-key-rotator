@@ -29,7 +29,7 @@ func (circleContext CircleCIContext) Write(serviceAccountName string, keyWrapper
 	contextID := circleContext.ContextID
 	key := keyWrapper.Key
 	// if configured, base64 decode the key (GCP return encoded keys)
-	if circle.Base64Decode {
+	if circleContext.Base64Decode {
 		var keyb []byte
 		keyb, err = base64.StdEncoding.DecodeString(key)
 		if err != nil {
