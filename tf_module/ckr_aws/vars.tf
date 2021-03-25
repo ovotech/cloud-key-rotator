@@ -17,3 +17,8 @@ variable "enable_ssm_location" {
 variable "ckr_trigger_description" {
   default = "Scheduled cloud key rotation"
 }
+
+variable "region" {
+  type    = string
+  default = "eu-west-1"
+}
