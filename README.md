@@ -246,7 +246,7 @@ the service account.
 a `PERMISSION DENIED` error in logs
 
 For the CloudScheduler to have permission to invoke CloudFunctions, the Cloud
-Scheduler service account must be given the `Cloud Scheduler Service Agent'
+Scheduler service account must be given the `Cloud Scheduler Service Agent`
 role in your project IAMs.
 
 The Cloud Scheduler service account will have an id of format:
