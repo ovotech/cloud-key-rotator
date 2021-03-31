@@ -44,6 +44,7 @@ module "cloud-key-rotator" {
 * (Optional) `config_data = <string>` -> Pass a json blob from any source containing your config file.
 * (Optional) `enable_ssm_location = false` -> Whether to create an IAM policy allowing `ssm:PutParameter`.
 Set this to `true` if using SSM as a `cloud-key-rotator` location.
+* (Optional) `region = <string>` -> pass aws region. Defaults to `eu-west-1` if not set.
 
 ## Usage - GCP
 
@@ -55,6 +56,10 @@ You will need the following APIs enabled in your project:
 * cloudscheduler.googleapis.com
 * cloudfunctions.googleapis.com
 * appengine.googleapis.com
+
+Unfortunately GCP Cloud Scheduler requires an AppEngine App to be present in
+the project before jobs can be created. Currently this must be done outside
+of the module, though there are plans to bring it inside the module in future.
 
 The module supports Terraform version 0.12.6 and up.
 
@@ -91,11 +96,11 @@ EOF
 * `version = "0.2.0"` -> The Terraform module version to use.
 * `ckr_version = "0.27.29"` -> The Cloud Key Rotator binary version to use.
 * `ckr_config = <string>` -> Pass a json blob from any source containing your config file.
-* `ckr_resource_suffix = "my-project-name"` -> Will be appended to the bucket, cloud function, custom role
+* (Optional) `ckr_resource_suffix = "my-project-name"` -> Will be appended to the bucket, cloud function, custom role. Defaults to a 3 character random string
   service account and scheduler job names to prevent naming conflicts
 * (Optional) `ckr_schedule = "0 10 * * 1-5"` -> Defaults to triggering 10am Monday-Friday.
 * (Optional) `ckr_schedule_time_zone = "Europe/London"` -> The time zone for the scheduler job. Defaults to Europe/London
-* (Optional) `deploying_accounts = ["serviceAccount:terraform@myproject.iam.gserviceaccount.com"]` -> Any accounts which 
-  will be deploying the CKR terraform but do not have the iam.serviceAccountUser permission for the whole project. This 
-  gives the supplied accounts iam.serviceAccountUser permissions for the Cloud Key Rotator service account which is 
+* (Optional) `deploying_accounts = ["serviceAccount:terraform@myproject.iam.gserviceaccount.com"]` -> Any accounts which
+  will be deploying the CKR terraform but do not have the iam.serviceAccountUser permission for the whole project. This
+  gives the supplied accounts iam.serviceAccountUser permissions for the Cloud Key Rotator service account which is
   necessary to deploy the terraform module. Defaults to an empty list

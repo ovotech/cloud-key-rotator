@@ -6,3 +6,4 @@ ckr.yaml
 key.json
 .vscode
 tf_module/**/.terraform*
+curl_output

@@ -4,10 +4,18 @@ terraform {
 
 locals {
   key_rotator_filename = "cloud-key-rotator-${var.ckr_version}.zip"
+  ckr_resource_suffix  = var.ckr_resource_suffix == "" ? random_string.suffix.result : var.ckr_resource_suffix
+}
+
+resource "random_string" "suffix" {
+  length  = 3
+  special = false
+  number  = false
+  upper   = false
 }
 
 resource "google_service_account" "key_rotator_service_account" {
-  account_id   = "ckr-${var.ckr_resource_suffix}"
+  account_id   = "ckr-${local.ckr_resource_suffix}"
   display_name = "Service account which runs the cloud key rotation cloud function"
 }
 
@@ -21,7 +29,7 @@ resource "google_service_account_iam_member" "key_rotator_deployment" {
 data "google_client_config" "current_provider" {}
 
 resource "google_storage_bucket" "key_rotator_bucket" {
-  name     = "ckr-${var.ckr_resource_suffix}"
+  name     = "ckr-${local.ckr_resource_suffix}"
   location = data.google_client_config.current_provider.region
 
   uniform_bucket_level_access = true
@@ -49,7 +57,7 @@ resource "google_storage_bucket_object" "key_rotator_cloud_function_zip" {
 }
 
 resource "google_cloudfunctions_function" "key_rotator_cloud_function" {
-  name        = "ckr-${var.ckr_resource_suffix}"
+  name        = "ckr-${local.ckr_resource_suffix}"
   description = "This is a cloud function for rotating service account keys"
   runtime     = "go113"
 
@@ -87,7 +95,7 @@ resource "google_project_iam_member" "key_rotator_cloud_run_perms" {
 }
 
 resource "google_project_iam_custom_role" "key_rotator_custom_role" {
-  role_id     = "cloudKeyRotator_${replace(var.ckr_resource_suffix, "-", "_")}"
+  role_id     = "cloudKeyRotator_${replace(local.ckr_resource_suffix, "-", "_")}"
   title       = "Custom role for the cloud key rotator"
   description = "This role gives the permissions necessary to rotate the cloud keys using the cloud key rotator tool"
   permissions = [
@@ -104,7 +112,7 @@ resource "google_project_iam_member" "key_rotator_custom_perms" {
 }
 
 resource "google_cloud_scheduler_job" "key_rotator_scheduled_job" {
-  name             = "ckr-${var.ckr_resource_suffix}"
+  name             = "ckr-${local.ckr_resource_suffix}"
   description      = "Job to routinely rotate service account keys"
   schedule         = var.ckr_schedule
   time_zone        = var.ckr_schedule_time_zone
