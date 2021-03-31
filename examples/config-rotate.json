@@ -13,14 +13,14 @@
     "Accounts": [{
       "Provider": {
         "Name": "gcp",
-        "Project": "cepheus-202811"
+        "Project": "my-project"
       },
       "ProviderAccounts": [
         "cloud-key-client-test"
       ]
     }]
   },
-  "KeyLocations": [{
+  "AccountKeyLocations": [{
     "ServiceAccountName": "cloud-key-rotator-test",
     "GitHub": {
       "FilePath": "service-account.txt",

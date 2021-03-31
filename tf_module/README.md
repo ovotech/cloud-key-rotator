@@ -57,6 +57,10 @@ You will need the following APIs enabled in your project:
 * cloudfunctions.googleapis.com
 * appengine.googleapis.com
 
+Unfortunately GCP Cloud Scheduler requires an AppEngine App to be present in
+the project before jobs can be created. Currently this must be done outside
+of the module, though there are plans to bring it inside the module in future.
+
 The module supports Terraform version 0.12.6 and up.
 
 ### Terraform usage

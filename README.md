@@ -216,8 +216,63 @@ Service Account's email address.
   * Verify update has worked (where possible)
   * Delete old key
 
+
+## Troubleshooting
+
+### GCP
+
+- I get an error when using my key: `Response: {"error":"invalid_grant",
+"error_description":"Invalid JWT Signature."}`
+
+The key you're trying to use isn't valid. It could be because a rotation
+has happened since the process, e.g. CI/CD job, started using the key (hence
+the key has been deleted in GCP). If you run the `cloud-key-rotator` very
+frequently it increases your chance of seeing this.
+
+Try and schedule rotations for times that are unlikely to conflict with CI/CD
+jobs.
+
+- When trying to create a GCP AppEngine App (a pre-requisite of being able to
+create CloudScheduler jobs) I get an error: `Error waiting for App Engine app to
+create: Error code 13, message: AppEngine service account cannot be generated for e~<project_name>`
+
+This happens when the AppEngine default service account has been previously
+deleted from your project. If this happeed recently (possibly last 30d) there's
+a [gcloud cmd](https://cloud.google.com/sdk/gcloud/reference/beta/iam/service-accounts/undelete)
+available to try. If that's not possible, GCP support should be able to restore
+the service account.
+
+- CloudScheduler fails to invoke the `cloud-key-rotator` CloudFunction, showing
+a `PERMISSION DENIED` error in logs
+
+For the CloudScheduler to have permission to invoke CloudFunctions, the Cloud
+Scheduler service account must be given the `Cloud Scheduler Service Agent`
+role in your project IAMs.
+
+The Cloud Scheduler service account will have an id of format:
+
+```
+service-<project_number>@gcp-sa-cloudscheduler.iam.gserviceaccount.com
+```
+
+### CircleCI
+
+- I get an error in `cloud-key-rotator` logs: `404: Project not found: APIError null`
+
+First thing to check is that there's no typo in the `UsernameProject` value
+that you've set in config.
+
+The user/owner (preferably a bot user) of the CircleCI API key that you pass to
+`cloud-key-rotator` must have write access to the GitHub repo that the CircleCI
+jobs run from.
+
+
+
 ## Contributions
 
-Contributions are more than welcome. It should be straightforward plugging in
-integrations of new key providers and/or locations, so for that,
-or anything else, please branch or fork and raise a PR.
+Contributions are more than welcome from both internal (to ovotech) and external
+contributors.
+
+If you have write access to this repo, create a branch and PR, 
+otherwise fork and PR. Forked branches will be pushed to this repo by a 
+reviewer so PR checks can run.
