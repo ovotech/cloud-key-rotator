@@ -92,7 +92,7 @@ EOF
 * `version = "0.2.0"` -> The Terraform module version to use.
 * `ckr_version = "0.27.29"` -> The Cloud Key Rotator binary version to use.
 * `ckr_config = <string>` -> Pass a json blob from any source containing your config file.
-* `ckr_resource_suffix = "my-project-name"` -> Will be appended to the bucket, cloud function, custom role
+* (Optional) `ckr_resource_suffix = "my-project-name"` -> Will be appended to the bucket, cloud function, custom role. Defaults to a 3 character random string
   service account and scheduler job names to prevent naming conflicts
 * (Optional) `ckr_schedule = "0 10 * * 1-5"` -> Defaults to triggering 10am Monday-Friday.
 * (Optional) `ckr_schedule_time_zone = "Europe/London"` -> The time zone for the scheduler job. Defaults to Europe/London
