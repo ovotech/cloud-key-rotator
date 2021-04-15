@@ -53,6 +53,9 @@ jobs:
     executor: terraform/terraform-0_12
     steps:
     - checkout
+    - run:
+        command: |
+          tfswitch 0.12.30
     - terraform/fmt-check:
         path: tf_module/ckr_aws
     # Not running validate for AWS as the AWS provider requires
@@ -64,6 +67,9 @@ jobs:
     executor: terraform/terraform-0_12
     steps:
     - checkout
+    - run:
+        command: |
+          tfswitch 0.12.30
     - terraform/fmt-check:
         path: tf_module/ckr_gcp
     - terraform/validate:
