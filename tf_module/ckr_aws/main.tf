@@ -1,3 +1,7 @@
+terraform {
+  required_version = "< 0.15.0"
+}
+
 data "aws_caller_identity" "current" {}
 
 locals {
