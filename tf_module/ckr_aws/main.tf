@@ -1,3 +1,8 @@
+terraform {
+  # version >= 0.15.0 will break as the terraform orb v1 doesn't support it
+  required_version = "< 0.15.0"
+}
+
 data "aws_caller_identity" "current" {}
 
 locals {
