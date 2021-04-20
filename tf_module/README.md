@@ -38,9 +38,9 @@ module "cloud-key-rotator" {
 
 ### Variables
 
-* `version = "0.1.0"` -> The Terraform module version to use.
-* `ckr_version = "0.27.29"` -> The Cloud Key Rotator binary version to use.
-* (Optional) `ckr_schedule = "cron(0 10 ? * MON-FRI *)"` -> Defaults to triggering 10am Monday-Friday.
+* `version = "0.2.0"` -> The Terraform module version to use.
+* `ckr_version = "0.27.35"` -> The Cloud Key Rotator binary version to use.
+* (Optional) `ckr_schedule = "0 10 * * 1-5"` -> Defaults to triggering 10am Monday-Friday.
 * (Optional) `config_data = <string>` -> Pass a json blob from any source containing your config file.
 * (Optional) `enable_ssm_location = false` -> Whether to create an IAM policy allowing `ssm:PutParameter`.
 Set this to `true` if using SSM as a `cloud-key-rotator` location.
