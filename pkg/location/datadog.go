@@ -54,7 +54,7 @@ func (dd Datadog) Write(serviceAccountName string, wrapper KeyWrapper, creds cre
 	}
 
 	var r *http.Response
-	if _, r, err = client.GCPIntegrationApi.UpdateGCPIntegration(ctx).Body(integration).Execute(); err != nil {
+	if _, r, err = client.GCPIntegrationApi.UpdateGCPIntegration(ctx, integration); err != nil {
 		return
 	}
 
@@ -74,7 +74,7 @@ func (dd Datadog) Write(serviceAccountName string, wrapper KeyWrapper, creds cre
 }
 
 func (dd Datadog) getDatadogGCPIntegration(ctx context.Context, client *datadog.APIClient) (datadog.GCPAccount, error) {
-	accs, _, err := client.GCPIntegrationApi.ListGCPIntegration(ctx).Execute()
+	accs, _, err := client.GCPIntegrationApi.ListGCPIntegration(ctx)
 	if err != nil {
 		return datadog.GCPAccount{}, err
 	}
