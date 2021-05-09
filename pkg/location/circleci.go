@@ -28,18 +28,23 @@ import (
 // EnvVarLister type to allow for mocking
 type EnvVarLister func(username, project string, client *circleci.Client) ([]circleci.EnvVar, error)
 
+// EnvVarDeleter type to allow for mocking
 type EnvVarDeleter func(username, project, envVarName string, client *circleci.Client) error
 
+// EnvVarAdder type to allow for mocking
 type EnvVarAdder func(username, project, envVarName, envVarValue string, client *circleci.Client) (*circleci.EnvVar, error)
 
+// listEnvVars of type EnvVarLister
 func listEnvVars(username, project string, client *circleci.Client) ([]circleci.EnvVar, error) {
 	return client.ListEnvVars(username, project)
 }
 
+// deleteEnvVar of type EnvVarDeleter
 func deleteEnvVar(username, project, envVarName string, client *circleci.Client) error {
 	return client.DeleteEnvVar(username, project, envVarName)
 }
 
+// addEnvVar of type EnvVarAdder
 func addEnvVar(username, project, envVarName, envVarValue string, client *circleci.Client) (*circleci.EnvVar, error) {
 	return client.AddEnvVar(username, project, envVarName, envVarValue)
 }
