@@ -53,12 +53,19 @@ func TestVerifyEnvVarsNotFound(t *testing.T) {
 	// return a "foo" env var
 	err := verifyCircleCiEnvVar("", "", "bar", nil, mockListEnvVars)
 	if err == nil {
-		t.Error("Expected error, got nil")
+		t.Error("Expected error after env var not found, got nil")
 	}
 }
 
 func TestUpdateEnvVarSuccess(t *testing.T) {
 	updateCircleCIEnvVar("", "", "foo", "", nil, mockListEnvVars, mockDeleteEnvVar, mockAddEnvVar)
+}
+
+func TestUpdateEnvVarNotFound(t *testing.T) {
+	err := updateCircleCIEnvVar("", "", "bar", "", nil, mockListEnvVars, mockDeleteEnvVar, mockAddEnvVar)
+	if err == nil {
+		t.Error("Expected error after env var not found, got nil")
+	}
 }
 
 func TestUpdateEnvVarsListFail(t *testing.T) {
