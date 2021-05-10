@@ -42,8 +42,16 @@ func TestVerifyEnvVarsSuccess(t *testing.T) {
 }
 
 func TestVerifyEnvVarsFail(t *testing.T) {
-	// verifying an env var of name "bar" should error, as our mock will only return "foo"
 	err := verifyCircleCiEnvVar("", "", "", nil, mockListEnvVarsError)
+	if err == nil {
+		t.Error("Expected error, got nil")
+	}
+}
+
+func TestVerifyEnvVarsNotFound(t *testing.T) {
+	// verifying an env var of name "bar" should error, as our mock will only
+	// return a "foo" env var
+	err := verifyCircleCiEnvVar("", "", "bar", nil, mockListEnvVars)
 	if err == nil {
 		t.Error("Expected error, got nil")
 	}
@@ -53,16 +61,22 @@ func TestUpdateEnvVarSuccess(t *testing.T) {
 	updateCircleCIEnvVar("", "", "foo", "", nil, mockListEnvVars, mockDeleteEnvVar, mockAddEnvVar)
 }
 
-func TestUpdateEnvVarsFail(t *testing.T) {
+func TestUpdateEnvVarsListFail(t *testing.T) {
 	err := updateCircleCIEnvVar("", "", "", "", nil, mockListEnvVarsError, mockDeleteEnvVar, mockAddEnvVar)
 	if err == nil {
 		t.Error("Expected error from listEnvVars, got nil")
 	}
-	err = updateCircleCIEnvVar("", "", "", "", nil, mockListEnvVars, mockDeleteEnvVarError, mockAddEnvVar)
+}
+
+func TestUpdateEnvVarsDeleteFail(t *testing.T) {
+	err := updateCircleCIEnvVar("", "", "", "", nil, mockListEnvVars, mockDeleteEnvVarError, mockAddEnvVar)
 	if err == nil {
 		t.Error("Expected error from deleteEnvVar, got nil")
 	}
-	err = updateCircleCIEnvVar("", "", "", "", nil, mockListEnvVars, mockDeleteEnvVar, mockAddEnvVarError)
+}
+
+func TestUpdateEnvVarsAddFail(t *testing.T) {
+	err := updateCircleCIEnvVar("", "", "", "", nil, mockListEnvVars, mockDeleteEnvVar, mockAddEnvVarError)
 	if err == nil {
 		t.Error("Expected error from addEnvVar, got nil")
 	}
