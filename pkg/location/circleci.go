@@ -25,28 +25,10 @@ import (
 	"github.com/ovotech/cloud-key-rotator/pkg/log"
 )
 
-// EnvVarLister type to allow for mocking
-type EnvVarLister func(username, project string, client *circleci.Client) ([]circleci.EnvVar, error)
-
-// EnvVarDeleter type to allow for mocking
-type EnvVarDeleter func(username, project, envVarName string, client *circleci.Client) error
-
-// EnvVarAdder type to allow for mocking
-type EnvVarAdder func(username, project, envVarName, envVarValue string, client *circleci.Client) (*circleci.EnvVar, error)
-
-// listEnvVars of type EnvVarLister
-func listEnvVars(username, project string, client *circleci.Client) ([]circleci.EnvVar, error) {
-	return client.ListEnvVars(username, project)
-}
-
-// deleteEnvVar of type EnvVarDeleter
-func deleteEnvVar(username, project, envVarName string, client *circleci.Client) error {
-	return client.DeleteEnvVar(username, project, envVarName)
-}
-
-// addEnvVar of type EnvVarAdder
-func addEnvVar(username, project, envVarName, envVarValue string, client *circleci.Client) (*circleci.EnvVar, error) {
-	return client.AddEnvVar(username, project, envVarName, envVarValue)
+type CircleCiClient interface {
+	ListEnvVars(string, string) ([]circleci.EnvVar, error)
+	DeleteEnvVar(string, string, string) error
+	AddEnvVar(string, string, string, string) (*circleci.EnvVar, error)
 }
 
 //CircleCI type
@@ -93,12 +75,12 @@ func (circle CircleCI) Write(serviceAccountName string, keyWrapper KeyWrapper, c
 	}
 
 	if len(keyIDEnvVar) > 0 {
-		if err = updateCircleCIEnvVar(username, project, keyIDEnvVar, keyWrapper.KeyID, client, listEnvVars, deleteEnvVar, addEnvVar); err != nil {
+		if err = updateCircleCIEnvVar(username, project, keyIDEnvVar, keyWrapper.KeyID, client); err != nil {
 			return
 		}
 	}
 
-	if err = updateCircleCIEnvVar(username, project, keyEnvVar, key, client, listEnvVars, deleteEnvVar, addEnvVar); err != nil {
+	if err = updateCircleCIEnvVar(username, project, keyEnvVar, key, client); err != nil {
 		return
 	}
 
@@ -110,26 +92,25 @@ func (circle CircleCI) Write(serviceAccountName string, keyWrapper KeyWrapper, c
 	return updated, nil
 }
 
-func updateCircleCIEnvVar(username, project, envVarName, envVarValue string, client *circleci.Client,
-	envVarListerFunc EnvVarLister, envVarDeleterFunc EnvVarDeleter, envVarAdderFunc EnvVarAdder) (err error) {
-	if err = verifyCircleCiEnvVar(username, project, envVarName, client, envVarListerFunc); err != nil {
+func updateCircleCIEnvVar(username, project, envVarName, envVarValue string, client CircleCiClient) (err error) {
+	if err = verifyCircleCiEnvVar(username, project, envVarName, client); err != nil {
 		return
 	}
-	if err = envVarDeleterFunc(username, project, envVarName, client); err != nil {
+	if err = client.DeleteEnvVar(username, project, envVarName); err != nil {
 		return
 	}
 	logger.Infof("Deleted CircleCI env var: %s from %s/%s", envVarName, username, project)
-	if _, err = envVarAdderFunc(username, project, envVarName, envVarValue, client); err != nil {
+	if _, err = client.AddEnvVar(username, project, envVarName, envVarValue); err != nil {
 		return
 	}
 	logger.Infof("Added CircleCI env var: %s to %s/%s", envVarName, username, project)
-	return verifyCircleCiEnvVar(username, project, envVarName, client, envVarListerFunc)
+	return verifyCircleCiEnvVar(username, project, envVarName, client)
 }
 
-func verifyCircleCiEnvVar(username, project, envVarName string, client *circleci.Client, envVarListerFunc EnvVarLister) (err error) {
+func verifyCircleCiEnvVar(username, project, envVarName string, client CircleCiClient) (err error) {
 	var exists bool
 	var envVars []circleci.EnvVar
-	if envVars, err = envVarListerFunc(username, project, client); err != nil {
+	if envVars, err = client.ListEnvVars(username, project); err != nil {
 		return
 	}
 	for _, envVar := range envVars {
