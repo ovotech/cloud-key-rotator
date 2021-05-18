@@ -8,15 +8,15 @@ either AWS or GCP.
 
 ### Pre-requisite
 
-You'll need a configuration json file which holds secrets and which keys to rotate.  [Examples](https://github.com/ovotech/cloud-key-rotator/tree/master/examples)
+You'll need a configuration json file which holds secrets and which keys to rotate. [Examples](https://github.com/ovotech/cloud-key-rotator/tree/master/examples)
 here and detail in the main
 [README](https://github.com/ovotech/cloud-key-rotator/blob/master/README.md).
 
 Either:
 
-* Create a config.json. Apply the Terraform module, and then replace the `placeholder` ckr-config secret value with your json blob.
+- Create a config.json. Apply the Terraform module, and then replace the `placeholder` ckr-config secret value with your json blob.
 
-* Create a config.json. Store it somewhere (in AWS or otherwise), and inject it into Terraform to the `config_data` variable as a string.
+- Create a config.json. Store it somewhere (in AWS or otherwise), and inject it into Terraform to the `config_data` variable as a string.
 
 An example config.json template to rotate an SSM parameter that holds an IAM user's details and a CircleCi user (requiring a Circle API key to do so) is [here](https://github.com/ovotech/cloud-key-rotator/tree/master/examples/config-template.tmpl).
 
@@ -38,13 +38,13 @@ module "cloud-key-rotator" {
 
 ### Variables
 
-* `version = "0.2.0"` -> The Terraform module version to use.
-* `ckr_version = "0.27.35"` -> The Cloud Key Rotator binary version to use.
-* (Optional) `ckr_schedule = "0 10 * * 1-5"` -> Defaults to triggering 10am Monday-Friday.
-* (Optional) `config_data = <string>` -> Pass a json blob from any source containing your config file.
-* (Optional) `enable_ssm_location = false` -> Whether to create an IAM policy allowing `ssm:PutParameter`.
-Set this to `true` if using SSM as a `cloud-key-rotator` location.
-* (Optional) `region = <string>` -> pass aws region. Defaults to `eu-west-1` if not set.
+- `version = "0.2.0"` -> The Terraform module version to use.
+- `ckr_version = "0.27.35"` -> The Cloud Key Rotator binary version to use.
+- (Optional) `ckr_schedule = "0 10 * * 1-5"` -> Defaults to triggering 10am Monday-Friday.
+- (Optional) `config_data = <string>` -> Pass a json blob from any source containing your config file.
+- (Optional) `enable_ssm_location = false` -> Whether to create an IAM policy allowing `ssm:PutParameter`.
+  Set this to `true` if using SSM as a `cloud-key-rotator` location.
+- (Optional) `region = <string>` -> pass aws region. Defaults to `eu-west-1` if not set.
 
 ## Usage - GCP
 
@@ -52,10 +52,10 @@ This module creates a Cloud Function to run the Cloud Key Rotator and a job in C
 
 You will need the following APIs enabled in your project:
 
-* cloudbuild.googleapis.com
-* cloudscheduler.googleapis.com
-* cloudfunctions.googleapis.com
-* appengine.googleapis.com
+- cloudbuild.googleapis.com
+- cloudscheduler.googleapis.com
+- cloudfunctions.googleapis.com
+- appengine.googleapis.com
 
 Unfortunately GCP Cloud Scheduler requires an AppEngine App to be present in
 the project before jobs can be created. Currently this must be done outside
@@ -93,14 +93,15 @@ EOF
 
 ### Variables
 
-* `version = "0.2.0"` -> The Terraform module version to use.
-* `ckr_version = "0.27.29"` -> The Cloud Key Rotator binary version to use.
-* `ckr_config = <string>` -> Pass a json blob from any source containing your config file.
-* (Optional) `ckr_resource_suffix = "my-project-name"` -> Will be appended to the bucket, cloud function, custom role. Defaults to a 3 character random string
+- `version = "0.2.0"` -> The Terraform module version to use.
+- `ckr_version = "0.27.29"` -> The Cloud Key Rotator binary version to use.
+- `ckr_config = <string>` -> Pass a json blob from any source containing your config file.
+- (Optional) `ckr_resource_suffix = "my-project-name"` -> Will be appended to the bucket, cloud function, custom role. Defaults to a 3 character random string
   service account and scheduler job names to prevent naming conflicts
-* (Optional) `ckr_schedule = "0 10 * * 1-5"` -> Defaults to triggering 10am Monday-Friday.
-* (Optional) `ckr_schedule_time_zone = "Europe/London"` -> The time zone for the scheduler job. Defaults to Europe/London
-* (Optional) `deploying_accounts = ["serviceAccount:terraform@myproject.iam.gserviceaccount.com"]` -> Any accounts which
+- (Optional) `ckr_schedule = "0 10 * * 1-5"` -> Defaults to triggering 10am Monday-Friday.
+- (Optional) `ckr_schedule_time_zone = "Europe/London"` -> The time zone for the scheduler job. Defaults to Europe/London
+- (Optional) `deploying_accounts = ["serviceAccount:terraform@myproject.iam.gserviceaccount.com"]` -> Any accounts which
   will be deploying the CKR terraform but do not have the iam.serviceAccountUser permission for the whole project. This
   gives the supplied accounts iam.serviceAccountUser permissions for the Cloud Key Rotator service account which is
   necessary to deploy the terraform module. Defaults to an empty list
+- (Optional) `ckr_timeout = 300` -> Timeout (in seconds) for the function. Default value is 300 seconds. Cannot be more than 540 seconds.
