@@ -25,5 +25,5 @@ variable "region" {
 
 variable "ckr_timeout" {
   default = 300
-  type = number
+  type    = number
 }
