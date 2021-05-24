@@ -33,7 +33,7 @@ variable "deploying_accounts" {
 }
 
 variable "ckr_timeout" {
-  default = 300
-  type = number
+  default     = 300
+  type        = number
   description = "(Optional) Timeout (in seconds) for the function. Default value is 300 seconds. Cannot be more than 540 seconds."
 }

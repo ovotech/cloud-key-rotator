@@ -68,7 +68,7 @@ resource "google_cloudfunctions_function" "key_rotator_cloud_function" {
   trigger_http          = true
   entry_point           = "Request"
   service_account_email = google_service_account.key_rotator_service_account.email
-  timeout = var.ckr_timeout
+  timeout               = var.ckr_timeout
 
   environment_variables = {
     CKR_BUCKET_NAME = google_storage_bucket.key_rotator_bucket.name
