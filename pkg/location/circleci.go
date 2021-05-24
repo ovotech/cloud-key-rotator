@@ -25,29 +25,114 @@ import (
 	"github.com/ovotech/cloud-key-rotator/pkg/log"
 )
 
-// EnvVarLister type to allow for mocking
-type EnvVarLister func(username, project string, client *circleci.Client) ([]circleci.EnvVar, error)
+// // EnvVarLister type to allow for mocking
+// type EnvVarLister func(username, project string, client *circleci.Client) ([]circleci.EnvVar, error)
 
-// EnvVarDeleter type to allow for mocking
-type EnvVarDeleter func(username, project, envVarName string, client *circleci.Client) error
+// // EnvVarDeleter type to allow for mocking
+// type EnvVarDeleter func(username, project, envVarName string, client *circleci.Client) error
 
-// EnvVarAdder type to allow for mocking
-type EnvVarAdder func(username, project, envVarName, envVarValue string, client *circleci.Client) (*circleci.EnvVar, error)
+// // EnvVarAdder type to allow for mocking
+// type EnvVarAdder func(username, project, envVarName, envVarValue string, client *circleci.Client) (*circleci.EnvVar, error)
 
-// listEnvVars of type EnvVarLister
-func listEnvVars(username, project string, client *circleci.Client) ([]circleci.EnvVar, error) {
-	return client.ListEnvVars(username, project)
+type circleCIListCaller interface {
+	list() ([]circleci.EnvVar, error)
+	getUsername() string
+	getProject() string
 }
 
-// deleteEnvVar of type EnvVarDeleter
-func deleteEnvVar(username, project, envVarName string, client *circleci.Client) error {
-	return client.DeleteEnvVar(username, project, envVarName)
+type circleCIDeleteCaller interface {
+	delete() error
+	getEnvVarName() string
+	getUsername() string
+	getProject() string
 }
 
-// addEnvVar of type EnvVarAdder
-func addEnvVar(username, project, envVarName, envVarValue string, client *circleci.Client) (*circleci.EnvVar, error) {
-	return client.AddEnvVar(username, project, envVarName, envVarValue)
+type circleCIAddCaller interface {
+	add() (*circleci.EnvVar, error)
+	getEnvVarName() string
+	getUsername() string
+	getProject() string
 }
+
+type circleCICallList struct {
+	client   *circleci.Client
+	project  string
+	username string
+}
+
+type circleCICallDelete struct {
+	client     *circleci.Client
+	envVarName string
+	project    string
+	username   string
+}
+
+type circleCICallAdd struct {
+	client      *circleci.Client
+	envVarName  string
+	envVarValue string
+	project     string
+	username    string
+}
+
+func (c circleCICallList) list() ([]circleci.EnvVar, error) {
+	return c.client.ListEnvVars(c.username, c.project)
+}
+
+func (c circleCICallList) getUsername() string {
+	return c.username
+}
+
+func (c circleCICallList) getProject() string {
+	return c.project
+}
+
+func (c circleCICallDelete) delete() error {
+	return c.client.DeleteEnvVar(c.username, c.project, c.envVarName)
+}
+
+func (c circleCICallDelete) getEnvVarName() string {
+	return c.envVarName
+}
+
+func (c circleCICallDelete) getUsername() string {
+	return c.username
+}
+
+func (c circleCICallDelete) getProject() string {
+	return c.project
+}
+
+func (c circleCICallAdd) add() (*circleci.EnvVar, error) {
+	return c.client.AddEnvVar(c.username, c.project, c.envVarName, c.envVarValue)
+}
+
+func (c circleCICallAdd) getEnvVarName() string {
+	return c.envVarName
+}
+
+func (c circleCICallAdd) getUsername() string {
+	return c.envVarName
+}
+
+func (c circleCICallAdd) getProject() string {
+	return c.envVarName
+}
+
+// // listEnvVars of type EnvVarLister
+// func listEnvVars(username, project string, client *circleci.Client) ([]circleci.EnvVar, error) {
+// 	return client.ListEnvVars(username, project)
+// }
+
+// // deleteEnvVar of type EnvVarDeleter
+// func deleteEnvVar(username, project, envVarName string, client *circleci.Client) error {
+// 	return client.DeleteEnvVar(username, project, envVarName)
+// }
+
+// // addEnvVar of type EnvVarAdder
+// func addEnvVar(username, project, envVarName, envVarValue string, client *circleci.Client) (*circleci.EnvVar, error) {
+// 	return client.AddEnvVar(username, project, envVarName, envVarValue)
+// }
 
 //CircleCI type
 type CircleCI struct {
@@ -80,6 +165,8 @@ func (circle CircleCI) Write(serviceAccountName string, keyWrapper KeyWrapper, c
 		key = string(keyb)
 	}
 
+	circleCICallList := circleCICallList{client: client, project: project, username: username}
+
 	var keyEnvVar string
 	var idValue bool
 	if keyEnvVar, err = getVarNameFromProvider(provider, circle.KeyEnvVar, idValue); err != nil {
@@ -93,12 +180,15 @@ func (circle CircleCI) Write(serviceAccountName string, keyWrapper KeyWrapper, c
 	}
 
 	if len(keyIDEnvVar) > 0 {
-		if err = updateCircleCIEnvVar(username, project, keyIDEnvVar, keyWrapper.KeyID, client, listEnvVars, deleteEnvVar, addEnvVar); err != nil {
+		circleCICallDelete := circleCICallDelete{client: client, envVarName: keyIDEnvVar, username: username, project: project}
+		circleCICallAdd := circleCICallAdd{client: client, envVarName: keyIDEnvVar, envVarValue: keyWrapper.KeyID, username: username, project: project}
+		if err = updateCircleCIEnvVar(circleCICallList, circleCICallDelete, circleCICallAdd); err != nil {
 			return
 		}
 	}
-
-	if err = updateCircleCIEnvVar(username, project, keyEnvVar, key, client, listEnvVars, deleteEnvVar, addEnvVar); err != nil {
+	circleCICallDelete := circleCICallDelete{client: client, envVarName: keyEnvVar, username: username, project: project}
+	circleCICallAdd := circleCICallAdd{client: client, envVarName: keyIDEnvVar, envVarValue: keyWrapper.KeyID, username: username, project: project}
+	if err = updateCircleCIEnvVar(circleCICallList, circleCICallDelete, circleCICallAdd); err != nil {
 		return
 	}
 
@@ -110,26 +200,25 @@ func (circle CircleCI) Write(serviceAccountName string, keyWrapper KeyWrapper, c
 	return updated, nil
 }
 
-func updateCircleCIEnvVar(username, project, envVarName, envVarValue string, client *circleci.Client,
-	envVarListerFunc EnvVarLister, envVarDeleterFunc EnvVarDeleter, envVarAdderFunc EnvVarAdder) (err error) {
-	if err = verifyCircleCiEnvVar(username, project, envVarName, client, envVarListerFunc); err != nil {
+func updateCircleCIEnvVar(circleCICallList circleCIListCaller, circleCICallDelete circleCIDeleteCaller, circleCICallAdd circleCIAddCaller) (err error) {
+	if err = verifyCircleCiEnvVar(circleCICallList, circleCICallDelete.getEnvVarName()); err != nil {
 		return
 	}
-	if err = envVarDeleterFunc(username, project, envVarName, client); err != nil {
+	if err = circleCICallDelete.delete(); err != nil {
 		return
 	}
-	logger.Infof("Deleted CircleCI env var: %s from %s/%s", envVarName, username, project)
-	if _, err = envVarAdderFunc(username, project, envVarName, envVarValue, client); err != nil {
+	logger.Infof("Deleted CircleCI env var: %s from %s/%s", circleCICallDelete.getEnvVarName(), circleCICallDelete.getUsername(), circleCICallDelete.getProject())
+	if _, err = circleCICallAdd.add(); err != nil {
 		return
 	}
-	logger.Infof("Added CircleCI env var: %s to %s/%s", envVarName, username, project)
-	return verifyCircleCiEnvVar(username, project, envVarName, client, envVarListerFunc)
+	logger.Infof("Added CircleCI env var: %s to %s/%s", circleCICallAdd.getEnvVarName(), circleCICallAdd.getUsername(), circleCICallAdd.getProject())
+	return verifyCircleCiEnvVar(circleCICallList, circleCICallAdd.getEnvVarName())
 }
 
-func verifyCircleCiEnvVar(username, project, envVarName string, client *circleci.Client, envVarListerFunc EnvVarLister) (err error) {
+func verifyCircleCiEnvVar(circleCICallList circleCIListCaller, envVarName string) (err error) {
 	var exists bool
 	var envVars []circleci.EnvVar
-	if envVars, err = envVarListerFunc(username, project, client); err != nil {
+	if envVars, err = circleCICallList.list(); err != nil {
 		return
 	}
 	for _, envVar := range envVars {
@@ -140,10 +229,10 @@ func verifyCircleCiEnvVar(username, project, envVarName string, client *circleci
 	}
 	if exists {
 		logger.Infof("Verified CircleCI env var: %s on %s/%s",
-			envVarName, username, project)
+			envVarName, circleCICallList.getUsername(), circleCICallList.getProject())
 	} else {
 		err = fmt.Errorf("CircleCI env var: %s not detected on %s/%s",
-			envVarName, username, project)
+			envVarName, circleCICallList.getUsername(), circleCICallList.getProject())
 		return
 	}
 	return
