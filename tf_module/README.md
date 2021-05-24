@@ -43,7 +43,7 @@ module "cloud-key-rotator" {
 * (Optional) `ckr_schedule = "0 10 * * 1-5"` -> Defaults to triggering 10am Monday-Friday.
 * (Optional) `config_data = <string>` -> Pass a json blob from any source containing your config file.
 * (Optional) `enable_ssm_location = false` -> Whether to create an IAM policy allowing `ssm:PutParameter`.
-  Set this to `true` if using SSM as a `cloud-key-rotator` location.
+Set this to `true` if using SSM as a `cloud-key-rotator` location.
 * (Optional) `region = <string>` -> pass aws region. Defaults to `eu-west-1` if not set.
 
 ## Usage - GCP
