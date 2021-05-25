@@ -31,3 +31,9 @@ variable "deploying_accounts" {
   type        = list(string)
   description = "List of accounts which will be deploying the CKR terraform. This needs to be given if you are not giving the deploying accounts the iam.serviceAccountUser permission for the whole project"
 }
+
+variable "ckr_timeout" {
+  default     = 300
+  type        = number
+  description = "(Optional) Timeout (in seconds) for the function. Default value is 300 seconds. Cannot be more than 540 seconds."
+}
