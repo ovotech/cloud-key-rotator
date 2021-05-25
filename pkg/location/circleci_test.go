@@ -136,32 +136,6 @@ func (c circleCICallAddError) getEnvVarName() string {
 	return c.envVarName
 }
 
-// func mockListEnvVars(username, project string, client *circleci.Client) ([]circleci.EnvVar, error) {
-// 	envVar := circleci.EnvVar{Name: "foo", Value: "bar"}
-// 	return []circleci.EnvVar{envVar}, nil
-// }
-
-// func mockListEnvVarsError(username, project string, client *circleci.Client) ([]circleci.EnvVar, error) {
-// 	return nil, errors.New("Mock listEnvVars error from CircleCI")
-// }
-
-// func mockDeleteEnvVar(username, project, envVarName string, client *circleci.Client) error {
-// 	return nil
-// }
-
-// func mockDeleteEnvVarError(username, project, envVarName string, client *circleci.Client) error {
-// 	return errors.New("Mock deleteEnvVar error from CircleCI")
-// }
-
-// func mockAddEnvVar(username, project, envVarName, envVarValue string, client *circleci.Client) (*circleci.EnvVar, error) {
-// 	envVar := circleci.EnvVar{Name: "foo", Value: "bar"}
-// 	return &envVar, nil
-// }
-
-// func mockAddEnvVarError(username, project, envVarName, envVarValue string, client *circleci.Client) (*circleci.EnvVar, error) {
-// 	return nil, errors.New("Mock addEnvVar error from CircleCI")
-// }
-
 // Test functions
 
 func TestVerifyEnvVarsSuccess(t *testing.T) {

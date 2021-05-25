@@ -25,15 +25,6 @@ import (
 	"github.com/ovotech/cloud-key-rotator/pkg/log"
 )
 
-// // EnvVarLister type to allow for mocking
-// type EnvVarLister func(username, project string, client *circleci.Client) ([]circleci.EnvVar, error)
-
-// // EnvVarDeleter type to allow for mocking
-// type EnvVarDeleter func(username, project, envVarName string, client *circleci.Client) error
-
-// // EnvVarAdder type to allow for mocking
-// type EnvVarAdder func(username, project, envVarName, envVarValue string, client *circleci.Client) (*circleci.EnvVar, error)
-
 type circleCIListCaller interface {
 	list() ([]circleci.EnvVar, error)
 	getUsername() string
@@ -118,21 +109,6 @@ func (c circleCICallAdd) getUsername() string {
 func (c circleCICallAdd) getProject() string {
 	return c.envVarName
 }
-
-// // listEnvVars of type EnvVarLister
-// func listEnvVars(username, project string, client *circleci.Client) ([]circleci.EnvVar, error) {
-// 	return client.ListEnvVars(username, project)
-// }
-
-// // deleteEnvVar of type EnvVarDeleter
-// func deleteEnvVar(username, project, envVarName string, client *circleci.Client) error {
-// 	return client.DeleteEnvVar(username, project, envVarName)
-// }
-
-// // addEnvVar of type EnvVarAdder
-// func addEnvVar(username, project, envVarName, envVarValue string, client *circleci.Client) (*circleci.EnvVar, error) {
-// 	return client.AddEnvVar(username, project, envVarName, envVarValue)
-// }
 
 //CircleCI type
 type CircleCI struct {
