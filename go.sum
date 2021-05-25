@@ -79,8 +79,8 @@ github.com/aws/aws-lambda-go v1.23.0 h1:Vjwow5COkFJp7GePkk9kjAo/DyX36b7wVPKwseQZ
 github.com/aws/aws-lambda-go v1.23.0/go.mod h1:jJmlefzPfGnckuHdXX7/80O3BvUUi12XOkbv4w9SGLU=
 github.com/aws/aws-sdk-go v1.34.4/go.mod h1:5zCpMtNQVjRREroY7sYe8lOMRSxkhG6MZveU8YkpAk0=
 github.com/aws/aws-sdk-go v1.34.9/go.mod h1:5zCpMtNQVjRREroY7sYe8lOMRSxkhG6MZveU8YkpAk0=
-github.com/aws/aws-sdk-go v1.38.30 h1:X+JDSwkpSQfoLqH4fBLmS0rou8W/cdCCCD5lntTk9Vs=
-github.com/aws/aws-sdk-go v1.38.30/go.mod h1:hcU610XS61/+aQV88ixoOzUoG7v3b31pl2zKMmprdro=
+github.com/aws/aws-sdk-go v1.38.47 h1:yWOz6zlDCiY3zvebYOZrI1LqCq6zWPWC5Cfe+mBcPos=
+github.com/aws/aws-sdk-go v1.38.47/go.mod h1:hcU610XS61/+aQV88ixoOzUoG7v3b31pl2zKMmprdro=
 github.com/beamly/go-gocd v0.0.0-20190719193049-383d56afbf92 h1:4cZnjWx0qjkJwyY+sFO37SFYgS3M8gAe3KARSlpPsY4=
 github.com/beamly/go-gocd v0.0.0-20190719193049-383d56afbf92/go.mod h1:pksG9m+PD4EGQOXi+SRJErSZDDPb5nodJsTRWm4I7To=
 github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24TaqPxmxbtue+5NUziq4I4S80YR8gNf3Q=
