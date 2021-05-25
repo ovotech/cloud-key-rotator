@@ -204,7 +204,7 @@ func TestUpdateEnvVarsDeleteFail(t *testing.T) {
 
 func TestUpdateEnvVarsAddFail(t *testing.T) {
 	err := updateCircleCIEnvVar(circleCICallListSuccess{}, circleCICallDeleteSuccess{}, circleCICallAddError{})
-	if err != nil {
+	if err == nil {
 		t.Error("Expected error from addEnvVar, got nil")
 	}
 }
