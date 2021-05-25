@@ -35,7 +35,7 @@ resource "aws_lambda_function" "cloud_key_rotator" {
   function_name = "cloud-key-rotator"
   role          = aws_iam_role.cloudkeyrotator_role.arn
   handler       = "cloud-key-rotator-lambda"
-  timeout       = 300
+  timeout       = var.ckr_timeout
   runtime       = "go1.x"
 }
 

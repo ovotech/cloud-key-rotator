@@ -8,7 +8,7 @@ either AWS or GCP.
 
 ### Pre-requisite
 
-You'll need a configuration json file which holds secrets and which keys to rotate.  [Examples](https://github.com/ovotech/cloud-key-rotator/tree/master/examples)
+You'll need a configuration json file which holds secrets and which keys to rotate. [Examples](https://github.com/ovotech/cloud-key-rotator/tree/master/examples)
 here and detail in the main
 [README](https://github.com/ovotech/cloud-key-rotator/blob/master/README.md).
 
@@ -104,3 +104,4 @@ EOF
   will be deploying the CKR terraform but do not have the iam.serviceAccountUser permission for the whole project. This
   gives the supplied accounts iam.serviceAccountUser permissions for the Cloud Key Rotator service account which is
   necessary to deploy the terraform module. Defaults to an empty list
+* (Optional) `ckr_timeout = 300` -> Timeout (in seconds) for the function. Default value is 300 seconds. Cannot be more than 540 seconds.
