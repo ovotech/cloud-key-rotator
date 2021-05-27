@@ -21,8 +21,8 @@ require (
 	github.com/spf13/viper v1.7.1
 	go.uber.org/zap v1.16.0
 	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
-	golang.org/x/oauth2 v0.0.0-20210427180440-81ed05c6b58c
-	google.golang.org/api v0.46.0
+	golang.org/x/oauth2 v0.0.0-20210514164344-f6687ab2804c
+	google.golang.org/api v0.47.0
 	gopkg.in/inf.v0 v0.9.0 // indirect
 	gopkg.in/ini.v1 v1.62.0
 	gopkg.in/src-d/go-git.v4 v4.13.1
