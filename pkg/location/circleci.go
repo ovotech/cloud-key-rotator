@@ -25,6 +25,7 @@ import (
 	"github.com/ovotech/cloud-key-rotator/pkg/log"
 )
 
+// CircleCiClient type
 type CircleCiClient interface {
 	ListEnvVars(string, string) ([]circleci.EnvVar, error)
 	DeleteEnvVar(string, string, string) error
