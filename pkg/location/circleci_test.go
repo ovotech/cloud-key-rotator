@@ -23,15 +23,15 @@ type mockCircleCiClient struct {
 	}
 }
 
-func (m mockCircleCiClient) ListEnvVars(s string, s2 string) ([]circleci.EnvVar, error) {
+func (m mockCircleCiClient) ListEnvVars(account, repo string) ([]circleci.EnvVar, error) {
 	return m.listEnvResponse.envVars, m.listEnvResponse.error
 }
 
-func (m mockCircleCiClient) DeleteEnvVar(s string, s2 string, s3 string) error {
+func (m mockCircleCiClient) DeleteEnvVar(account, repo, name string) error {
 	return m.deleteEnvResponse.error
 }
 
-func (m mockCircleCiClient) AddEnvVar(s string, s2 string, s3 string, s4 string) (*circleci.EnvVar, error) {
+func (m mockCircleCiClient) AddEnvVar(account, repo, name, value string) (*circleci.EnvVar, error) {
 	return m.addEnvResponse.envVar, m.addEnvResponse.error
 }
 
