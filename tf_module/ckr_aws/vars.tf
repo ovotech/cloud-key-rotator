@@ -22,3 +22,8 @@ variable "region" {
   type    = string
   default = "eu-west-1"
 }
+
+variable "ckr_timeout" {
+  default = 300
+  type    = number
+}

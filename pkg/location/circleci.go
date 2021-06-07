@@ -76,12 +76,12 @@ func (circle CircleCI) Write(serviceAccountName string, keyWrapper KeyWrapper, c
 	}
 
 	if len(keyIDEnvVar) > 0 {
-		if err = updateCircleCIEnvVar(username, project, keyIDEnvVar, keyWrapper.KeyID, client); err != nil {
+		if err = updateCircleCIEnvVar(username, project, keyIDEnvVar, keyWrapper.KeyID, client, listEnvVars, deleteEnvVar, addEnvVar); err != nil {
 			return
 		}
 	}
 
-	if err = updateCircleCIEnvVar(username, project, keyEnvVar, key, client); err != nil {
+	if err = updateCircleCIEnvVar(username, project, keyEnvVar, key, client, listEnvVars, deleteEnvVar, addEnvVar); err != nil {
 		return
 	}
 
@@ -97,15 +97,15 @@ func updateCircleCIEnvVar(username, project, envVarName, envVarValue string, cli
 	if err = verifyCircleCiEnvVar(username, project, envVarName, client); err != nil {
 		return
 	}
-	if err = client.DeleteEnvVar(username, project, envVarName); err != nil {
+	if err = envVarDeleterFunc(username, project, envVarName, client); err != nil {
 		return
 	}
 	logger.Infof("Deleted CircleCI env var: %s from %s/%s", envVarName, username, project)
-	if _, err = client.AddEnvVar(username, project, envVarName, envVarValue); err != nil {
+	if _, err = envVarAdderFunc(username, project, envVarName, envVarValue, client); err != nil {
 		return
 	}
 	logger.Infof("Added CircleCI env var: %s to %s/%s", envVarName, username, project)
-	return verifyCircleCiEnvVar(username, project, envVarName, client)
+	return verifyCircleCiEnvVar(username, project, envVarName, client, envVarListerFunc)
 }
 
 func verifyCircleCiEnvVar(username, project, envVarName string, client CircleCiClient) (err error) {

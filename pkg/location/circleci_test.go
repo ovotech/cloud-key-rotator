@@ -8,7 +8,6 @@ import (
 )
 
 // Mock functions
-
 type mockCircleCiClient struct {
 	listEnvResponse struct {
 		envVars []circleci.EnvVar
