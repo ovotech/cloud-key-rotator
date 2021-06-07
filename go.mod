@@ -4,7 +4,7 @@ go 1.13
 
 require (
 	cloud.google.com/go/storage v1.15.0
-	github.com/CircleCI-Public/circleci-cli v0.1.15195
+	github.com/CircleCI-Public/circleci-cli v0.1.15224
 	github.com/DataDog/datadog-api-client-go v1.0.0-beta.22
 	github.com/Sectorbob/mlab-ns2 v0.0.0-20171030222938-d3aa0c295a8a
 	github.com/aws/aws-lambda-go v1.24.0
@@ -19,7 +19,7 @@ require (
 	github.com/spf13/afero v1.3.2 // indirect
 	github.com/spf13/cobra v0.0.7
 	github.com/spf13/viper v1.7.1
-	go.uber.org/zap v1.16.0
+	go.uber.org/zap v1.17.0
 	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
 	golang.org/x/oauth2 v0.0.0-20210514164344-f6687ab2804c
 	google.golang.org/api v0.47.0
