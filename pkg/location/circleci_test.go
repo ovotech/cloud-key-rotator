@@ -8,82 +8,138 @@ import (
 )
 
 // Mock functions
-
-func mockListEnvVars(username, project string, client *circleci.Client) ([]circleci.EnvVar, error) {
-	envVar := circleci.EnvVar{Name: "foo", Value: "bar"}
-	return []circleci.EnvVar{envVar}, nil
+type mockCircleCiClient struct {
+	listEnvResponse struct {
+		envVars []circleci.EnvVar
+		error   error
+	}
+	deleteEnvResponse struct {
+		error error
+	}
+	addEnvResponse struct {
+		envVar *circleci.EnvVar
+		error  error
+	}
 }
 
-func mockListEnvVarsError(username, project string, client *circleci.Client) ([]circleci.EnvVar, error) {
-	return nil, errors.New("Mock listEnvVars error from CircleCI")
+func (m mockCircleCiClient) ListEnvVars(account, repo string) ([]circleci.EnvVar, error) {
+	return m.listEnvResponse.envVars, m.listEnvResponse.error
 }
 
-func mockDeleteEnvVar(username, project, envVarName string, client *circleci.Client) error {
-	return nil
+func (m mockCircleCiClient) DeleteEnvVar(account, repo, name string) error {
+	return m.deleteEnvResponse.error
 }
 
-func mockDeleteEnvVarError(username, project, envVarName string, client *circleci.Client) error {
-	return errors.New("Mock deleteEnvVar error from CircleCI")
-}
-
-func mockAddEnvVar(username, project, envVarName, envVarValue string, client *circleci.Client) (*circleci.EnvVar, error) {
-	envVar := circleci.EnvVar{Name: "foo", Value: "bar"}
-	return &envVar, nil
-}
-
-func mockAddEnvVarError(username, project, envVarName, envVarValue string, client *circleci.Client) (*circleci.EnvVar, error) {
-	return nil, errors.New("Mock addEnvVar error from CircleCI")
+func (m mockCircleCiClient) AddEnvVar(account, repo, name, value string) (*circleci.EnvVar, error) {
+	return m.addEnvResponse.envVar, m.addEnvResponse.error
 }
 
 // Test functions
 
 func TestVerifyEnvVarsSuccess(t *testing.T) {
-	verifyCircleCiEnvVar("", "", "foo", nil, mockListEnvVars)
+	client := mockCircleCiClient{listEnvResponse: struct {
+		envVars []circleci.EnvVar
+		error   error
+	}{envVars: []circleci.EnvVar{{Name: "foo"}}, error: nil}}
+	err := verifyCircleCiEnvVar("", "", "foo", client)
+	if err != nil {
+		t.Errorf("Expected nil, got %s", err)
+	}
 }
 
 func TestVerifyEnvVarsFail(t *testing.T) {
-	err := verifyCircleCiEnvVar("", "", "", nil, mockListEnvVarsError)
+	client := mockCircleCiClient{listEnvResponse: struct {
+		envVars []circleci.EnvVar
+		error   error
+	}{envVars: []circleci.EnvVar{}, error: nil}}
+	err := verifyCircleCiEnvVar("", "", "", client)
 	if err == nil {
 		t.Error("Expected error, got nil")
 	}
 }
 
 func TestVerifyEnvVarsNotFound(t *testing.T) {
-	// verifying an env var of name "bar" should error, as our mock will only
-	// return a "foo" env var
-	err := verifyCircleCiEnvVar("", "", "bar", nil, mockListEnvVars)
+	client := mockCircleCiClient{listEnvResponse: struct {
+		envVars []circleci.EnvVar
+		error   error
+	}{envVars: []circleci.EnvVar{{Name: "foo"}}, error: nil}}
+	err := verifyCircleCiEnvVar("", "", "bar", client)
 	if err == nil {
 		t.Error("Expected error after env var not found, got nil")
 	}
 }
 
 func TestUpdateEnvVarSuccess(t *testing.T) {
-	updateCircleCIEnvVar("", "", "foo", "", nil, mockListEnvVars, mockDeleteEnvVar, mockAddEnvVar)
+	client := mockCircleCiClient{
+		listEnvResponse: struct {
+			envVars []circleci.EnvVar
+			error   error
+		}{envVars: []circleci.EnvVar{{Name: "foo"}}, error: nil},
+		deleteEnvResponse: struct{ error error }{error: nil},
+		addEnvResponse: struct {
+			envVar *circleci.EnvVar
+			error  error
+		}{envVar: &circleci.EnvVar{Name: "foo", Value: ""}, error: nil},
+	}
+	err := updateCircleCIEnvVar("", "", "foo", "", client)
+	if err != nil {
+		t.Errorf("Expected nil, got %s", err)
+	}
 }
 
 func TestUpdateEnvVarNotFound(t *testing.T) {
-	err := updateCircleCIEnvVar("", "", "bar", "", nil, mockListEnvVars, mockDeleteEnvVar, mockAddEnvVar)
+	client := mockCircleCiClient{
+		listEnvResponse: struct {
+			envVars []circleci.EnvVar
+			error   error
+		}{envVars: []circleci.EnvVar{{Name: "foo"}}, error: nil},
+	}
+	err := updateCircleCIEnvVar("", "", "bar", "", client)
 	if err == nil {
 		t.Error("Expected error after env var not found, got nil")
 	}
 }
 
 func TestUpdateEnvVarsListFail(t *testing.T) {
-	err := updateCircleCIEnvVar("", "", "", "", nil, mockListEnvVarsError, mockDeleteEnvVar, mockAddEnvVar)
+	client := mockCircleCiClient{
+		listEnvResponse: struct {
+			envVars []circleci.EnvVar
+			error   error
+		}{envVars: []circleci.EnvVar{}, error: errors.New("could not list env vars")},
+	}
+	err := updateCircleCIEnvVar("", "", "", "", client)
 	if err == nil {
 		t.Error("Expected error from listEnvVars, got nil")
 	}
 }
 
 func TestUpdateEnvVarsDeleteFail(t *testing.T) {
-	err := updateCircleCIEnvVar("", "", "", "", nil, mockListEnvVars, mockDeleteEnvVarError, mockAddEnvVar)
+	client := mockCircleCiClient{
+		listEnvResponse: struct {
+			envVars []circleci.EnvVar
+			error   error
+		}{envVars: []circleci.EnvVar{{Name: "foo"}}, error: nil},
+		deleteEnvResponse: struct{ error error }{error: errors.New("could not delete env var")},
+	}
+	err := updateCircleCIEnvVar("", "", "foo", "", client)
 	if err == nil {
 		t.Error("Expected error from deleteEnvVar, got nil")
 	}
 }
 
 func TestUpdateEnvVarsAddFail(t *testing.T) {
-	err := updateCircleCIEnvVar("", "", "", "", nil, mockListEnvVars, mockDeleteEnvVar, mockAddEnvVarError)
+	client := mockCircleCiClient{
+		listEnvResponse: struct {
+			envVars []circleci.EnvVar
+			error   error
+		}{envVars: []circleci.EnvVar{{Name: "foo"}}, error: nil},
+		deleteEnvResponse: struct{ error error }{error: nil},
+		addEnvResponse: struct {
+			envVar *circleci.EnvVar
+			error  error
+		}{envVar: nil, error: errors.New("could not add env var")},
+	}
+	err := updateCircleCIEnvVar("", "", "", "", client)
 	if err == nil {
 		t.Error("Expected error from addEnvVar, got nil")
 	}
