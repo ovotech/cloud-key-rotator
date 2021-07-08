@@ -7,6 +7,13 @@ orbs:
   terraform: ovotech/terraform@1
 
 jobs:
+  snyk_scan_go:
+    docker:
+      - image: circleci/golang:1.13
+    steps:
+      - checkout
+      - run: export GO111MODULE=on
+      - snyk/scan
   goreleaser:
     <<: *defaults
 
@@ -171,6 +178,24 @@ jobs:
 
 workflows:
   version: 2
+  commit:
+    jobs:
+      - go_fmt
+      - go_vet
+      - go_cyclo
+      - go_lint
+      - go_build
+      - go_test
+      - tf_check_aws
+      - tf_check_gcp
+      - publish_tf_module:
+          filters:
+            branches:
+              only: master
+      - snyk_scan_go:
+          filters:
+            branches:
+              ignore: master
   release_pipeline:
     jobs:
       - goreleaser:
@@ -193,75 +218,3 @@ workflows:
               only: /v[0-9]+(\.[0-9]+)*(-.*)*/
             branches:
               ignore: /.*/
-  pr_pipeline:
-    jobs:
-      - go_fmt:
-          filters:
-            branches:
-              ignore: master
-      - go_vet:
-          filters:
-            branches:
-              ignore: master
-      - go_cyclo:
-          filters:
-            branches:
-              ignore: master
-      - go_lint:
-          filters:
-            branches:
-              ignore: master
-      - go_build:
-          filters:
-            branches:
-              ignore: master
-      - go_test:
-          filters:
-            branches:
-              ignore: master
-      - tf_check_aws:
-          filters:
-            branches:
-              ignore: master
-      - tf_check_gcp:
-          filters:
-            branches:
-              ignore: master
-  master_pipeline:
-    jobs:
-      - go_fmt:
-          filters:
-            branches:
-              only: master
-      - go_vet:
-          filters:
-            branches:
-              only: master
-      - go_cyclo:
-          filters:
-            branches:
-              only: master
-      - go_lint:
-          filters:
-            branches:
-              only: master
-      - go_build:
-          filters:
-            branches:
-              only: master
-      - go_test:
-          filters:
-            branches:
-              only: master
-      - tf_check_aws:
-          filters:
-            branches:
-              only: master
-      - tf_check_gcp:
-          filters:
-            branches:
-              only: master
-      - publish_tf_module:
-          filters:
-            branches:
-              only: master
