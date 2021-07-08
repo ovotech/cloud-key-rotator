@@ -24,7 +24,7 @@ jobs:
       - checkout
       - setup_remote_docker
       - run: export GO111MODULE=on
-      - run: go build
+      - run: go build -o cloud-key-rotator ./cmd
       - run: docker build -t $IMAGE_NAME .
       - snyk/scan:
           docker-image-name: $IMAGE_NAME
