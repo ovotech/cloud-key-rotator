@@ -14,6 +14,7 @@ jobs:
     steps:
       - checkout
       - run: export GO111MODULE=on
+      - run: go build
       - snyk/scan
   snyk_scan_docker:
     docker:
