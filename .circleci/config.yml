@@ -17,7 +17,7 @@ jobs:
       - snyk/scan
   snyk_scan_docker:
     docker:
-      - image: 'circleci/buildpack-deps:stretch'
+      - image: circleci/golang:1.13
     environment:
       IMAGE_NAME: ovotech/cloud-key-rotator
     steps:
