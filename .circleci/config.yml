@@ -14,7 +14,6 @@ jobs:
     steps:
       - checkout
       - run: export GO111MODULE=on
-      - run: go build
       - snyk/scan
   snyk_scan_docker:
     docker:
@@ -24,6 +23,8 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
+      - run: export GO111MODULE=on
+      - run: go build
       - run: docker build -t $IMAGE_NAME .
       - snyk/scan:
           docker-image-name: $IMAGE_NAME
