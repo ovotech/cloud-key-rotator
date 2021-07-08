@@ -5,6 +5,7 @@ version: 2.1
 
 orbs:
   terraform: ovotech/terraform@1
+  snyk: snyk/snyk@0
 
 jobs:
   snyk_scan_go:
