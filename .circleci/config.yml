@@ -202,18 +202,12 @@ workflows:
       - go_test
       - tf_check_aws
       - tf_check_gcp
+      - snyk_scan_go
+      - snyk_scan_docker
       - publish_tf_module:
           filters:
             branches:
               only: master
-      - snyk_scan_go:
-          filters:
-            branches:
-              ignore: master
-      - snyk_scan_docker:
-          filters:
-            branches:
-              ignore: master
   release_pipeline:
     jobs:
       - goreleaser:
