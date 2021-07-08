@@ -15,6 +15,17 @@ jobs:
       - checkout
       - run: export GO111MODULE=on
       - snyk/scan
+  snyk_scan_docker:
+    docker:
+      - image: 'circleci/buildpack-deps:stretch'
+    environment:
+      IMAGE_NAME: ovotech/cloud-key-rotator
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run: docker build -t $IMAGE_NAME .
+      - snyk/scan:
+          docker-image-name: $IMAGE_NAME
   goreleaser:
     <<: *defaults
 
@@ -194,6 +205,10 @@ workflows:
             branches:
               only: master
       - snyk_scan_go:
+          filters:
+            branches:
+              ignore: master
+      - snyk_scan_docker:
           filters:
             branches:
               ignore: master
