@@ -8,7 +8,7 @@ require (
 	github.com/DataDog/datadog-api-client-go v1.1.0
 	github.com/Sectorbob/mlab-ns2 v0.0.0-20171030222938-d3aa0c295a8a
 	github.com/aws/aws-lambda-go v1.24.0
-	github.com/aws/aws-sdk-go v1.38.62
+	github.com/aws/aws-sdk-go v1.40.0
 	github.com/beamly/go-gocd v0.0.0-20190719193049-383d56afbf92
 	github.com/gogo/protobuf v1.3.1 // indirect
 	github.com/google/gofuzz v1.1.0 // indirect
