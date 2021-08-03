@@ -23,7 +23,7 @@ require (
 	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
 	golang.org/x/oauth2 v0.0.0-20210628180205-a41e5a781914
 	golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba // indirect
-	google.golang.org/api v0.50.0
+	google.golang.org/api v0.52.0
 	gopkg.in/inf.v0 v0.9.0 // indirect
 	gopkg.in/ini.v1 v1.62.0
 	gopkg.in/src-d/go-git.v4 v4.13.1
