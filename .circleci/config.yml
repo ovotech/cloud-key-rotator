@@ -181,7 +181,7 @@ jobs:
             name: run rotate
             command: |
               export GO111MODULE=on
-              go build -o cloud-key-rotator
+              go build -o cloud-key-rotator ./cmd
               chmod u+x cloud-key-rotator
               export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID_E2E_TEST
               export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY_E2E_TEST
