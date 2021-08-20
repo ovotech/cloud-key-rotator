@@ -182,6 +182,7 @@ jobs:
             command: |
               export GO111MODULE=on
               go build -o cloud-key-rotator
+              chmod u+x cloud-key-rotator
               export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID_E2E_TEST
               export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY_E2E_TEST
               aws secretsmanager get-secret-value --secret-id ckr-config --region eu-west-1 --query SecretString --output text > config.json
