@@ -188,6 +188,7 @@ jobs:
               aws secretsmanager get-secret-value --secret-id ckr-config --region eu-west-1 --query SecretString --output text > config.json
               ./cloud-key-rotator rotate
               rm config.json
+              sleep 10
               if $(aws sts get-caller-identity >/dev/null 2>/dev/null); then exit 1; fi
   
 
