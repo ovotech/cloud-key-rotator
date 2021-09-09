@@ -11,7 +11,7 @@ CircleCI:
   "RotationMode": true,
   "CloudProviders": [
     {
-      "Name": "aws",
+      "Name": "aws"
     }
   ],
   "AccountFilter": {
