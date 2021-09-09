@@ -167,6 +167,29 @@ jobs:
              export GO111MODULE=on
              go mod download
              go test ./... -v
+
+  e2e_test_aws:
+    <<: *defaults
+
+    docker:
+      - image: eversc/aws-cli
+
+    steps:
+      - checkout
+
+      - run:
+            name: run rotate
+            command: |
+              export GO111MODULE=on
+              go build -o cloud-key-rotator ./cmd
+              chmod u+x cloud-key-rotator
+              export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID_E2E_TEST
+              export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY_E2E_TEST
+              aws secretsmanager get-secret-value --secret-id ckr-config --region eu-west-1 --query SecretString --output text > config.json
+              ./cloud-key-rotator rotate
+              rm config.json
+              sleep 10
+              if $(aws sts get-caller-identity >/dev/null 2>/dev/null); then exit 1; fi
   
 
 workflows:
@@ -193,74 +216,19 @@ workflows:
               only: /v[0-9]+(\.[0-9]+)*(-.*)*/
             branches:
               ignore: /.*/
-  pr_pipeline:
+  commits:
     jobs:
-      - go_fmt:
-          filters:
-            branches:
-              ignore: master
-      - go_vet:
-          filters:
-            branches:
-              ignore: master
-      - go_cyclo:
-          filters:
-            branches:
-              ignore: master
-      - go_lint:
-          filters:
-            branches:
-              ignore: master
-      - go_build:
-          filters:
-            branches:
-              ignore: master
-      - go_test:
-          filters:
-            branches:
-              ignore: master
-      - tf_check_aws:
-          filters:
-            branches:
-              ignore: master
-      - tf_check_gcp:
-          filters:
-            branches:
-              ignore: master
+      - go_fmt
+      - go_vet
+      - go_cyclo
+      - go_lint
+      - go_build
+      - go_test
+      - e2e_test_aws
+      - tf_check_aws
+      - tf_check_gcp
   master_pipeline:
     jobs:
-      - go_fmt:
-          filters:
-            branches:
-              only: master
-      - go_vet:
-          filters:
-            branches:
-              only: master
-      - go_cyclo:
-          filters:
-            branches:
-              only: master
-      - go_lint:
-          filters:
-            branches:
-              only: master
-      - go_build:
-          filters:
-            branches:
-              only: master
-      - go_test:
-          filters:
-            branches:
-              only: master
-      - tf_check_aws:
-          filters:
-            branches:
-              only: master
-      - tf_check_gcp:
-          filters:
-            branches:
-              only: master
       - publish_tf_module:
           filters:
             branches:
