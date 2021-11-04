@@ -92,8 +92,9 @@ resource "google_cloudfunctions_function_iam_member" "key_rotator_invoker_perms"
 }
 
 resource "google_project_iam_member" "key_rotator_cloud_run_perms" {
-  role   = "roles/run.invoker"
-  member = "serviceAccount:${google_service_account.key_rotator_service_account.email}"
+  role    = "roles/run.invoker"
+  member  = "serviceAccount:${google_service_account.key_rotator_service_account.email}"
+  project = var.gcp_project
 }
 
 resource "google_project_iam_custom_role" "key_rotator_custom_role" {
@@ -109,8 +110,9 @@ resource "google_project_iam_custom_role" "key_rotator_custom_role" {
 }
 
 resource "google_project_iam_member" "key_rotator_custom_perms" {
-  role   = google_project_iam_custom_role.key_rotator_custom_role.id
-  member = "serviceAccount:${google_service_account.key_rotator_service_account.email}"
+  role    = google_project_iam_custom_role.key_rotator_custom_role.id
+  member  = "serviceAccount:${google_service_account.key_rotator_service_account.email}"
+  project = var.gcp_project
 }
 
 resource "google_cloud_scheduler_job" "key_rotator_scheduled_job" {
