@@ -22,7 +22,7 @@ An example config.json template to rotate an SSM parameter that holds an IAM use
 
 ### Terraform usage
 
-```
+```hcl
 provider "aws" {
   version = "~> 2.28"
   region  = "eu-west-1"
@@ -30,9 +30,9 @@ provider "aws" {
 
 
 module "cloud-key-rotator" {
-  source         = "terraform.ovotech.org.uk/pe/ckr/aws"
-  version = "0.1.0"
-  ckr_version = "0.27.29"
+  source      = "terraform.ovotech.org.uk/pe/ckr/aws"
+  version     = "0.1.2"
+  ckr_version = "0.27.43"
 }
 ```
 
@@ -65,7 +65,7 @@ The module supports Terraform version 0.12.6 and up.
 
 ### Terraform usage
 
-```
+```hcl
 provider "google" {
   version = "~> 3.22.0"
   region  = "europe-west1"
