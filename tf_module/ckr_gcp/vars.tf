@@ -38,7 +38,7 @@ variable "ckr_timeout" {
   description = "(Optional) Timeout (in seconds) for the function. Default value is 300 seconds. Cannot be more than 540 seconds."
 }
 
-variable "gcp_project" {
+variable "project" {
   type        = string
   description = "(Required) The project id of the target project. This is not inferred from the provider."
 }
