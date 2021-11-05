@@ -22,7 +22,7 @@ An example config.json template to rotate an SSM parameter that holds an IAM use
 
 ### Terraform usage
 
-```
+```hcl
 provider "aws" {
   version = "~> 2.28"
   region  = "eu-west-1"
@@ -30,9 +30,9 @@ provider "aws" {
 
 
 module "cloud-key-rotator" {
-  source         = "terraform.ovotech.org.uk/pe/ckr/aws"
-  version = "0.1.0"
-  ckr_version = "0.27.29"
+  source      = "terraform.ovotech.org.uk/pe/ckr/aws"
+  version     = "0.1.2"
+  ckr_version = "0.27.43"
 }
 ```
 
@@ -65,7 +65,7 @@ The module supports Terraform version 0.12.6 and up.
 
 ### Terraform usage
 
-```
+```hcl
 provider "google" {
   version = "~> 3.22.0"
   region  = "europe-west1"
@@ -74,8 +74,9 @@ provider "google" {
 
 module "cloud-key-rotator" {
   source = "terraform.ovotech.org.uk/pe/ckr/gcp"
-  version = "0.2.0"
-  ckr_version = "0.27.29"
+  version = "1.0.0"
+  project = "your-project"
+  ckr_version = "0.27.43"
   ckr_resource_suffix = "my-project-name"
   ckr_config = <<EOF
 {
@@ -93,8 +94,9 @@ EOF
 
 ### Variables
 
-* `version = "0.2.0"` -> The Terraform module version to use.
-* `ckr_version = "0.27.29"` -> The Cloud Key Rotator binary version to use.
+* `version = "1.0.0"` -> The Terraform module version to use.
+* `project = <string>` -> The project ID of the target project. This is not inferred from the provider.
+* `ckr_version = "0.27.43"` -> The Cloud Key Rotator binary version to use.
 * `ckr_config = <string>` -> Pass a json blob from any source containing your config file.
 * (Optional) `ckr_resource_suffix = "my-project-name"` -> Will be appended to the bucket, cloud function, custom role. Defaults to a 3 character random string
   service account and scheduler job names to prevent naming conflicts

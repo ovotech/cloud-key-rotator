@@ -69,7 +69,7 @@ jobs:
     - terraform/validate:
         path: tf_module/ckr_gcp
 
-  publish_tf_module:
+  publish_aws_tf_module:
     executor: terraform/terraform-0_12
     steps:
     - checkout
@@ -77,6 +77,11 @@ jobs:
           path: tf_module/ckr_aws
           module_name: pe/ckr/aws
           version_file_path: tf_module/ckr_aws/module_version.txt
+
+  publish_gcp_tf_module:
+    executor: terraform/terraform-0_12
+    steps:
+    - checkout
     - terraform/publish-module:
           path: tf_module/ckr_gcp
           module_name: pe/ckr/gcp
@@ -229,7 +234,11 @@ workflows:
       - tf_check_gcp
   master_pipeline:
     jobs:
-      - publish_tf_module:
+      - publish_aws_tf_module:
+          filters:
+            branches:
+              only: master
+      - publish_gcp_tf_module:
           filters:
             branches:
               only: master
