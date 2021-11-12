@@ -1,3 +1,22 @@
+aliases:
+  - &docker-image
+    docker:
+      - image: google/cloud-sdk
+  - &init-credentials
+    run:
+      name: Get credentials
+      command: |
+        echo $GCLOUD_SERVICE_KEY | base64 -d | gcloud auth activate-service-account --key-file=-
+  - &deploy-cloudfunction
+    run:
+      name: Deploy GCP Cloudfunction
+      command: |
+        gcloud functions deploy ckr-dummy --region europe-west1 \
+        --entry-point Request \
+        --runtime go113 \
+        --trigger-http \
+        --project pe-dev-185509
+
 defaults: &defaults
   working_directory: /go/src/github.com/ovotech/cloud-key-rotator
 
@@ -195,7 +214,14 @@ jobs:
               rm config.json
               sleep 10
               if $(aws sts get-caller-identity >/dev/null 2>/dev/null); then exit 1; fi
-  
+
+# required due to previous builds failing only in GCP CloudFunctions (while building directly with Go works...)
+  test_cloudfunction_deploy:
+    <<: *docker-image
+    steps:
+      - checkout
+      - <<: *init-credentials
+      - <<: *deploy-cloudfunction
 
 workflows:
   version: 2
@@ -232,6 +258,7 @@ workflows:
       - e2e_test_aws
       - tf_check_aws
       - tf_check_gcp
+      - test_cloudfunction_deploy
   master_pipeline:
     jobs:
       - publish_aws_tf_module:
