@@ -10,16 +10,15 @@ require (
 	github.com/aws/aws-lambda-go v1.24.0
 	github.com/aws/aws-sdk-go v1.38.71
 	github.com/beamly/go-gocd v0.0.0-20190719193049-383d56afbf92
-	github.com/gogo/protobuf v1.3.1 // indirect
 	github.com/google/gofuzz v1.1.0 // indirect
 	github.com/googleapis/gnostic v0.0.0-20170729233727-0c5108395e2d // indirect
 	github.com/jszwedko/go-circleci v0.3.0
+	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/mongodb/go-client-mongodb-atlas v0.3.0
 	github.com/ovotech/cloud-key-client v0.2.2
 	github.com/ovotech/mantle v0.32.1
-	github.com/spf13/afero v1.3.2 // indirect
-	github.com/spf13/cobra v0.0.7
-	github.com/spf13/viper v1.7.1
+	github.com/spf13/cobra v1.2.1
+	github.com/spf13/viper v1.8.1
 	go.uber.org/zap v1.18.1
 	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
 	golang.org/x/oauth2 v0.0.0-20210628180205-a41e5a781914
