@@ -11,11 +11,16 @@ aliases:
     run:
       name: Deploy GCP Cloudfunction
       command: |
-        gcloud functions deploy ckr-dummy --region europe-west1 \
+        export rand_suffix=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 8 ; echo '')
+        gcloud functions deploy ckr-dummy-$rand_suffix \
+        --region europe-west1 \
         --entry-point Request \
         --runtime go113 \
         --trigger-http \
         --project pe-dev-185509
+        gcloud functions delete ckr-dummy-$rand_suffix \
+        --region europe-west1 \
+        --project pe-dev-185509 &
 
 defaults: &defaults
   working_directory: /go/src/github.com/ovotech/cloud-key-rotator
