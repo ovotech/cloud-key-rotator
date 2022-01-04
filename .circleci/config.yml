@@ -11,25 +11,17 @@ aliases:
     run:
       name: Deploy GCP Cloudfunction
       command: |
+        export RAND_SUFFIX=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 8 ; echo '')
         gcloud functions deploy ckr-dummy-$RAND_SUFFIX \
         --region europe-west1 \
         --entry-point Request \
         --runtime go113 \
         --trigger-http \
         --project pe-dev-185509
-  - &delete-cloudfunction
-    run:
-      name: Delete GCP Cloudfunction
-      command: |
         gcloud functions delete ckr-dummy-$RAND_SUFFIX \
         --region europe-west1 \
-        --project pe-dev-185509
-      background: true
-  - &rand-string
-    run:
-      name: Generate random string
-      command: |
-        echo "export RAND_SUFFIX=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 8 ; echo '')" >> $BASH_ENV
+        --project pe-dev-185509 \
+        --quiet
 
 defaults: &defaults
   working_directory: /go/src/github.com/ovotech/cloud-key-rotator
@@ -235,9 +227,7 @@ jobs:
     steps:
       - checkout
       - <<: *init-credentials
-      - <<: *rand-string
       - <<: *deploy-cloudfunction
-      - <<: *delete-cloudfunction
 
 workflows:
   version: 2
