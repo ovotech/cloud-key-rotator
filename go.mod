@@ -20,7 +20,7 @@ require (
 	github.com/spf13/afero v1.3.2 // indirect
 	github.com/spf13/cobra v0.0.7
 	github.com/spf13/viper v1.7.1
-	go.uber.org/zap v1.19.1
+	go.uber.org/zap v1.20.0
 	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
 	golang.org/x/oauth2 v0.0.0-20211005180243-6b3c2da341f1
 	golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba // indirect
