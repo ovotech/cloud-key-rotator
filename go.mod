@@ -8,14 +8,14 @@ require (
 	github.com/DataDog/datadog-api-client-go v1.7.0
 	github.com/Sectorbob/mlab-ns2 v0.0.0-20171030222938-d3aa0c295a8a
 	github.com/aws/aws-lambda-go v1.28.0
-	github.com/aws/aws-sdk-go v1.40.34
+	github.com/aws/aws-sdk-go v1.42.25
 	github.com/beamly/go-gocd v0.0.0-20190719193049-383d56afbf92
 	github.com/gogo/protobuf v1.3.1 // indirect
 	github.com/google/gofuzz v1.1.0 // indirect
 	github.com/googleapis/gnostic v0.0.0-20170729233727-0c5108395e2d // indirect
 	github.com/jszwedko/go-circleci v0.3.0
 	github.com/mongodb/go-client-mongodb-atlas v0.3.0
-	github.com/ovotech/cloud-key-client v0.2.2
+	github.com/ovotech/cloud-key-client v0.2.3
 	github.com/ovotech/mantle v0.32.3
 	github.com/spf13/afero v1.3.2 // indirect
 	github.com/spf13/cobra v0.0.7
