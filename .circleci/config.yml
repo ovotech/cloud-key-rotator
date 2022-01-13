@@ -116,7 +116,7 @@ jobs:
     <<: *defaults
 
     docker:
-      - image: eversc/go-pr-checks
+      - image: eversc/go-pr-checks:1.13
 
     steps:
       - checkout
@@ -129,7 +129,7 @@ jobs:
     <<: *defaults
 
     docker:
-      - image: eversc/go-pr-checks
+      - image: eversc/go-pr-checks:1.13
 
     steps:
       - checkout
@@ -145,7 +145,7 @@ jobs:
     <<: *defaults
 
     docker:
-      - image: eversc/go-pr-checks
+      - image: eversc/go-pr-checks:1.13
 
     steps:
       - checkout
@@ -158,7 +158,7 @@ jobs:
     <<: *defaults
 
     docker:
-      - image: eversc/go-pr-checks
+      - image: eversc/go-pr-checks:1.13
 
     steps:
       - checkout
@@ -171,7 +171,7 @@ jobs:
     <<: *defaults
 
     docker:
-      - image: eversc/go-pr-checks
+      - image: eversc/go-pr-checks:1.13
 
     steps:
       - checkout
@@ -186,7 +186,7 @@ jobs:
     <<: *defaults
 
     docker:
-      - image: eversc/go-pr-checks
+      - image: eversc/go-pr-checks:1.13
 
     steps:
       - checkout
@@ -255,16 +255,34 @@ workflows:
               ignore: /.*/
   commits:
     jobs:
-      - go_fmt
-      - go_vet
-      - go_cyclo
-      - go_lint
       - go_build
-      - go_test
-      - e2e_test_aws
-      - tf_check_aws
-      - tf_check_gcp
-      - test_cloudfunction_deploy
+      - go_fmt:
+          requires:
+            - go_build
+      - go_vet:
+          requires:
+            - go_build
+      - go_cyclo:
+          requires:
+            - go_build
+      - go_lint:
+          requires:
+            - go_build
+      - go_test:
+          requires:
+            - go_build
+      - tf_check_aws:
+          requires:
+            - go_build
+      - tf_check_gcp:
+          requires:
+            - go_build
+      - test_cloudfunction_deploy:
+          requires:
+            - go_build
+      - e2e_test_aws:
+          requires:
+            - go_build
   master_pipeline:
     jobs:
       - publish_aws_tf_module:
