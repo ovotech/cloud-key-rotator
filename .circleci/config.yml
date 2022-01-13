@@ -261,10 +261,14 @@ workflows:
       - go_lint
       - go_build
       - go_test
-      - e2e_test_aws
       - tf_check_aws
       - tf_check_gcp
-      - test_cloudfunction_deploy
+      - test_cloudfunction_deploy:
+          requires:
+            - go_build
+      - e2e_test_aws:
+          requires:
+            - go_build
   master_pipeline:
     jobs:
       - publish_aws_tf_module:
