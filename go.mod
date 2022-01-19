@@ -6,7 +6,7 @@ require (
 	cloud.google.com/go/iam v0.1.0 // indirect
 	cloud.google.com/go/storage v1.18.2
 	github.com/CircleCI-Public/circleci-cli v0.1.16422
-	github.com/DataDog/datadog-api-client-go v1.7.0
+	github.com/DataDog/datadog-api-client-go v1.8.0
 	github.com/Sectorbob/mlab-ns2 v0.0.0-20171030222938-d3aa0c295a8a
 	github.com/aws/aws-lambda-go v1.28.0
 	github.com/aws/aws-sdk-go v1.40.34
