@@ -31,8 +31,8 @@ provider "aws" {
 
 module "cloud-key-rotator" {
   source      = "terraform.ovotech.org.uk/pe/ckr/aws"
-  version     = "0.1.2"
-  ckr_version = "0.27.43"
+  version     = "0.1.3"
+  ckr_version = "0.27.45"
 }
 ```
 
