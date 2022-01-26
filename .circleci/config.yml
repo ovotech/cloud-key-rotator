@@ -111,6 +111,10 @@ jobs:
     executor: terraform/terraform-0_12
     steps:
     - checkout
+    - run:
+        name: check_existing_version
+        command: |
+          .circleci/check_tf_module_versions.sh "$(<tf_module/ckr_gcp/module_version.txt)" "pe/ckr/gcp"
     - terraform/publish-module:
           path: tf_module/ckr_gcp
           module_name: pe/ckr/gcp
