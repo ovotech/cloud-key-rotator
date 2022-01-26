@@ -98,6 +98,10 @@ jobs:
     executor: terraform/terraform-0_12
     steps:
     - checkout
+    - run:
+        name: check_existing_version
+        command: |
+          .circleci/check_tf_module_versions.sh
     - terraform/publish-module:
           path: tf_module/ckr_aws
           module_name: pe/ckr/aws
@@ -288,7 +292,7 @@ workflows:
       - publish_aws_tf_module:
           filters:
             branches:
-              only: master
+              only: check-existing-tf-module-versions
       - publish_gcp_tf_module:
           filters:
             branches:
