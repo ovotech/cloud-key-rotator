@@ -5,6 +5,8 @@ set -o pipefail
 
 VERSION=$1
 readonly VERSION
+MODULE_NAME=$2
+readonly MODULE_NAME
 
 
 REGISTRY_URL=$(curl --fail -sL "https://$TF_REGISTRY_HOST/.well-known/terraform.json" | jq -r '."modules.v1"')

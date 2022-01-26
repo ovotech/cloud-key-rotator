@@ -101,7 +101,7 @@ jobs:
     - run:
         name: check_existing_version
         command: |
-          .circleci/check_tf_module_versions.sh "$(<tf_module/ckr_aws/module_version.txt)"
+          .circleci/check_tf_module_versions.sh "$(<tf_module/ckr_aws/module_version.txt)" "pe/ckr/aws"
     - terraform/publish-module:
           path: tf_module/ckr_aws
           module_name: pe/ckr/aws
