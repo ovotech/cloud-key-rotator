@@ -292,7 +292,7 @@ workflows:
       - publish_aws_tf_module:
           filters:
             branches:
-              only: check-existing-tf-module-versions
+              only: master
       - publish_gcp_tf_module:
           filters:
             branches:
