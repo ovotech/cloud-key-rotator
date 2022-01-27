@@ -36,7 +36,7 @@ jobs:
     <<: *defaults
 
     docker:
-      - image: cimg/go:1.13
+      - image: circleci/golang:1.13
 
     steps:
       - checkout
