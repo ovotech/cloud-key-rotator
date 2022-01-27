@@ -10,6 +10,7 @@ require (
 	github.com/aws/aws-lambda-go v1.28.0
 	github.com/aws/aws-sdk-go v1.40.34
 	github.com/beamly/go-gocd v0.0.0-20190719193049-383d56afbf92
+	github.com/cenkalti/backoff/v4 v4.1.2
 	github.com/gogo/protobuf v1.3.1 // indirect
 	github.com/google/gofuzz v1.1.0 // indirect
 	github.com/googleapis/gnostic v0.0.0-20170729233727-0c5108395e2d // indirect
