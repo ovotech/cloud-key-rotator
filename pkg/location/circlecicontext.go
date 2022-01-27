@@ -3,11 +3,14 @@ package location
 import (
 	"encoding/base64"
 	"net/http"
+	"time"
 
 	"github.com/ovotech/cloud-key-rotator/pkg/cred"
 
 	"github.com/CircleCI-Public/circleci-cli/api"
 	"github.com/CircleCI-Public/circleci-cli/settings"
+
+	"github.com/cenkalti/backoff/v4"
 )
 
 // CircleCIContext type
@@ -78,8 +81,35 @@ func (circleContext CircleCIContext) Write(serviceAccountName string, keyWrapper
 func updateCircleCIContext(contextID, envVarName, envVarValue string,
 	restClient *api.ContextRestClient) (err error) {
 
-	if err = restClient.DeleteEnvironmentVariable(contextID, envVarName); err != nil {
+	maxElapsedTimeSecs := 500
+	backoffMultiplier := 5
+
+	deleteOp := func() error {
+		logger.Infof("Deleting env var %s on contextID: %s", envVarName, contextID)
+		return restClient.DeleteEnvironmentVariable(contextID, envVarName)
+	}
+	err = callCircleCIWithExpBackoff(deleteOp,
+		time.Duration(maxElapsedTimeSecs)*time.Second,
+		float64(backoffMultiplier))
+	if err != nil {
 		return
 	}
-	return restClient.CreateEnvironmentVariable(contextID, envVarName, envVarValue)
+	createOp := func() error {
+		logger.Infof("Creating env var %s on contextID: %s", envVarName, contextID)
+		return restClient.CreateEnvironmentVariable(contextID, envVarName, envVarValue)
+	}
+	err = callCircleCIWithExpBackoff(createOp,
+		time.Duration(maxElapsedTimeSecs)*time.Second,
+		float64(backoffMultiplier))
+	return
+}
+
+// callCircleCIWithExpBackoff calls the CircleCI API with exponential backoff
+func callCircleCIWithExpBackoff(operation backoff.Operation,
+	maxElapsedTime time.Duration, multiplier float64) (err error) {
+	b := backoff.NewExponentialBackOff()
+	b.MaxElapsedTime = maxElapsedTime
+	b.Multiplier = multiplier
+	err = backoff.Retry(operation, b)
+	return
 }
