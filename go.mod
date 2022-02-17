@@ -4,7 +4,7 @@ go 1.13
 
 require (
 	cloud.google.com/go/storage v1.19.0
-	github.com/CircleCI-Public/circleci-cli v0.1.16422
+	github.com/CircleCI-Public/circleci-cli v0.1.16737
 	github.com/DataDog/datadog-api-client-go v1.8.0
 	github.com/Sectorbob/mlab-ns2 v0.0.0-20171030222938-d3aa0c295a8a
 	github.com/aws/aws-lambda-go v1.28.0
