@@ -190,6 +190,29 @@ jobs:
              export GO111MODULE=on
              go build
 
+  docker_build:
+    <<: *defaults
+
+    docker:
+      - image: circleci/golang:1.13
+
+    steps:
+      - checkout
+
+      - setup_remote_docker:
+          docker_layer_caching: true
+
+      - run:
+          name: go build
+          command: |
+            export GO111MODULE=on
+            go build -o cloud-key-rotator ./cmd
+      - run:
+          name: docker build
+          command: |
+            docker build .
+
+
   go_test:
     <<: *defaults
 
@@ -289,6 +312,9 @@ workflows:
           requires:
             - go_build
       - e2e_test_aws:
+          requires:
+            - go_build
+      - docker_build:
           requires:
             - go_build
   master_pipeline:
