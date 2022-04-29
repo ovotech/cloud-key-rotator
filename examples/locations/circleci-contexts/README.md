@@ -65,3 +65,17 @@ When rotating GCP keys, to override the default CircleCI env var name
       "KeyEnvVar": "GCP_KEY"
     }]
 ```
+
+If you use a GCP key to interact with GCR, especially for downloading
+docker images for CircleCI to run your pipelines, then you may want the
+key to be stored as JSON directly, rather than base64 encoded (which is
+the default). You can do this easily by setting the `Base64Decode` option
+to true in the CircleCI location block, like so:
+
+```json
+    "CircleCI": [{
+      "ContextID": "my-uuid-context-id",
+      "Base64Decode": true
+    }]
+```
+
