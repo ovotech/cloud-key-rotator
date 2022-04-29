@@ -120,7 +120,7 @@ func GetConfigFromAWSSecretManager(secretName, configType string) (c Config, err
 		return c, errors.New("Unable to obtain secret value. Check user permissions and secret name")
 	}
 	viper.SetConfigType(configType)
-	if err = viper.ReadConfig(bytes.NewBufferString(secret)); err == nil {
+	if err = viper.ReadConfig(bytes.NewBufferString(secret)); err != nil {
 		return
 	}
 	err = viper.Unmarshal(&c)
