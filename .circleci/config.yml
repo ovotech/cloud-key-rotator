@@ -29,7 +29,7 @@ defaults: &defaults
 version: 2.1
 
 orbs:
-  terraform: ovotech/terraform@1
+  terraform: ovotech/terraform-v2@2
 
 jobs:
   goreleaser:
