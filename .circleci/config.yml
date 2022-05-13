@@ -75,7 +75,7 @@ jobs:
             pip3 install awscli
             aws s3 cp $TARGET_FILE s3://ckr-terraform-module-code --acl public-read
   tf_check_aws:
-    executor: terraform/terraform-0_12
+    executor: terraform/default
     steps:
     - checkout
     - terraform/fmt-check:
@@ -86,7 +86,7 @@ jobs:
     # of the module needs to do that.
 
   tf_check_gcp:
-    executor: terraform/terraform-0_12
+    executor: terraform/default
     steps:
     - checkout
     - terraform/fmt-check:
@@ -95,7 +95,7 @@ jobs:
         path: tf_module/ckr_gcp
 
   publish_aws_tf_module:
-    executor: terraform/terraform-0_12
+    executor: terraform/default
     steps:
     - checkout
     - run:
@@ -108,7 +108,7 @@ jobs:
           version_file_path: tf_module/ckr_aws/module_version.txt
 
   publish_gcp_tf_module:
-    executor: terraform/terraform-0_12
+    executor: terraform/default
     steps:
     - checkout
     - run:
