@@ -65,7 +65,7 @@ func (github GitHub) Write(serviceAccountName string, keyWrapper KeyWrapper, cre
 
 	updated = UpdatedLocation{
 		LocationType: "GitHub",
-		LocationURI:  fmt.Stringf(%s/%s, github.owner, github.repo),
+		LocationURI:  fmt.Stringf("%s/%s", github.owner, github.repo),
 		LocationIDs:  []string{keyIDEnvVar, keyEnvVar}}
 
 	return updated, nil
