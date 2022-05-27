@@ -23,8 +23,11 @@ type GitHub struct {
 	Repo         string
 }
 
+var logger = log.StdoutLogger().Sugar()
+
 func (github GitHub) Write(serviceAccountName string, keyWrapper KeyWrapper, creds cred.Credentials) (updated UpdatedLocation, err error) {
 
+	logger.Infof("Starting GitHub env var updates, owner: %s, repo: %s", github.Owner, github.Repo)
 	ctx, client, err := githubAuth(creds.GitHubAPIToken)
 	provider := keyWrapper.KeyProvider
 	key := keyWrapper.Key
@@ -118,6 +121,8 @@ func addRepoSecret(ctx context.Context, client *github.Client, owner string, rep
 	if _, err := client.Actions.CreateOrUpdateRepoSecret(ctx, owner, repo, encryptedSecret); err != nil {
 		return fmt.Errorf("Actions.CreateOrUpdateRepoSecret returned error: %v", err)
 	}
+
+	logger.Infof("Added GitHub secret: %s to %s/%s", secretName, owner, repo)
 
 	return nil
 }
