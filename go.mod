@@ -19,7 +19,6 @@ require (
 	github.com/mongodb/go-client-mongodb-atlas v0.3.0
 	github.com/ovotech/cloud-key-client v0.2.2
 	github.com/ovotech/mantle v0.32.3
-	github.com/rogpeppe/go-internal v1.3.0 // indirect
 	github.com/spf13/afero v1.3.2 // indirect
 	github.com/spf13/cobra v1.4.0
 	github.com/spf13/viper v1.7.1
