@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"flag"
 	"fmt"
+	"github.com/ovotech/cloud-key-rotator/pkg/cred"
 	"log"
 	"os"
 
@@ -22,8 +23,6 @@ type GitHub struct {
 	Owner        string
 	Repo         string
 }
-
-var logger = log.StdoutLogger().Sugar()
 
 func (github GitHub) Write(serviceAccountName string, keyWrapper KeyWrapper, creds cred.Credentials) (updated UpdatedLocation, err error) {
 
@@ -65,7 +64,7 @@ func (github GitHub) Write(serviceAccountName string, keyWrapper KeyWrapper, cre
 
 	updated = UpdatedLocation{
 		LocationType: "GitHub",
-		LocationURI:  fmt.Stringf("%s/%s", github.Owner, github.Repo),
+		LocationURI:  fmt.Sprintf("%s/%s", github.Owner, github.Repo),
 		LocationIDs:  []string{keyIDEnvVar, keyEnvVar}}
 
 	return updated, nil
