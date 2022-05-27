@@ -4,11 +4,8 @@ import (
 	"context"
 	crypto_rand "crypto/rand"
 	"encoding/base64"
-	"flag"
 	"fmt"
 	"github.com/ovotech/cloud-key-rotator/pkg/cred"
-	"log"
-	"os"
 
 	"github.com/google/go-github/v45/github"
 	"golang.org/x/crypto/nacl/box"
