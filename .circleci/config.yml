@@ -237,7 +237,7 @@ jobs:
     <<: *defaults
 
     docker:
-      - image: eversc/aws-cli
+      - image: eversc/aws-cli:1.13
 
     steps:
       - checkout

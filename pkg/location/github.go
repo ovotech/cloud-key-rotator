@@ -5,12 +5,19 @@ import (
 	crypto_rand "crypto/rand"
 	"encoding/base64"
 	"fmt"
+
 	"github.com/ovotech/cloud-key-rotator/pkg/cred"
 
 	"github.com/google/go-github/v45/github"
 	"golang.org/x/crypto/nacl/box"
 	"golang.org/x/oauth2"
 )
+
+// GitHubActionsService type
+type GitHubActionsService interface {
+	GetRepoPublicKey(context.Context, string, string) (*github.PublicKey, *github.Response, error)
+	CreateOrUpdateRepoSecret(context.Context, string, string, *github.EncryptedSecret) (*github.Response, error)
+}
 
 // GitHub type
 type GitHub struct {
@@ -49,13 +56,16 @@ func (github GitHub) Write(serviceAccountName string, keyWrapper KeyWrapper, cre
 		return
 	}
 
+	// create the ActionsService from the client so we can pass into addRepoSecret()
+	actionsService := client.Actions
+
 	if len(keyIDEnvVar) > 0 {
-		if err = addRepoSecret(ctx, client, github.Owner, github.Repo, keyIDEnvVar, keyWrapper.KeyID); err != nil {
+		if err = addRepoSecret(ctx, actionsService, github.Owner, github.Repo, keyIDEnvVar, keyWrapper.KeyID); err != nil {
 			return
 		}
 	}
 
-	if err = addRepoSecret(ctx, client, github.Owner, github.Repo, keyEnvVar, key); err != nil {
+	if err = addRepoSecret(ctx, actionsService, github.Owner, github.Repo, keyEnvVar, key); err != nil {
 		return
 	}
 
@@ -103,8 +113,8 @@ func githubAuth(token string) (context.Context, *github.Client, error) {
 //
 // Finally, the github.EncodedSecret is passed into the GitHub client.Actions.CreateOrUpdateRepoSecret method to
 // populate the secret in the GitHub repo.
-func addRepoSecret(ctx context.Context, client *github.Client, owner string, repo, secretName string, secretValue string) error {
-	publicKey, _, err := client.Actions.GetRepoPublicKey(ctx, owner, repo)
+func addRepoSecret(ctx context.Context, actionsService GitHubActionsService, owner string, repo, secretName string, secretValue string) error {
+	publicKey, _, err := actionsService.GetRepoPublicKey(ctx, owner, repo)
 	if err != nil {
 		return err
 	}
@@ -114,7 +124,7 @@ func addRepoSecret(ctx context.Context, client *github.Client, owner string, rep
 		return err
 	}
 
-	if _, err := client.Actions.CreateOrUpdateRepoSecret(ctx, owner, repo, encryptedSecret); err != nil {
+	if _, err := actionsService.CreateOrUpdateRepoSecret(ctx, owner, repo, encryptedSecret); err != nil {
 		return fmt.Errorf("Actions.CreateOrUpdateRepoSecret returned error: %v", err)
 	}
 
