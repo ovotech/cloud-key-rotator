@@ -12,6 +12,7 @@ The tool can update keys held in the following locations:
 * Datadog (GCP Integration)
 * GCS
 * Git
+* GitHub Secrets
 * GoCd
 * K8S (GKE only)
 * SSM (AWS Parameter Store)
@@ -97,6 +98,7 @@ Currently, the following locations are supported:
 * GCS
 * Git (files encrypted with [mantle](https://github.com/ovotech/mantle) which
 integrates with KMS))
+* GitHub Secrets
 * GoCd
 * K8S (GKE only)
 * SSM (AWS Parameter Store)
