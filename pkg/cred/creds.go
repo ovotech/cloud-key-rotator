@@ -17,6 +17,7 @@ package cred
 // Credentials type
 type Credentials struct {
 	CircleCIAPIToken string
+	GitHubAPIToken   string
 	Datadog          Datadog
 	GitAccount       GitAccount
 	AkrPass          string

@@ -75,6 +75,7 @@ type KeyLocations struct {
 	DatadogGCPIntegration    []location.Datadog
 	GCS                      []location.Gcs
 	Git                      location.Git
+	GitHub                   []location.GitHub
 	Gocd                     []location.Gocd
 	K8s                      []location.K8s
 	SSM                      []location.Ssm
