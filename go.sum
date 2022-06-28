@@ -60,8 +60,8 @@ github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/CircleCI-Public/circleci-cli v0.1.19183 h1:0RRgn/scv659ipIRFC9WP87VypE+l+jWVircc9TiVjE=
 github.com/CircleCI-Public/circleci-cli v0.1.19183/go.mod h1:dxuyQPAMiPAuIQKsV6YgNVJxuFkWT+Jz3T3rjYtgNqw=
-github.com/DataDog/datadog-api-client-go v1.13.0 h1:vcEQHtUWFBDE+XWGWR/P7a0AK5WrJR28fQJpN/NLa7Y=
-github.com/DataDog/datadog-api-client-go v1.13.0/go.mod h1:15sqwH81WH6nCgW+rWyHw6PdaBA3udYAOq0p5lntKcY=
+github.com/DataDog/datadog-api-client-go v1.14.0 h1:7ZITahghFVmC32GZ7DFcoEPdajvkS7cPWYQ29WJR6ko=
+github.com/DataDog/datadog-api-client-go v1.14.0/go.mod h1:15sqwH81WH6nCgW+rWyHw6PdaBA3udYAOq0p5lntKcY=
 github.com/Masterminds/semver v1.4.2 h1:WBLTQ37jOCzSLtXNdoo8bNM8876KhNqOKvrlGITgsTc=
 github.com/Masterminds/semver v1.4.2/go.mod h1:MB6lktGJrhw8PrUyiEoblNEGEQ+RzHPF078ddwwvV3Y=
 github.com/Netflix/go-expect v0.0.0-20180615182759-c93bf25de8e8/go.mod h1:oX5x61PbNXchhh0oikYAH+4Pcfw5LKv21+Jnpr6r6Pc=
