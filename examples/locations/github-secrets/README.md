@@ -65,11 +65,11 @@ For updating a secret in multiple repos:
 ```
 
 When rotating AWS keys, there are some optional fields,
-`keyIDEnvVar` and `keyEnvVar`, that represent the env var names in CircleCI,
+`keyIDEnvVar` and `keyEnvVar`, that represent the env var names in GitHub,
 defaulting to values `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`
 respectively.
 
-So, if you store your Key ID and Key values in env vars in CircleCI that're
+So, if you store your Key ID and Key values in env vars in GitHub that're
 named differently, you could set something like this instead:
 
 ```json
@@ -81,7 +81,7 @@ named differently, you could set something like this instead:
     }]
 ```
 
-When rotating GCP keys, to override the default CircleCI env var name
+When rotating GCP keys, to override the default GitHub env var name
 (`GCLOUD_SERVICE_KEY`), you only need to override the `KeyEnvVar` value (as only
 a single value, the key, is needed for GCP)
 
@@ -94,10 +94,10 @@ a single value, the key, is needed for GCP)
 ```
 
 If you use a GCP key to interact with GCR, especially for downloading
-docker images for CircleCI to run your pipelines, then you may want the
+docker images for GitHub to run your pipelines, then you may want the
 key to be stored as JSON directly, rather than base64 encoded (which is
 the default). You can do this easily by setting the `Base64Decode` option
-to true in the CircleCI location block, like so:
+to true in the GitHub location block, like so:
 
 ```json
     "GitHub": [{
