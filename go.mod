@@ -12,7 +12,7 @@ require (
 	github.com/beamly/go-gocd v0.0.0-20190719193049-383d56afbf92
 	github.com/cenkalti/backoff/v4 v4.1.3
 	github.com/gogo/protobuf v1.3.1 // indirect
-	github.com/google/go-github/v45 v45.0.0
+	github.com/google/go-github/v45 v45.2.0
 	github.com/google/gofuzz v1.1.0 // indirect
 	github.com/googleapis/gnostic v0.0.0-20170729233727-0c5108395e2d // indirect
 	github.com/jszwedko/go-circleci v0.3.0
