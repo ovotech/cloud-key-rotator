@@ -18,7 +18,12 @@ The tool can update keys held in the following locations:
 * SSM (AWS Parameter Store)
 
 The tool is packaged as an executable file for native invocation, and as a zip
- file for deployment as an AWS Lambda.
+file for deployment as an AWS Lambda.
+
+> :information_source: where possible [OpenID Connect (OIDC)]
+(https://openid.net/connect/) should be used instead of furnishing/storing
+long-lived credentials. Using OIDC will remove the need for running
+`cloud-key-rotator`.
 
 ## Install
 
