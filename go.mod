@@ -3,7 +3,7 @@ module github.com/ovotech/cloud-key-rotator
 go 1.13
 
 require (
-	cloud.google.com/go/storage v1.19.0
+	cloud.google.com/go/storage v1.24.0
 	github.com/CircleCI-Public/circleci-cli v0.1.19183
 	github.com/DataDog/datadog-api-client-go v1.13.0
 	github.com/Sectorbob/mlab-ns2 v0.0.0-20171030222938-d3aa0c295a8a
@@ -24,9 +24,9 @@ require (
 	github.com/spf13/viper v1.7.1
 	go.uber.org/zap v1.21.0
 	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5
-	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
+	golang.org/x/oauth2 v0.0.0-20220622183110-fd043fe589d2
 	golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba // indirect
-	google.golang.org/api v0.66.0
+	google.golang.org/api v0.85.0
 	gopkg.in/inf.v0 v0.9.0 // indirect
 	gopkg.in/ini.v1 v1.66.4
 	gopkg.in/src-d/go-git.v4 v4.13.1
