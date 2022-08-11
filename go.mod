@@ -11,7 +11,6 @@ require (
 	github.com/aws/aws-sdk-go v1.40.34
 	github.com/beamly/go-gocd v0.0.0-20190719193049-383d56afbf92
 	github.com/cenkalti/backoff/v4 v4.1.3
-	github.com/gogo/protobuf v1.3.1 // indirect
 	github.com/google/go-github/v45 v45.2.0
 	github.com/google/gofuzz v1.1.0 // indirect
 	github.com/googleapis/gnostic v0.0.0-20170729233727-0c5108395e2d // indirect
@@ -19,14 +18,13 @@ require (
 	github.com/mongodb/go-client-mongodb-atlas v0.3.0
 	github.com/ovotech/cloud-key-client v0.2.2
 	github.com/ovotech/mantle v0.32.3
-	github.com/spf13/afero v1.3.2 // indirect
 	github.com/spf13/cobra v1.5.0
-	github.com/spf13/viper v1.7.1
+	github.com/spf13/viper v1.12.0
 	go.uber.org/zap v1.21.0
-	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5
-	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
+	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4
+	golang.org/x/oauth2 v0.0.0-20220411215720-9780585627b5
 	golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba // indirect
-	google.golang.org/api v0.66.0
+	google.golang.org/api v0.81.0
 	gopkg.in/inf.v0 v0.9.0 // indirect
 	gopkg.in/ini.v1 v1.67.0
 	gopkg.in/src-d/go-git.v4 v4.13.1
@@ -35,5 +33,4 @@ require (
 	k8s.io/client-go v11.0.0+incompatible
 	k8s.io/klog v0.0.0-20190306015804-8e90cee79f82 // indirect
 	k8s.io/utils v0.0.0-20190308190857-21c4ce38f2a7 // indirect
-	sigs.k8s.io/yaml v1.1.0 // indirect
 )
