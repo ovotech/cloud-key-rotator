@@ -36,7 +36,7 @@ jobs:
     <<: *defaults
 
     docker:
-      - image: circleci/golang:1.13
+      - image: circleci/golang:1.16
 
     steps:
       - checkout
@@ -128,7 +128,7 @@ jobs:
     <<: *defaults
 
     docker:
-      - image: eversc/go-pr-checks:1.13
+      - image: eversc/go-pr-checks:1.16
 
     steps:
       - checkout
@@ -141,7 +141,7 @@ jobs:
     <<: *defaults
 
     docker:
-      - image: eversc/go-pr-checks:1.13
+      - image: eversc/go-pr-checks:1.16
 
     steps:
       - checkout
@@ -157,7 +157,7 @@ jobs:
     <<: *defaults
 
     docker:
-      - image: eversc/go-pr-checks:1.13
+      - image: eversc/go-pr-checks:1.16
 
     steps:
       - checkout
@@ -170,7 +170,7 @@ jobs:
     <<: *defaults
 
     docker:
-      - image: eversc/go-pr-checks:1.13
+      - image: eversc/go-pr-checks:1.16
 
     steps:
       - checkout
@@ -183,7 +183,7 @@ jobs:
     <<: *defaults
 
     docker:
-      - image: eversc/go-pr-checks:1.13
+      - image: eversc/go-pr-checks:1.16
 
     steps:
       - checkout
@@ -198,7 +198,7 @@ jobs:
     <<: *defaults
 
     docker:
-      - image: circleci/golang:1.13
+      - image: circleci/golang:1.16
 
     steps:
       - checkout
@@ -221,7 +221,7 @@ jobs:
     <<: *defaults
 
     docker:
-      - image: eversc/go-pr-checks:1.13
+      - image: eversc/go-pr-checks:1.16
 
     steps:
       - checkout
@@ -237,7 +237,7 @@ jobs:
     <<: *defaults
 
     docker:
-      - image: eversc/aws-cli:1.13
+      - image: eversc/aws-cli:1.16
 
     steps:
       - checkout
