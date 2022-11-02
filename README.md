@@ -12,12 +12,17 @@ The tool can update keys held in the following locations:
 * Datadog (GCP Integration)
 * GCS
 * Git
+* GitHub Secrets
 * GoCd
 * K8S (GKE only)
 * SSM (AWS Parameter Store)
 
 The tool is packaged as an executable file for native invocation, and as a zip
- file for deployment as an AWS Lambda.
+file for deployment as an AWS Lambda.
+
+> :information_source: where possible [OpenID Connect (OIDC)](https://openid.net/connect/)
+should be used instead of furnishing/storing long-lived credentials. Using OIDC
+will remove the need for running `cloud-key-rotator`.
 
 ## Install
 
@@ -97,6 +102,7 @@ Currently, the following locations are supported:
 * GCS
 * Git (files encrypted with [mantle](https://github.com/ovotech/mantle) which
 integrates with KMS))
+* GitHub Secrets
 * GoCd
 * K8S (GKE only)
 * SSM (AWS Parameter Store)

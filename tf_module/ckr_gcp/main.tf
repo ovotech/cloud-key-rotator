@@ -1,6 +1,5 @@
 terraform {
-  # version >= 0.15.0 will break as the terraform orb v1 doesn't support it
-  required_version = ">= 0.12.6, < 0.15.0"
+  required_version = ">= 0.12.6"
 }
 
 locals {
@@ -60,7 +59,7 @@ resource "google_storage_bucket_object" "key_rotator_cloud_function_zip" {
 resource "google_cloudfunctions_function" "key_rotator_cloud_function" {
   name        = "ckr-${local.ckr_resource_suffix}"
   description = "This is a cloud function for rotating service account keys"
-  runtime     = "go113"
+  runtime     = "go116"
 
   available_memory_mb   = 128
   source_archive_bucket = google_storage_bucket.key_rotator_bucket.name

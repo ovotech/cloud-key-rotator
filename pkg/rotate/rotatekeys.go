@@ -332,6 +332,10 @@ func locationsToUpdate(keyLocation config.KeyLocations) (kws []location.KeyWrite
 		kws = append(kws, keyLocation.Git)
 	}
 
+	for _, github := range keyLocation.GitHub {
+		kws = append(kws, github)
+	}
+
 	for _, gocd := range keyLocation.Gocd {
 		kws = append(kws, gocd)
 	}

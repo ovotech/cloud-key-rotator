@@ -15,7 +15,7 @@ aliases:
         gcloud functions deploy ckr-dummy-$RAND_SUFFIX \
         --region europe-west1 \
         --entry-point Request \
-        --runtime go113 \
+        --runtime go116 \
         --trigger-http \
         --project pe-dev-185509
         gcloud functions delete ckr-dummy-$RAND_SUFFIX \
@@ -29,14 +29,14 @@ defaults: &defaults
 version: 2.1
 
 orbs:
-  terraform: ovotech/terraform@1
+  terraform: ovotech/terraform-v2@2
 
 jobs:
   goreleaser:
     <<: *defaults
 
     docker:
-      - image: circleci/golang:1.13
+      - image: circleci/golang:1.16
 
     steps:
       - checkout
@@ -74,8 +74,12 @@ jobs:
             curl -L https://github.com/ovotech/cloud-key-rotator/releases/download/v${VERSION}/${TARGET_FILE} -O
             pip3 install awscli
             aws s3 cp $TARGET_FILE s3://ckr-terraform-module-code --acl public-read
+            # publish source to bucket in ap-southeast-2 so cloud-key-rotator can be used in that region
+            export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID_PROD_ENG
+            export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY_PROD_ENG
+            aws s3 cp $TARGET_FILE s3://ckr-terraform-module-code-ap-southeast-2 --acl public-read
   tf_check_aws:
-    executor: terraform/terraform-0_12
+    executor: terraform/default
     steps:
     - checkout
     - terraform/fmt-check:
@@ -86,7 +90,7 @@ jobs:
     # of the module needs to do that.
 
   tf_check_gcp:
-    executor: terraform/terraform-0_12
+    executor: terraform/default
     steps:
     - checkout
     - terraform/fmt-check:
@@ -95,7 +99,7 @@ jobs:
         path: tf_module/ckr_gcp
 
   publish_aws_tf_module:
-    executor: terraform/terraform-0_12
+    executor: terraform/default
     steps:
     - checkout
     - run:
@@ -108,7 +112,7 @@ jobs:
           version_file_path: tf_module/ckr_aws/module_version.txt
 
   publish_gcp_tf_module:
-    executor: terraform/terraform-0_12
+    executor: terraform/default
     steps:
     - checkout
     - run:
@@ -124,7 +128,7 @@ jobs:
     <<: *defaults
 
     docker:
-      - image: eversc/go-pr-checks:1.13
+      - image: eversc/go-pr-checks:1.16
 
     steps:
       - checkout
@@ -137,7 +141,7 @@ jobs:
     <<: *defaults
 
     docker:
-      - image: eversc/go-pr-checks:1.13
+      - image: eversc/go-pr-checks:1.16
 
     steps:
       - checkout
@@ -153,7 +157,7 @@ jobs:
     <<: *defaults
 
     docker:
-      - image: eversc/go-pr-checks:1.13
+      - image: eversc/go-pr-checks:1.16
 
     steps:
       - checkout
@@ -166,7 +170,7 @@ jobs:
     <<: *defaults
 
     docker:
-      - image: eversc/go-pr-checks:1.13
+      - image: eversc/go-pr-checks:1.16
 
     steps:
       - checkout
@@ -179,7 +183,7 @@ jobs:
     <<: *defaults
 
     docker:
-      - image: eversc/go-pr-checks:1.13
+      - image: eversc/go-pr-checks:1.16
 
     steps:
       - checkout
@@ -194,7 +198,7 @@ jobs:
     <<: *defaults
 
     docker:
-      - image: circleci/golang:1.13
+      - image: circleci/golang:1.16
 
     steps:
       - checkout
@@ -217,7 +221,7 @@ jobs:
     <<: *defaults
 
     docker:
-      - image: eversc/go-pr-checks:1.13
+      - image: eversc/go-pr-checks:1.16
 
     steps:
       - checkout
@@ -233,7 +237,7 @@ jobs:
     <<: *defaults
 
     docker:
-      - image: eversc/aws-cli
+      - image: eversc/aws-cli:1.16
 
     steps:
       - checkout
