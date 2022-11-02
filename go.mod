@@ -20,7 +20,7 @@ require (
 	github.com/ovotech/mantle v0.32.3
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.13.0
-	go.uber.org/zap v1.21.0
+	go.uber.org/zap v1.23.0
 	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4
 	golang.org/x/oauth2 v0.0.0-20220909003341-f21342109be1
 	golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba // indirect
