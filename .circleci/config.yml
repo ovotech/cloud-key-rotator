@@ -15,7 +15,7 @@ aliases:
         gcloud functions deploy ckr-dummy-$RAND_SUFFIX \
         --region europe-west1 \
         --entry-point Request \
-        --runtime go113 \
+        --runtime go116 \
         --trigger-http \
         --project pe-dev-185509
         gcloud functions delete ckr-dummy-$RAND_SUFFIX \
