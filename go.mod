@@ -3,11 +3,11 @@ module github.com/ovotech/cloud-key-rotator
 go 1.16
 
 require (
-	cloud.google.com/go/storage v1.27.0
+	cloud.google.com/go/storage v1.28.0
 	github.com/CircleCI-Public/circleci-cli v0.1.19183
 	github.com/DataDog/datadog-api-client-go v1.13.0
 	github.com/Sectorbob/mlab-ns2 v0.0.0-20171030222938-d3aa0c295a8a
-	github.com/aws/aws-lambda-go v1.34.1
+	github.com/aws/aws-lambda-go v1.35.0
 	github.com/aws/aws-sdk-go v1.40.34
 	github.com/beamly/go-gocd v0.0.0-20190719193049-383d56afbf92
 	github.com/cenkalti/backoff/v4 v4.1.3
@@ -19,12 +19,11 @@ require (
 	github.com/ovotech/cloud-key-client v0.2.2
 	github.com/ovotech/mantle v0.32.3
 	github.com/spf13/cobra v1.6.1
-	github.com/spf13/viper v1.13.0
+	github.com/spf13/viper v1.14.0
 	go.uber.org/zap v1.23.0
-	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4
-	golang.org/x/oauth2 v0.0.0-20220909003341-f21342109be1
-	golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba // indirect
-	google.golang.org/api v0.97.0
+	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e
+	golang.org/x/oauth2 v0.0.0-20221014153046-6fdb5e3db783
+	google.golang.org/api v0.102.0
 	gopkg.in/inf.v0 v0.9.0 // indirect
 	gopkg.in/ini.v1 v1.67.0
 	gopkg.in/src-d/go-git.v4 v4.13.1
