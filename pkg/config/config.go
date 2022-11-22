@@ -75,6 +75,7 @@ type KeyLocations struct {
 	DatadogGCPIntegration    []location.Datadog
 	GCS                      []location.Gcs
 	Git                      location.Git
+	GitHub                   []location.GitHub
 	Gocd                     []location.Gocd
 	K8s                      []location.K8s
 	SSM                      []location.Ssm
@@ -120,7 +121,9 @@ func GetConfigFromAWSSecretManager(secretName, configType string) (c Config, err
 		return c, errors.New("Unable to obtain secret value. Check user permissions and secret name")
 	}
 	viper.SetConfigType(configType)
-	viper.ReadConfig(bytes.NewBufferString(secret))
+	if err = viper.ReadConfig(bytes.NewBufferString(secret)); err != nil {
+		return
+	}
 	err = viper.Unmarshal(&c)
 	return
 }
