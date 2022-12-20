@@ -79,6 +79,8 @@ resource "google_cloudfunctions_function" "key_rotator_cloud_function" {
     update = "10m"
     delete = "10m"
   }
+
+  ingress_settings = "ALLOW_INTERNAL_ONLY"
 }
 
 resource "google_cloudfunctions_function_iam_member" "key_rotator_invoker_perms" {
