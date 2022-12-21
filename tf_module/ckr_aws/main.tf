@@ -1,7 +1,4 @@
-terraform {
-  # version >= 0.15.0 will break as the terraform orb v1 doesn't support it
-  required_version = "< 0.15.0"
-}
+terraform {}
 
 data "aws_caller_identity" "current" {}
 
@@ -30,7 +27,7 @@ resource "aws_iam_role_policy_attachment" "attach-ckr-ssm-policy" {
 
 resource "aws_lambda_function" "cloud_key_rotator" {
   description   = "A function for rotating cloud keys"
-  s3_bucket     = "ckr-terraform-module-code"
+  s3_bucket     = var.region == "ap-southeast-2" ? "ckr-terraform-module-code-${var.region}" : "ckr-terraform-module-code"
   s3_key        = "cloud-key-rotator_${var.ckr_version}_lambda.zip"
   function_name = "cloud-key-rotator"
   role          = aws_iam_role.cloudkeyrotator_role.arn
