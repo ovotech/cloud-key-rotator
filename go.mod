@@ -10,7 +10,7 @@ require (
 	github.com/aws/aws-lambda-go v1.36.0
 	github.com/aws/aws-sdk-go v1.42.30
 	github.com/beamly/go-gocd v0.0.0-20190719193049-383d56afbf92
-	github.com/cenkalti/backoff/v4 v4.1.3
+	github.com/cenkalti/backoff/v4 v4.2.0
 	github.com/google/go-github/v45 v45.2.0
 	github.com/jszwedko/go-circleci v0.3.0
 	github.com/mongodb/go-client-mongodb-atlas v0.3.0
