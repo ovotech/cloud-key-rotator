@@ -5,7 +5,7 @@ go 1.18
 require (
 	cloud.google.com/go/storage v1.28.1
 	github.com/CircleCI-Public/circleci-cli v0.1.19183
-	github.com/DataDog/datadog-api-client-go v1.13.0
+	github.com/DataDog/datadog-api-client-go v1.16.0
 	github.com/Sectorbob/mlab-ns2 v0.0.0-20171030222938-d3aa0c295a8a
 	github.com/aws/aws-lambda-go v1.36.0
 	github.com/aws/aws-sdk-go v1.42.30
@@ -34,6 +34,7 @@ require (
 	cloud.google.com/go/compute v1.12.1 // indirect
 	cloud.google.com/go/compute/metadata v0.2.1 // indirect
 	cloud.google.com/go/iam v0.7.0 // indirect
+	github.com/DataDog/zstd v1.5.0 // indirect
 	github.com/Masterminds/semver v1.4.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/emirpasic/gods v1.12.0 // indirect
