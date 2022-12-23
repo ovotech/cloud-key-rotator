@@ -15,7 +15,7 @@ aliases:
         gcloud functions deploy ckr-dummy-$RAND_SUFFIX \
         --region europe-west1 \
         --entry-point Request \
-        --runtime go116 \
+        --runtime go118 \
         --trigger-http \
         --project pe-dev-185509
         gcloud functions delete ckr-dummy-$RAND_SUFFIX \
@@ -24,7 +24,7 @@ aliases:
         --quiet
 
 defaults: &defaults
-  working_directory: /go/src/github.com/ovotech/cloud-key-rotator
+  working_directory: /home/circleci/project/src/github.com/ovotech/cloud-key-rotator
 
 version: 2.1
 
@@ -36,7 +36,7 @@ jobs:
     <<: *defaults
 
     docker:
-      - image: circleci/golang:1.16
+      - image: cimg/go:1.18
 
     steps:
       - checkout
@@ -128,7 +128,7 @@ jobs:
     <<: *defaults
 
     docker:
-      - image: eversc/go-pr-checks:1.16
+      - image: eversc/go-pr-checks:1.18
 
     steps:
       - checkout
@@ -141,7 +141,7 @@ jobs:
     <<: *defaults
 
     docker:
-      - image: eversc/go-pr-checks:1.16
+      - image: eversc/go-pr-checks:1.18
 
     steps:
       - checkout
@@ -157,7 +157,7 @@ jobs:
     <<: *defaults
 
     docker:
-      - image: eversc/go-pr-checks:1.16
+      - image: eversc/go-pr-checks:1.18
 
     steps:
       - checkout
@@ -170,7 +170,7 @@ jobs:
     <<: *defaults
 
     docker:
-      - image: eversc/go-pr-checks:1.16
+      - image: eversc/go-pr-checks:1.18
 
     steps:
       - checkout
@@ -183,7 +183,7 @@ jobs:
     <<: *defaults
 
     docker:
-      - image: eversc/go-pr-checks:1.16
+      - image: eversc/go-pr-checks:1.18
 
     steps:
       - checkout
@@ -198,7 +198,7 @@ jobs:
     <<: *defaults
 
     docker:
-      - image: circleci/golang:1.16
+      - image: cimg/go:1.18
 
     steps:
       - checkout
@@ -221,7 +221,7 @@ jobs:
     <<: *defaults
 
     docker:
-      - image: eversc/go-pr-checks:1.16
+      - image: eversc/go-pr-checks:1.18
 
     steps:
       - checkout
@@ -237,7 +237,7 @@ jobs:
     <<: *defaults
 
     docker:
-      - image: eversc/aws-cli:1.16
+      - image: eversc/aws-cli:1.18
 
     steps:
       - checkout
