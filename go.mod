@@ -1,6 +1,6 @@
 module github.com/ovotech/cloud-key-rotator
 
-go 1.16
+go 1.18
 
 require (
 	cloud.google.com/go/storage v1.28.1
