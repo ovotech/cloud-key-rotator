@@ -14,7 +14,7 @@ require (
 	github.com/google/go-github/v45 v45.2.0
 	github.com/jszwedko/go-circleci v0.3.0
 	github.com/mongodb/go-client-mongodb-atlas v0.3.0
-	github.com/ovotech/cloud-key-client v0.2.4
+	github.com/ovotech/cloud-key-client v0.3.0
 	github.com/ovotech/mantle v0.32.3
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.14.0
