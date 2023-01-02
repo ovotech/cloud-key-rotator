@@ -32,7 +32,7 @@ var (
 				err = rotate.Rotate(account, provider, project, c)
 			}
 			if err != nil {
-				logger.Error(err)
+				logger.Fatal(err)
 			}
 		},
 	}
