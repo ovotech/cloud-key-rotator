@@ -25,7 +25,7 @@ require (
 	gopkg.in/ini.v1 v1.67.0
 	gopkg.in/src-d/go-git.v4 v4.13.1
 	k8s.io/api v0.0.0-20190313235455-40a48860b5ab
-	k8s.io/apimachinery v0.0.0-20190313205120-d7deff9243b1
+	k8s.io/apimachinery v0.15.7
 	k8s.io/client-go v11.0.0+incompatible
 )
 
@@ -94,7 +94,7 @@ require (
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/klog v0.0.0-20190306015804-8e90cee79f82 // indirect
+	k8s.io/klog v0.3.1 // indirect
 	k8s.io/utils v0.0.0-20190308190857-21c4ce38f2a7 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
