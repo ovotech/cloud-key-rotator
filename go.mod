@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	cloud.google.com/go/storage v1.29.0
-	github.com/CircleCI-Public/circleci-cli v0.1.23667
+	github.com/CircleCI-Public/circleci-cli v0.1.23816
 	github.com/DataDog/datadog-api-client-go v1.16.0
 	github.com/Sectorbob/mlab-ns2 v0.0.0-20171030222938-d3aa0c295a8a
 	github.com/aws/aws-lambda-go v1.37.0
@@ -78,7 +78,7 @@ require (
 	go.opencensus.io v0.24.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
-	golang.org/x/net v0.6.0 // indirect
+	golang.org/x/net v0.7.0 // indirect
 	golang.org/x/sys v0.5.0 // indirect
 	golang.org/x/term v0.5.0 // indirect
 	golang.org/x/text v0.7.0 // indirect
