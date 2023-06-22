@@ -80,7 +80,6 @@ type KeyLocations struct {
 	Gocd                     []location.Gocd
 	K8s                      []location.K8s
 	SSM                      []location.Ssm
-	SecretsManager           []location.SecretsManager
 }
 
 //ProviderServiceAccounts type
