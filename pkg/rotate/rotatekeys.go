@@ -54,13 +54,16 @@ const (
 //keyProviders returns a slice of key providers based on flags or config (in
 // that order of priority)
 func keyProviders(provider, project string, c config.Config) (keyProviders []keys.Provider) {
+	// Only Aiven API tokens are currently supported in the cloud-key-client
+	// https://github.com/ovotech/cloud-key-client
+	token := c.Credentials.AivenAPIToken
 	if len(provider) > 0 {
 		keyProviders = append(keyProviders, keys.Provider{GcpProject: project,
-			Provider: provider})
+			Provider: provider, Token: token})
 	} else {
 		for _, cloudProvider := range c.CloudProviders {
 			keyProviders = append(keyProviders, keys.Provider{GcpProject: cloudProvider.Project,
-				Provider: cloudProvider.Name})
+				Provider: cloudProvider.Name, Token: token})
 		}
 	}
 	return
@@ -347,6 +350,10 @@ func locationsToUpdate(keyLocation config.KeyLocations) (kws []location.KeyWrite
 
 	for _, ssm := range keyLocation.SSM {
 		kws = append(kws, ssm)
+	}
+
+	for _, sm := range keyLocation.SecretsManager {
+		kws = append(kws, sm)
 	}
 
 	if googleAppCredsRequired {

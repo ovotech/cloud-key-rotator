@@ -45,14 +45,20 @@ type envVarDefaults struct {
 
 var (
 	defaultsMap = map[string]envVarDefaults{
+		"aiven": {
+			fileType:  "",
+			keyEnvVar: "AIVEN_TOKEN",
+		},
 		"aws": {
 			fileType:    "ini",
 			keyEnvVar:   "AWS_SECRET_ACCESS_KEY",
-			keyIDEnvVar: "AWS_ACCESS_KEY_ID"},
+			keyIDEnvVar: "AWS_ACCESS_KEY_ID",
+		},
 		"gcp": {
 			fileType:    "b64",
 			keyEnvVar:   "GCLOUD_SERVICE_KEY",
-			keyIDEnvVar: ""},
+			keyIDEnvVar: "",
+		},
 	}
 )
 
