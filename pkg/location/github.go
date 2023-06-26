@@ -5,6 +5,7 @@ import (
 	crypto_rand "crypto/rand"
 	"encoding/base64"
 	"fmt"
+	"strconv"
 
 	"github.com/ovotech/cloud-key-rotator/pkg/cred"
 
@@ -16,12 +17,14 @@ import (
 // GitHubActionsService type
 type GitHubActionsService interface {
 	GetRepoPublicKey(context.Context, string, string) (*github.PublicKey, *github.Response, error)
+	CreateOrUpdateEnvSecret(context.Context, int, string, *github.EncryptedSecret) (*github.Response, error)
 	CreateOrUpdateRepoSecret(context.Context, string, string, *github.EncryptedSecret) (*github.Response, error)
 }
 
 // GitHub type
 type GitHub struct {
 	Base64Decode bool
+	Env          string
 	KeyIDEnvVar  string
 	KeyEnvVar    string
 	Owner        string
@@ -60,12 +63,12 @@ func (github GitHub) Write(serviceAccountName string, keyWrapper KeyWrapper, cre
 	actionsService := client.Actions
 
 	if len(keyIDEnvVar) > 0 {
-		if err = addRepoSecret(ctx, actionsService, github.Owner, github.Repo, keyIDEnvVar, keyWrapper.KeyID); err != nil {
+		if err = addEnvOrRepoSecret(ctx, actionsService, github.Owner, github.Repo, github.Env, keyIDEnvVar, keyWrapper.KeyID); err != nil {
 			return
 		}
 	}
 
-	if err = addRepoSecret(ctx, actionsService, github.Owner, github.Repo, keyEnvVar, key); err != nil {
+	if err = addEnvOrRepoSecret(ctx, actionsService, github.Owner, github.Repo, github.Env, keyEnvVar, key); err != nil {
 		return
 	}
 
@@ -113,7 +116,7 @@ func githubAuth(token string) (context.Context, *github.Client, error) {
 //
 // Finally, the github.EncodedSecret is passed into the GitHub client.Actions.CreateOrUpdateRepoSecret method to
 // populate the secret in the GitHub repo.
-func addRepoSecret(ctx context.Context, actionsService GitHubActionsService, owner string, repo, secretName string, secretValue string) error {
+func addEnvOrRepoSecret(ctx context.Context, actionsService GitHubActionsService, owner, repo, env, secretName, secretValue string) error {
 	publicKey, _, err := actionsService.GetRepoPublicKey(ctx, owner, repo)
 	if err != nil {
 		return err
@@ -124,8 +127,20 @@ func addRepoSecret(ctx context.Context, actionsService GitHubActionsService, own
 		return err
 	}
 
-	if _, err := actionsService.CreateOrUpdateRepoSecret(ctx, owner, repo, encryptedSecret); err != nil {
-		return fmt.Errorf("Actions.CreateOrUpdateRepoSecret returned error: %v", err)
+	if env != "" {
+		repoID, err := strconv.Atoi(repo)
+		if err != nil {
+			return fmt.Errorf("Error parsing repo string: %s to int: %w", repo, err)
+		}
+		_, err = actionsService.CreateOrUpdateEnvSecret(ctx, repoID, env, encryptedSecret)
+		if err != nil {
+			return fmt.Errorf("Actions.CreateOrUpdateEnvSecret returned error: %v", err)
+		}
+	} else {
+		_, err = actionsService.CreateOrUpdateRepoSecret(ctx, owner, repo, encryptedSecret)
+		if err != nil {
+			return fmt.Errorf("Actions.CreateOrUpdateRepoSecret returned error: %v", err)
+		}
 	}
 
 	logger.Infof("Added GitHub secret: %s to %s/%s", secretName, owner, repo)
