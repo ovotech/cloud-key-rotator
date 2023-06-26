@@ -34,14 +34,8 @@ func (m mockGitHubActionsService) CreateOrUpdateRepoSecret(context.Context, stri
 }
 
 func TestAddEnvSecretSuccess(t *testing.T) {
-	actionsService := mockGitHubActionsService{
-		// getPublicKeyResponse: struct {
-		// 	publicKey *github.PublicKey
-		// 	response  *github.Response
-		// 	error     error
-		// }{},
-	}
-	err := addEnvOrRepoSecret(nil, actionsService, "", "", "", "", "")
+	actionsService := mockGitHubActionsService{}
+	err := addEnvOrRepoSecret(nil, actionsService, "", "", "my_env", "", "", 1234)
 	if err != nil {
 		t.Error("Expected nil, got error")
 	}
@@ -55,7 +49,7 @@ func TestAddEnvSecretPublicKeyFail(t *testing.T) {
 			error     error
 		}{error: errors.New("error getting repo public key")},
 	}
-	err := addEnvOrRepoSecret(nil, actionsService, "", "", "", "", "")
+	err := addEnvOrRepoSecret(nil, actionsService, "", "", "my_env", "", "", 1234)
 	if err == nil {
 		t.Error("Expected error, got nil")
 	}
@@ -68,7 +62,7 @@ func TestAddEnvSecretAddSecretFail(t *testing.T) {
 			error    error
 		}{error: errors.New("error adding secret")},
 	}
-	err := addEnvOrRepoSecret(nil, actionsService, "", "", "", "", "")
+	err := addEnvOrRepoSecret(nil, actionsService, "", "", "my_env", "", "", 1234)
 	if err == nil {
 		t.Error("Expected error, got nil")
 	}
@@ -81,21 +75,15 @@ func TestAddEnvSecretParseRepoIDFail(t *testing.T) {
 			error    error
 		}{error: errors.New("error adding secret")},
 	}
-	err := addEnvOrRepoSecret(nil, actionsService, "", "cannot_parse_to_int", "", "", "")
+	err := addEnvOrRepoSecret(nil, actionsService, "", "", "my_env", "", "", 1234)
 	if err == nil {
 		t.Error("Expected error, got nil")
 	}
 }
 
 func TestAddRepoSecretSuccess(t *testing.T) {
-	actionsService := mockGitHubActionsService{
-		// getPublicKeyResponse: struct {
-		// 	publicKey *github.PublicKey
-		// 	response  *github.Response
-		// 	error     error
-		// }{},
-	}
-	err := addEnvOrRepoSecret(nil, actionsService, "", "", "", "", "")
+	actionsService := mockGitHubActionsService{}
+	err := addEnvOrRepoSecret(nil, actionsService, "", "", "", "", "", 0)
 	if err != nil {
 		t.Error("Expected nil, got error")
 	}
@@ -109,7 +97,7 @@ func TestAddRepoSecretPublicKeyFail(t *testing.T) {
 			error     error
 		}{error: errors.New("error getting repo public key")},
 	}
-	err := addEnvOrRepoSecret(nil, actionsService, "", "", "", "", "")
+	err := addEnvOrRepoSecret(nil, actionsService, "", "", "", "", "", 0)
 	if err == nil {
 		t.Error("Expected error, got nil")
 	}
@@ -122,7 +110,7 @@ func TestAddRepoSecretAddSecretFail(t *testing.T) {
 			error    error
 		}{error: errors.New("error adding secret")},
 	}
-	err := addEnvOrRepoSecret(nil, actionsService, "", "", "", "", "")
+	err := addEnvOrRepoSecret(nil, actionsService, "", "", "", "", "", 0)
 	if err == nil {
 		t.Error("Expected error, got nil")
 	}

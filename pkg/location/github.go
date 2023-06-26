@@ -5,7 +5,6 @@ import (
 	crypto_rand "crypto/rand"
 	"encoding/base64"
 	"fmt"
-	"strconv"
 
 	"github.com/ovotech/cloud-key-rotator/pkg/cred"
 
@@ -29,6 +28,7 @@ type GitHub struct {
 	KeyEnvVar    string
 	Owner        string
 	Repo         string
+	RepoID       int
 }
 
 func (github GitHub) Write(serviceAccountName string, keyWrapper KeyWrapper, creds cred.Credentials) (updated UpdatedLocation, err error) {
@@ -63,12 +63,12 @@ func (github GitHub) Write(serviceAccountName string, keyWrapper KeyWrapper, cre
 	actionsService := client.Actions
 
 	if len(keyIDEnvVar) > 0 {
-		if err = addEnvOrRepoSecret(ctx, actionsService, github.Owner, github.Repo, github.Env, keyIDEnvVar, keyWrapper.KeyID); err != nil {
+		if err = addEnvOrRepoSecret(ctx, actionsService, github.Owner, github.Repo, github.Env, keyIDEnvVar, keyWrapper.KeyID, github.RepoID); err != nil {
 			return
 		}
 	}
 
-	if err = addEnvOrRepoSecret(ctx, actionsService, github.Owner, github.Repo, github.Env, keyEnvVar, key); err != nil {
+	if err = addEnvOrRepoSecret(ctx, actionsService, github.Owner, github.Repo, github.Env, keyEnvVar, key, github.RepoID); err != nil {
 		return
 	}
 
@@ -116,7 +116,7 @@ func githubAuth(token string) (context.Context, *github.Client, error) {
 //
 // Finally, the github.EncodedSecret is passed into the GitHub client.Actions.CreateOrUpdateRepoSecret method to
 // populate the secret in the GitHub repo.
-func addEnvOrRepoSecret(ctx context.Context, actionsService GitHubActionsService, owner, repo, env, secretName, secretValue string) error {
+func addEnvOrRepoSecret(ctx context.Context, actionsService GitHubActionsService, owner, repo, env, secretName, secretValue string, repoID int) error {
 	publicKey, _, err := actionsService.GetRepoPublicKey(ctx, owner, repo)
 	if err != nil {
 		return err
@@ -128,10 +128,6 @@ func addEnvOrRepoSecret(ctx context.Context, actionsService GitHubActionsService
 	}
 
 	if env != "" {
-		repoID, err := strconv.Atoi(repo)
-		if err != nil {
-			return fmt.Errorf("Error parsing repo string: %s to int: %w", repo, err)
-		}
 		_, err = actionsService.CreateOrUpdateEnvSecret(ctx, repoID, env, encryptedSecret)
 		if err != nil {
 			return fmt.Errorf("Actions.CreateOrUpdateEnvSecret returned error: %v", err)
