@@ -19,6 +19,7 @@ import (
 	"context"
 	"errors"
 	"io/ioutil"
+	"strings"
 
 	"cloud.google.com/go/storage"
 	"github.com/aws/aws-sdk-go/aws"
@@ -91,10 +92,20 @@ const envVarPrefix = "ckr"
 
 //GetConfig returns the application config
 func GetConfig(configPath string) (c Config, err error) {
-	viper.AutomaticEnv()
 	viper.SetEnvPrefix(envVarPrefix)
+	// when viper picks up nested keys from env vars, it uses "." as the
+	// separator. E.g. for AivenAPIToken in the Credentials struct, it looks
+	// for "CKR_CREDENTIALS.AIVENAPITOKEN". Bash won't allow users to set this
+	// though, so we need to replace all "." with "_"
+	// so we can now set CKR_CREDENTIALS_AIVENAPITOKEN for example
+	replacer := strings.NewReplacer(".", "_")
+	viper.SetEnvKeyReplacer(replacer)
+	// setting defaults is required so users can pass values in from env vars
+	viper.SetDefault("credentials.aivenapitoken", "")
+	viper.SetDefault("credentials.circleciapitoken", "")
+	viper.SetDefault("credentials.githubapitoken", "")
+	viper.AutomaticEnv()
 	viper.AddConfigPath(configPath)
-	viper.SetEnvPrefix("ckr")
 	viper.SetConfigName("config")
 	viper.AddConfigPath(".")
 	if err = viper.ReadInConfig(); err != nil {
