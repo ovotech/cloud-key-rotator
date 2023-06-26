@@ -16,6 +16,7 @@ package cred
 
 // Credentials type
 type Credentials struct {
+	AivenAPIToken    string
 	CircleCIAPIToken string
 	GitHubAPIToken   string
 	Datadog          Datadog
