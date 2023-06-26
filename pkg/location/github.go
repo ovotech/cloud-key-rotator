@@ -59,7 +59,7 @@ func (github GitHub) Write(serviceAccountName string, keyWrapper KeyWrapper, cre
 		return
 	}
 
-	// create the ActionsService from the client so we can pass into addRepoSecret()
+	// create the ActionsService from the client so we can pass into addEnvOrRepoSecret()
 	actionsService := client.Actions
 
 	if len(keyIDEnvVar) > 0 {
