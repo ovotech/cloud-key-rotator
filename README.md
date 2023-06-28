@@ -108,6 +108,7 @@ Currently, the following locations are supported:
 - GoCd
 - K8S (GKE only)
 - SSM (AWS Parameter Store)
+- AWS SecretsManager
 
 ## Rotation Process
 
