@@ -352,6 +352,10 @@ func locationsToUpdate(keyLocation config.KeyLocations) (kws []location.KeyWrite
 		kws = append(kws, ssm)
 	}
 
+	for _, secretsmanager := range keyLocation.SecretsManager {
+		kws = append(kws, secretsmanager)
+	}
+
 	if googleAppCredsRequired {
 		ensureGoogleAppCreds()
 	}
