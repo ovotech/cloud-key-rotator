@@ -1,4 +1,5 @@
 # Cloud-Key-Rotator
+
 [![CircleCI](https://circleci.com/gh/ovotech/cloud-key-rotator/tree/master.svg?style=svg)](https://circleci.com/gh/ovotech/cloud-key-rotator/tree/master)
 
 This is a Golang program to assist with the reporting of Service Account key
@@ -6,30 +7,31 @@ ages, and rotating said keys once they pass a specific age threshold.
 
 The tool can update keys held in the following locations:
 
-* Atlas (mongoDB)
-* CircleCI env vars
-* CircleCI contexts
-* Datadog (GCP Integration)
-* GCS
-* Git
-* GitHub Secrets
-* GoCd
-* K8S (GKE only)
-* SSM (AWS Parameter Store)
+- Atlas (mongoDB)
+- CircleCI env vars
+- CircleCI contexts
+- Datadog (GCP Integration)
+- GCS
+- Git
+- GitHub Secrets
+- GoCd
+- K8S (GKE only)
+- SSM (AWS Parameter Store)
+- AWS SecretsManager
 
 The tool is packaged as an executable file for native invocation, and as a zip
 file for deployment as an AWS Lambda.
 
 > :information_source: where possible [OpenID Connect (OIDC)](https://openid.net/connect/)
-should be used instead of furnishing/storing long-lived credentials. Using OIDC
-will remove the need for running `cloud-key-rotator`.
+> should be used instead of furnishing/storing long-lived credentials. Using OIDC
+> will remove the need for running `cloud-key-rotator`.
 
 ## Install
 
 ### From Binary Releases
 
 Darwin, Linux and Windows Binaries can be downloaded from the
- [Releases](https://github.com/ovotech/cloud-key-rotator/releases) page.
+[Releases](https://github.com/ovotech/cloud-key-rotator/releases) page.
 
 Try it out:
 
@@ -54,9 +56,9 @@ HCL.
 
 For native invocation, the file needs to be called "config" (before whatever
 extension you're using), and be present either in `/etc/cloud-key-rotator/` or
-in the same directory the binary runs in.  For AWS Lambda invocation, the config needs
+in the same directory the binary runs in. For AWS Lambda invocation, the config needs
 to be set as a plaintext secret in the AWS Secrets Manager, using a default key name
- of "ckr-config".
+of "ckr-config".
 
 ### Authentication/Authorisation
 
@@ -65,7 +67,7 @@ any key provider that it'll be updating.
 
 Authorisation is handled by the Default Credential Provider Chains for both
 [GCP](https://cloud.google.com/docs/authentication/production#auth-cloud-implicit-go) and
- [AWS](https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html#credentials-default).
+[AWS](https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/credentials.html#credentials-default).
 
 ### Mode Of Operation
 
@@ -95,29 +97,30 @@ ultimately be updated with the new keys that are generated.
 
 Currently, the following locations are supported:
 
-* Atlas (mongoDB)
-* CircleCI env vars
-* CircleCI contexts
-* Datadog (GCP Integration)
-* GCS
-* Git (files encrypted with [mantle](https://github.com/ovotech/mantle) which
-integrates with KMS))
-* GitHub Secrets
-* GoCd
-* K8S (GKE only)
-* SSM (AWS Parameter Store)
+- Atlas (mongoDB)
+- CircleCI env vars
+- CircleCI contexts
+- Datadog (GCP Integration)
+- GCS
+- Git (files encrypted with [mantle](https://github.com/ovotech/mantle) which
+  integrates with KMS))
+- GitHub Secrets
+- GoCd
+- K8S (GKE only)
+- SSM (AWS Parameter Store)
+- AWS SecretsManager
 
 ## Rotation Process
 
 The tool attempts to verify its actions as much as possible and aborts
-immediately if it encounters an error.  By design, the tool does **not** attempt to
+immediately if it encounters an error. By design, the tool does **not** attempt to
 handle errors gracefully and continue, since this can lead to a "split-brain effect",
 with keys out-of-sync in various locations.
 
 It should be quick to re-run the tool (with new keys being created) once issues
- have been resolved.   Note that cloud providers usually limit the number of
- keys you can have attached to a Service Account at any one time, so it is
- worth bearing this in mind when re-running manually after seeing errors.
+have been resolved. Note that cloud providers usually limit the number of
+keys you can have attached to a Service Account at any one time, so it is
+worth bearing this in mind when re-running manually after seeing errors.
 
 Only the first key of a Service Account is handled by `cloud-key-rotator`. If
 it handled more than one key, it could lead to complications when updating
@@ -168,12 +171,13 @@ to a Git repository.
 Commits to Git repositories are required to be GPG signed. In order to
 achieve this, you need to provide 4 things:
 
-* `Username` of the Git user commits will be made on behalf of, set in config
-* `Email` address of Git user, set in config
-* `ArmouredKeyRing`, aka GPG private key, stored in `/etc/cloud-key-rotator/akr.asc`
-* `Passphrase` to the ArmouredKeyRing
+- `Username` of the Git user commits will be made on behalf of, set in config
+- `Email` address of Git user, set in config
+- `ArmouredKeyRing`, aka GPG private key, stored in `/etc/cloud-key-rotator/akr.asc`
+- `Passphrase` to the ArmouredKeyRing
 
 e.g. along with the `akr.asc` file, you should set the following:
+
 ```JSON
 "AkrPass": "change_me",
 "GitName": "git-name",
@@ -212,16 +216,15 @@ Service Account's email address.
 ## Rotation Flow
 
 1. Reduce keys to those of service accounts deemed to be valid (e.g. strip out
-  user accounts if in rotation-mode)
+   user accounts if in rotation-mode)
 2. Filter keys to those deemed to be eligible (e.g. according to filtering rules
-  configured by the user)
+   configured by the user)
 3. For each eligible key:
 
-  * Create new key
-  * Update key locations
-  * Verify update has worked (where possible)
-  * Delete old key
-
+- Create new key
+- Update key locations
+- Verify update has worked (where possible)
+- Delete old key
 
 ## Troubleshooting
 
@@ -239,7 +242,7 @@ Try and schedule rotations for times that are unlikely to conflict with CI/CD
 jobs.
 
 - When trying to create a GCP AppEngine App (a pre-requisite of being able to
-create CloudScheduler jobs) I get an error: `Error waiting for App Engine app to
+  create CloudScheduler jobs) I get an error: `Error waiting for App Engine app to
 create: Error code 13, message: AppEngine service account cannot be generated for e~<project_name>`
 
 This happens when the AppEngine default service account has been previously
@@ -249,7 +252,7 @@ available to try. If that's not possible, GCP support should be able to restore
 the service account.
 
 - CloudScheduler fails to invoke the `cloud-key-rotator` CloudFunction, showing
-a `PERMISSION DENIED` error in logs
+  a `PERMISSION DENIED` error in logs
 
 For the CloudScheduler to have permission to invoke CloudFunctions, the Cloud
 Scheduler service account must be given the `Cloud Scheduler Service Agent`
@@ -272,13 +275,11 @@ The user/owner (preferably a bot user) of the CircleCI API key that you pass to
 `cloud-key-rotator` must have write access to the GitHub repo that the CircleCI
 jobs run from.
 
-
-
 ## Contributions
 
 Contributions are more than welcome from both internal (to ovotech) and external
 contributors.
 
-If you have write access to this repo, create a branch and PR, 
-otherwise fork and PR. Forked branches will be pushed to this repo by a 
+If you have write access to this repo, create a branch and PR,
+otherwise fork and PR. Forked branches will be pushed to this repo by a
 reviewer so PR checks can run.
