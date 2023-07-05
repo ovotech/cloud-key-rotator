@@ -44,7 +44,6 @@ For updating a single environment secret:
         {
           "Owner": "my_org",
           "Repo": "my_repo",
-          "RepoID": "123456789",
           "Env": "my_env",
         },
       ]
@@ -54,9 +53,6 @@ For updating a single environment secret:
     "GitHubAPIToken": "my_github_api_token"
   }
 ```
-
-> :information_source: to get RepoID you can use the gh-cli and jq:
-> `gh api -H "Accept: application/vnd.github+json" repos/{org}/{repo} | jq .id`
 
 For updating a secret in multiple repos:
 

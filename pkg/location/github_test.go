@@ -21,6 +21,10 @@ type mockGitHubActionsService struct {
 	}
 }
 
+func (m mockGitHubActionsService) GetEnvPublicKey(context.Context, int, string) (*github.PublicKey, *github.Response, error) {
+	return m.getPublicKeyResponse.publicKey, m.getPublicKeyResponse.response, m.getPublicKeyResponse.error
+}
+
 func (m mockGitHubActionsService) GetRepoPublicKey(context.Context, string, string) (*github.PublicKey, *github.Response, error) {
 	return m.getPublicKeyResponse.publicKey, m.getPublicKeyResponse.response, m.getPublicKeyResponse.error
 }
