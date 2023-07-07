@@ -345,6 +345,8 @@ github.com/openlyinc/pointy v1.1.2 h1:LywVV2BWC5Sp5v7FoP4bUD+2Yn5k0VNeRbU5vq9jUM
 github.com/openlyinc/pointy v1.1.2/go.mod h1:w2Sytx+0FVuMKn37xpXIAyBNhFNBIJGR/v2m7ik1WtM=
 github.com/ovotech/cloud-key-client v0.4.1 h1:88WT3iJKX1hs9KKyP+hCUxnFkeor15xBaPaLD/MP1h4=
 github.com/ovotech/cloud-key-client v0.4.1/go.mod h1:GE+dvpLfk42JW0jX2Hzs8Gocjj4vWlliZTIq9W2Z0Ns=
+github.com/ovotech/cloud-key-client v0.4.2 h1:NpHyTqBTyQV7uvJlcbCB1rgFhyRMHUZq82zV3/l2Gu4=
+github.com/ovotech/cloud-key-client v0.4.2/go.mod h1:GE+dvpLfk42JW0jX2Hzs8Gocjj4vWlliZTIq9W2Z0Ns=
 github.com/ovotech/mantle v0.32.3 h1:LNqEYlotYhbxcDIrU476c3B+vhAQ92kdCjeNdbaZxjU=
 github.com/ovotech/mantle v0.32.3/go.mod h1:bSrueYEoP2Tt3DMrXvSsia+WLM7tv5C2nc1Rdi0Mrh4=
 github.com/pelletier/go-buffruneio v0.2.0/go.mod h1:JkE26KsDizTr40EUHkXVtNPvgGtbSNq5BcowyYOWdKo=

@@ -5,7 +5,7 @@ import (
 	crypto_rand "crypto/rand"
 	"encoding/base64"
 	"fmt"
-	"strings"
+	"net/url"
 
 	"github.com/ovotech/cloud-key-rotator/pkg/cred"
 
@@ -65,7 +65,7 @@ func (github GitHub) Write(serviceAccountName string, keyWrapper KeyWrapper, cre
 	repo, _, err := client.Repositories.Get(ctx, github.Owner, github.Repo)
 	repoID := repo.GetID()
 	// encode forwardslash character (which is valid in GitHub environment names), otherwise it'll break a REST API call
-	env := strings.Replace(github.Env, "/", "%2F", -1)
+	env := url.PathEscape(github.Env)
 
 	if len(keyIDEnvVar) > 0 {
 		if err = addEnvOrRepoSecret(ctx, actionsService, github.Owner, github.Repo, env, keyIDEnvVar, keyWrapper.KeyID, repoID); err != nil {
