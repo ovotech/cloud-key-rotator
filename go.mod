@@ -8,7 +8,7 @@ require (
 	github.com/DataDog/datadog-api-client-go v1.16.0
 	github.com/Sectorbob/mlab-ns2 v0.0.0-20171030222938-d3aa0c295a8a
 	github.com/aws/aws-lambda-go v1.37.0
-	github.com/aws/aws-sdk-go v1.45.11
+	github.com/aws/aws-sdk-go v1.45.27
 	github.com/beamly/go-gocd v0.0.0-20190719193049-383d56afbf92
 	github.com/cenkalti/backoff/v4 v4.2.0
 	github.com/google/go-github/v45 v45.2.0
