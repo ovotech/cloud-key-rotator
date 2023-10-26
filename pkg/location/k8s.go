@@ -31,7 +31,7 @@ import (
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
 )
 
-//K8s type
+// K8s type
 type K8s struct {
 	Project     string
 	Location    string
@@ -41,7 +41,7 @@ type K8s struct {
 	DataName    string
 }
 
-//googleAuthProvider type
+// googleAuthProvider type
 type googleAuthProvider struct {
 	tokenSource oauth2.TokenSource
 }
@@ -86,7 +86,7 @@ func (k8s K8s) Write(serviceAccountName string, keyWrapper KeyWrapper, creds cre
 	return
 }
 
-//kubernetesClient creates a kubernetes clientset
+// kubernetesClient creates a kubernetes clientset
 func kubernetesClient(cluster *gkev1.Cluster) (k8sclient *kubernetes.Clientset, err error) {
 	var decodedClientCertificate []byte
 	if decodedClientCertificate, err = b64.StdEncoding.
@@ -135,7 +135,7 @@ func newGoogleAuthProvider(addr string, config map[string]string,
 	return &googleAuthProvider{tokenSource: ts}, nil
 }
 
-//updateK8sSecret updates a specific namespace/secret/data with the key string
+// updateK8sSecret updates a specific namespace/secret/data with the key string
 func updateK8sSecret(secretName, dataName, namespace, key string,
 	k8sclient *kubernetes.Clientset) (newSecret *v1.Secret, err error) {
 	logger.Info("Starting k8s secret updates")
@@ -152,7 +152,7 @@ func updateK8sSecret(secretName, dataName, namespace, key string,
 	return k8sclient.CoreV1().Secrets(namespace).Update(secret)
 }
 
-//gkeCluster creates a GKE cluster struct
+// gkeCluster creates a GKE cluster struct
 func gkeCluster(project, location, clusterName string) (cluster *gkev1.Cluster, err error) {
 	ctx := context.Background()
 	var httpClient *http.Client

@@ -56,7 +56,7 @@ func logCloudFunctionError(w http.ResponseWriter, err error) {
 	logger.Error(err)
 }
 
-//getEnv returns the value of the env var matching the key, if it exists, and
+// getEnv returns the value of the env var matching the key, if it exists, and
 // the value of fallback otherwise
 func getEnv(key, fallback string) string {
 	if value, ok := os.LookupEnv(key); ok {

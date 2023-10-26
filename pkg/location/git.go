@@ -31,7 +31,7 @@ import (
 	gitHttp "gopkg.in/src-d/go-git.v4/plumbing/transport/http"
 )
 
-//Git type
+// Git type
 type Git struct {
 	Filepath              string
 	FileType              string
@@ -84,7 +84,7 @@ func (git Git) Write(serviceAccountName string, keyWrapper KeyWrapper, creds cre
 	return
 }
 
-//writeKeyToRemoteGitRepo handles the writing of the supplied key to the *remote*
+// writeKeyToRemoteGitRepo handles the writing of the supplied key to the *remote*
 // Git repo defined in the Git struct
 func writeKeyToRemoteGitRepo(gitt Git, serviceAccountName string,
 	key []byte, localDir string, signKey *openpgp.Entity, creds cred.Credentials) (committed *object.Commit, err error) {
@@ -114,7 +114,7 @@ func writeKeyToRemoteGitRepo(gitt Git, serviceAccountName string,
 	return
 }
 
-//writeKeyToLocalGitRepo handles the writing of the supplied key to the *local*
+// writeKeyToLocalGitRepo handles the writing of the supplied key to the *local*
 // Git repo defined in the Git struct
 func writeKeyToLocalGitRepo(gitt Git, repo *git.Repository, key []byte,
 	serviceAccountName, localDir string, signKey *openpgp.Entity, creds cred.Credentials) (commmit plumbing.Hash, err error) {
@@ -139,7 +139,7 @@ func writeKeyToLocalGitRepo(gitt Git, repo *git.Repository, key []byte,
 	})
 }
 
-//cloneGitRepo clones the specified Git repository into a local directory
+// cloneGitRepo clones the specified Git repository into a local directory
 func cloneGitRepo(localDir, orgRepo, token string) (repo *git.Repository, err error) {
 	url := strings.Join([]string{"https://github.com/", orgRepo, ".git"}, "")
 	return git.PlainClone(localDir, false, &git.CloneOptions{
