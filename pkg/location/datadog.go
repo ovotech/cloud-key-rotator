@@ -29,7 +29,7 @@ var (
 	ErrIncorrectGCPKeyProvider = errors.New("this location only supports GCP service account keys")
 )
 
-//Write
+// Write
 func (dd Datadog) Write(serviceAccountName string, wrapper KeyWrapper, creds cred.Credentials) (updated UpdatedLocation, err error) {
 	logger.Infof("Starting Datadog GCP integration update for %s in project %s", dd.ClientEmail, dd.Project)
 
