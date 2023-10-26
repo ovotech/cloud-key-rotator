@@ -136,7 +136,7 @@ jobs:
       - run:
            name: ensure gofmt
            command: |
-             PATH=$PATH:/usr/local/go/bin
+             export PATH=$PATH:/usr/local/go/bin
              test -z $(gofmt -s -l $(find . -iname '*.go' -type f | grep -v /vendor/))
   go_vet:
     <<: *defaults
