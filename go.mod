@@ -18,7 +18,7 @@ require (
 	github.com/ovotech/mantle v0.32.3
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.17.0
-	go.uber.org/zap v1.24.0
+	go.uber.org/zap v1.26.0
 	golang.org/x/crypto v0.14.0
 	golang.org/x/oauth2 v0.13.0
 	google.golang.org/api v0.143.0
@@ -82,7 +82,7 @@ require (
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
-	go.uber.org/multierr v1.9.0 // indirect
+	go.uber.org/multierr v1.10.0 // indirect
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
 	golang.org/x/net v0.16.0 // indirect
 	golang.org/x/sync v0.3.0 // indirect
