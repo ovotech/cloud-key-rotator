@@ -35,7 +35,7 @@ import (
 	"github.com/ovotech/cloud-key-rotator/pkg/log"
 )
 
-//rotationCandidate type
+// rotationCandidate type
 type rotationCandidate struct {
 	key                   keys.Key
 	keyLocation           config.KeyLocations
@@ -51,7 +51,7 @@ const (
 	datadogURL = "https://api.datadoghq.com/api/v1/series?api_key="
 )
 
-//keyProviders returns a slice of key providers based on flags or config (in
+// keyProviders returns a slice of key providers based on flags or config (in
 // that order of priority)
 func keyProviders(provider, project string, c config.Config) (keyProviders []keys.Provider) {
 	// Only Aiven API tokens are currently supported in the cloud-key-client
@@ -69,7 +69,7 @@ func keyProviders(provider, project string, c config.Config) (keyProviders []key
 	return
 }
 
-//validateFlags returns an error that's not nil if provided string values fail
+// validateFlags returns an error that's not nil if provided string values fail
 // a set of validation rules
 func validateFlags(account, provider, project string) (err error) {
 	if len(account) > 0 && len(provider) == 0 {
@@ -83,7 +83,7 @@ func validateFlags(account, provider, project string) (err error) {
 	return
 }
 
-//keysOfProviders returns keys from all the configured providers that have passed
+// keysOfProviders returns keys from all the configured providers that have passed
 // through filtering
 func keysOfProviders(account, provider, project string, c config.Config) (accountKeys []keys.Key, err error) {
 	if accountKeys, err = keys.Keys(keyProviders(provider, project, c), c.IncludeInactiveKeys); err != nil {
@@ -93,7 +93,7 @@ func keysOfProviders(account, provider, project string, c config.Config) (accoun
 	return filterKeys(accountKeys, c, account)
 }
 
-//Rotate rotates those keys..
+// Rotate rotates those keys..
 func Rotate(account, provider, project string, c config.Config) (err error) {
 	defer logger.Sync()
 
@@ -155,7 +155,7 @@ func Rotate(account, provider, project string, c config.Config) (err error) {
 	return
 }
 
-//rotateKey creates a new key for the rotation candidate, updates its key locations,
+// rotateKey creates a new key for the rotation candidate, updates its key locations,
 // and deletes the old key iff the key location update is successful
 func rotateKey(rotationCandidate rotationCandidate, creds cred.Credentials) (err error) {
 	key := rotationCandidate.key
@@ -175,7 +175,7 @@ func rotateKey(rotationCandidate rotationCandidate, creds cred.Credentials) (err
 	return deleteKey(key, keyProvider)
 }
 
-//rotationAgeThreshold calculates the key age rotation threshold based on config values
+// rotationAgeThreshold calculates the key age rotation threshold based on config values
 func rotationAgeThreshold(keyLocation config.KeyLocations, defaultRotationAgeThresholdMins int) (rotationAgeThresholdMins int) {
 	rotationAgeThresholdMins = defaultRotationAgeThresholdMins
 	if keyLocation.RotationAgeThresholdMins > 0 {
@@ -184,7 +184,7 @@ func rotationAgeThreshold(keyLocation config.KeyLocations, defaultRotationAgeThr
 	return
 }
 
-//rotateKeys iterates over the rotation candidates, invoking the func that actually
+// rotateKeys iterates over the rotation candidates, invoking the func that actually
 // performs the rotation
 func rotateKeys(rotationCandidates []rotationCandidate, creds cred.Credentials) (err error) {
 	for _, rc := range rotationCandidates {
@@ -204,9 +204,9 @@ func rotateKeys(rotationCandidates []rotationCandidate, creds cred.Credentials) 
 	return
 }
 
-//rotatekeys runs through the end to end process of rotating a slice of keys:
-//filter down to subset of target keys, generate new key for each, update the
-//key's locations and finally delete the existing/old key
+// rotatekeys runs through the end to end process of rotating a slice of keys:
+// filter down to subset of target keys, generate new key for each, update the
+// key's locations and finally delete the existing/old key
 func rotationCandidates(accountKeys []keys.Key, keyLoc []config.KeyLocations,
 	creds cred.Credentials, defaultRotationAgeThresholdMins int) (rotationCandidates []rotationCandidate, err error) {
 	processedItems := make([]string, 0)
@@ -240,7 +240,7 @@ func rotationCandidates(accountKeys []keys.Key, keyLoc []config.KeyLocations,
 	return
 }
 
-//createKey creates a new key with the provider specified
+// createKey creates a new key with the provider specified
 func createKey(key keys.Key, keyProvider string) (newKeyID, newKey string, err error) {
 	if newKeyID, newKey, err = keys.CreateKey(key); err != nil {
 		logger.Error(err)
@@ -253,7 +253,7 @@ func createKey(key keys.Key, keyProvider string) (newKeyID, newKey string, err e
 	return
 }
 
-//deletekey deletes the key
+// deletekey deletes the key
 func deleteKey(key keys.Key, keyProvider string) (err error) {
 	if err = keys.DeleteKey(key); err != nil {
 		return
@@ -265,8 +265,8 @@ func deleteKey(key keys.Key, keyProvider string) (err error) {
 	return
 }
 
-//accountKeyLocation gets the keyLocation element defined in config for the
-//specified account
+// accountKeyLocation gets the keyLocation element defined in config for the
+// specified account
 func accountKeyLocation(account string,
 	keyLocations []config.KeyLocations) (accountKeyLocation config.KeyLocations, err error) {
 	err = errors.New("No account key locations (in config) mapped to SA: " + account)
@@ -280,14 +280,14 @@ func accountKeyLocation(account string,
 	return
 }
 
-//InLambda returns true if the AWS_LAMBDA_FUNCTION_NAME env var is set
+// InLambda returns true if the AWS_LAMBDA_FUNCTION_NAME env var is set
 func InLambda() (isLambda bool) {
 	return len(os.Getenv("AWS_LAMBDA_FUNCTION_NAME")) > 0
 }
 
-//ensureGoogleAppCreds helps to provision a GCP service account key when running in a Lambda.
-//The key could be used for various purposes, e.g. rotating a service account's key, writing
-//a new key to GCS, or writing a new key to a Secret in GKE.
+// ensureGoogleAppCreds helps to provision a GCP service account key when running in a Lambda.
+// The key could be used for various purposes, e.g. rotating a service account's key, writing
+// a new key to GCS, or writing a new key to a Secret in GKE.
 func ensureGoogleAppCreds() (err error) {
 	if InLambda() && !provisionedGoogleAppCreds {
 		var secretValue string
@@ -303,7 +303,7 @@ func ensureGoogleAppCreds() (err error) {
 	return
 }
 
-//locationsToUpdate return a slice of structs that implement the keyWriter
+// locationsToUpdate return a slice of structs that implement the keyWriter
 // interface, based on the keyLocations supplied
 func locationsToUpdate(keyLocation config.KeyLocations) (kws []location.KeyWriter) {
 
@@ -363,7 +363,7 @@ func locationsToUpdate(keyLocation config.KeyLocations) (kws []location.KeyWrite
 	return
 }
 
-//updateKeyLocation updates locations specified in keyLocations with the new key, e.g. Git, CircleCI and K8s
+// updateKeyLocation updates locations specified in keyLocations with the new key, e.g. Git, CircleCI and K8s
 func updateKeyLocation(account string, keyLocations config.KeyLocations,
 	keyWrapper location.KeyWrapper, creds cred.Credentials) (err error) {
 
@@ -391,7 +391,7 @@ func updateKeyLocation(account string, keyLocations config.KeyLocations,
 	return
 }
 
-//validKey returns a bool reflecting whether the key is deemed to be valid, based
+// validKey returns a bool reflecting whether the key is deemed to be valid, based
 // on a number of provider-specific rules. E.g., if the provider is AWS, and
 // not configured to include user keys, is the key a user key (and hence invalid)?
 func validKey(key keys.Key, config config.Config) bool {
@@ -401,7 +401,7 @@ func validKey(key keys.Key, config config.Config) bool {
 	return true
 }
 
-//filterKeys returns a keys.Key slice created by filtering the provided
+// filterKeys returns a keys.Key slice created by filtering the provided
 // keys.Key slice based on specific rules for each provider
 func filterKeys(keysToFilter []keys.Key, config config.Config, account string) (filteredKeys []keys.Key, err error) {
 	var selfKeys []keys.Key
@@ -433,7 +433,7 @@ func filterKeys(keysToFilter []keys.Key, config config.Config, account string) (
 	return
 }
 
-//isSelf returns true iff the key provided matches the 'self' defined in the
+// isSelf returns true iff the key provided matches the 'self' defined in the
 // config.cloudProvider. This means the key is the one being used in the
 // rotation process, and should probably be rotated last.
 func isSelf(config config.Config, key keys.Key) bool {
@@ -447,7 +447,7 @@ func isSelf(config config.Config, key keys.Key) bool {
 	return false
 }
 
-//filterKey returns a bool indicating whether the key is eligible for 'use'
+// filterKey returns a bool indicating whether the key is eligible for 'use'
 func filterKey(account string, config config.Config, key keys.Key) (eligible bool, err error) {
 	if len(account) > 0 {
 		//this means an overriding account has been supplied, i.e. from CLI
@@ -468,7 +468,7 @@ func filterKey(account string, config config.Config, key keys.Key) (eligible boo
 	return
 }
 
-//isKeyEligible returns a bool indicating whether the key is eligible based on
+// isKeyEligible returns a bool indicating whether the key is eligible based on
 // application config
 func isKeyEligible(config config.Config, key keys.Key) (eligible bool, err error) {
 	filterAccounts := config.AccountFilter.Accounts
@@ -484,7 +484,7 @@ func isKeyEligible(config config.Config, key keys.Key) (eligible bool, err error
 	return
 }
 
-//keyDefinedInFiltering returns a bool indicating whether the key matches
+// keyDefinedInFiltering returns a bool indicating whether the key matches
 // a service account defined in the AccountFilter
 func keyDefinedInFiltering(providerServiceAccounts []config.ProviderServiceAccounts,
 	key keys.Key) bool {
@@ -502,7 +502,7 @@ func keyDefinedInFiltering(providerServiceAccounts []config.ProviderServiceAccou
 	return false
 }
 
-//contains returns true if the string slice contains the specified string
+// contains returns true if the string slice contains the specified string
 func contains(s []string, e string) bool {
 	for _, a := range s {
 		if a == e {
@@ -512,7 +512,7 @@ func contains(s []string, e string) bool {
 	return false
 }
 
-//validAwsKey returns a bool that reflects whether the provided keys.Key is
+// validAwsKey returns a bool that reflects whether the provided keys.Key is
 // valid, based on aws-specific rules
 func validAwsKey(key keys.Key, config config.Config) (valid bool) {
 	if config.IncludeAwsUserKeys {
@@ -528,7 +528,7 @@ func isDatadogKeySet(apiKey string) bool {
 	return len(apiKey) > 0
 }
 
-//postMetric posts details of each keys.Key to a metrics api
+// postMetric posts details of each keys.Key to a metrics api
 func postMetric(keys []keys.Key, apiKey string, datadog config.Datadog) (err error) {
 	url := strings.Join([]string{datadogURL, apiKey}, "")
 	for _, key := range keys {

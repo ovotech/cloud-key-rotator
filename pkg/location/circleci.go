@@ -32,7 +32,7 @@ type CircleCiClient interface {
 	AddEnvVar(string, string, string, string) (*circleci.EnvVar, error)
 }
 
-//CircleCI type
+// CircleCI type
 type CircleCI struct {
 	UsernameProject string
 	KeyIDEnvVar     string
@@ -42,8 +42,8 @@ type CircleCI struct {
 
 var logger = log.StdoutLogger().Sugar()
 
-//updateCircleCI updates the circleCI environment variable by deleting and
-//then creating it again with the new key
+// updateCircleCI updates the circleCI environment variable by deleting and
+// then creating it again with the new key
 func (circle CircleCI) Write(serviceAccountName string, keyWrapper KeyWrapper, creds cred.Credentials) (updated UpdatedLocation, err error) {
 	splitUsernameProject := strings.Split(circle.UsernameProject, "/")
 	username := splitUsernameProject[0]
@@ -137,8 +137,8 @@ func verifyCircleCiEnvVar(username, project, envVarName string, client CircleCiC
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-//verifyCircleCIJobSuccess uses the specified gitHash to track down the circleCI
-//build number, which it then uses to determine the status of the circleCI build
+// verifyCircleCIJobSuccess uses the specified gitHash to track down the circleCI
+// build number, which it then uses to determine the status of the circleCI build
 func verifyCircleCIJobSuccess(orgRepo, gitHash, circleCIDeployJobName, circleCIAPIToken string) (err error) {
 	client := &circleci.Client{Token: circleCIAPIToken}
 	splitOrgRepo := strings.Split(orgRepo, "/")
@@ -152,8 +152,8 @@ func verifyCircleCIJobSuccess(orgRepo, gitHash, circleCIDeployJobName, circleCIA
 	return checkForJobSuccess(org, repo, targetBuildNum, client)
 }
 
-//checkForJobSuccess polls the circleCI API until the build is successful or
-//failed, or a timeout is reached, whichever happens first
+// checkForJobSuccess polls the circleCI API until the build is successful or
+// failed, or a timeout is reached, whichever happens first
 func checkForJobSuccess(org, repo string, targetBuildNum int, client *circleci.Client) (err error) {
 	checkAttempts := 0
 	checkLimit := 60
@@ -180,7 +180,7 @@ func checkForJobSuccess(org, repo string, targetBuildNum int, client *circleci.C
 	return
 }
 
-//obtainBuildNum gets the number of the circleCI build by matching up the gitHash
+// obtainBuildNum gets the number of the circleCI build by matching up the gitHash
 func obtainBuildNum(org, repo, gitHash, circleCIDeployJobName string, client *circleci.Client) (targetBuildNum int, err error) {
 	checkAttempts := 0
 	checkLimit := 60
@@ -206,7 +206,7 @@ func obtainBuildNum(org, repo, gitHash, circleCIDeployJobName string, client *ci
 	return
 }
 
-//buildNumFromRecentBuilds returns an int that represents the number of a
+// buildNumFromRecentBuilds returns an int that represents the number of a
 // build that contains a job of the specified name
 // The GitHash is used to ensure the correct build is selected
 func buildNumFromRecentBuilds(builds []*circleci.Build, gitHash, circleCIDeployJobName string) (targetBuildNum int) {
