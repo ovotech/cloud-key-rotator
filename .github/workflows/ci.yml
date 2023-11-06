@@ -79,6 +79,7 @@ jobs:
     runs-on: ubuntu-latest
     container: eversc/aws-cli:1.19
     steps:
+      - uses: actions/checkout@v3
       - name: e2e test rotation
         env:
           CKR_CREDENTIALS_GITHUBAPITOKEN: ${{ secrets.CKR_GITHUB_TOKEN }}
