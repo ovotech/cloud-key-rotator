@@ -26,6 +26,9 @@ jobs:
       - name: go lint
         run: |
           golint -set_exit_status $(go list ./...)
+      - name: go test
+        run: |
+          go test ./... -v
   test_cloudfunction_deploy:
     runs-on: ubuntu-latest
     container: google/cloud-sdk
@@ -47,3 +50,24 @@ jobs:
           --region europe-west1 \
           --project pe-dev-185509 \
           --quiet
+  docker_build:
+    runs-on: ubuntu-latest
+    container: cimg/go:1.19
+    steps:
+      - uses: actions/checkout@v3
+      - name: docker build
+        run: |
+          export GO111MODULE=on
+          go build -o cloud-key-rotator ./cmd
+          docker build .
+  tf_checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: terraform format check
+        id: fmt
+        run: terraform fmt -check -recursive -diff || (echo "::error title=terraform format check failed::Run 'terraform fmt -recursive' to ensure all files are correctly formatted";exit 1)
+        # don't validate AWS terraform as the provider requires a region to be set
+      - name: terraform validate
+        id: validate
+        run: terraform validate -no-color -test-directory=tf_module/ckr_gcp
