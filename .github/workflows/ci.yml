@@ -3,6 +3,8 @@ on:
   pull_request:
     branches: [master]
   workflow_dispatch:
+concurrency:
+  group: ${{ github.workflow }}
 
 jobs:
   go_checks:
