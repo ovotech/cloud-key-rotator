@@ -18,3 +18,12 @@ jobs:
       - name: go fmt
         run: |
           test -z $(/usr/local/go/bin/gofmt -s -l $(find . -iname '*.go' -type f | grep -v /vendor/))
+      - name: go vet
+        run: |
+          go vet ./...
+      - name: go cyclo
+        run: |
+          gocyclo -over 6 cmd
+      - name: go lint
+        run: |
+          golint -set_exit_status $(go list ./...)
