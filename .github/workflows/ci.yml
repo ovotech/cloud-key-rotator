@@ -62,6 +62,7 @@ jobs:
       - name: docker build
         uses: docker/build-push-action@v5
         with:
+          context: .
           push: false
   tf_checks:
     runs-on: ubuntu-latest
