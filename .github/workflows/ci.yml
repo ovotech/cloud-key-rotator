@@ -75,3 +75,21 @@ jobs:
       - name: terraform validate
         id: validate
         run: terraform validate -no-color -test-directory=tf_module/ckr_gcp
+  e2e_test:
+    runs-on: ubuntu-latest
+    container: eversc/aws-cli:1.19
+    steps:
+      - name: e2e test rotation
+        env:
+          CKR_CREDENTIALS_GITHUBAPITOKEN: ${{ secrets.CKR_GITHUB_TOKEN }}
+        run: |
+          export GO111MODULE=on
+          go build -o cloud-key-rotator ./cmd
+          chmod u+x cloud-key-rotator
+          export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID_E2E_TEST
+          export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY_E2E_TEST
+          aws secretsmanager get-secret-value --secret-id ckr-config --region eu-west-1 --query SecretString --output text > config.json
+          ./cloud-key-rotator rotate
+          rm config.json
+          sleep 10
+          if $(aws sts get-caller-identity >/dev/null 2>/dev/null); then exit 1; fi
