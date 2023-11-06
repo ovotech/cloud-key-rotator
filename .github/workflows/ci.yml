@@ -1,10 +1,11 @@
 name: CI
 
-# Prevent concurrent builds of the same workflow
-# concurrency: ${{ github.workflow }}
 on:
-  pull_request:
-    branches: ["master"]
+  # Prevent concurrent builds of the same workflow
+  # concurrency: ${{ github.workflow }}
+  # on:
+  #   pull_request:
+  #     branches: ["master"]
 
   workflow_dispatch:
 
