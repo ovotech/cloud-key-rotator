@@ -9,7 +9,10 @@ jobs:
     runs-on: ubuntu-latest
     container: eversc/go-pr-checks:1.19
     steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v3
       - name: go build
         run: |
+          pwd
           export GO111MODULE=on
           go build
