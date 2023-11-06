@@ -1,0 +1,20 @@
+name: CI
+
+# Prevent concurrent builds of the same workflow
+concurrency: ${{ github.workflow }}
+
+on:
+  pull_request:
+    branches: ["master"]
+
+  workflow_dispatch:
+
+jobs:
+  go_build:
+    runs-on: ubuntu-latest
+    container: eversc/go-pr-checks:1.19
+    steps:
+      - name: go build
+        run: |
+          export GO111MODULE=on
+          go build
