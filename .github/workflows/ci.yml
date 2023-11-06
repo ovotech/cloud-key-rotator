@@ -55,11 +55,14 @@ jobs:
     container: cimg/go:1.19
     steps:
       - uses: actions/checkout@v3
-      - name: docker build
+      - name: go build
         run: |
           export GO111MODULE=on
           go build -o cloud-key-rotator ./cmd
-          docker build .
+      - name: docker build
+        uses: docker/build-push-action@v5
+        with:
+          push: false
   tf_checks:
     runs-on: ubuntu-latest
     steps:
