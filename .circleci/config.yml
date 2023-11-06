@@ -288,39 +288,6 @@ workflows:
               only: /v[0-9]+(\.[0-9]+)*(-.*)*/
             branches:
               ignore: /.*/
-  commits:
-    jobs:
-      - go_build
-      - go_fmt:
-          requires:
-            - go_build
-      - go_vet:
-          requires:
-            - go_build
-      - go_cyclo:
-          requires:
-            - go_build
-      - go_lint:
-          requires:
-            - go_build
-      - go_test:
-          requires:
-            - go_build
-      - tf_check_aws:
-          requires:
-            - go_build
-      - tf_check_gcp:
-          requires:
-            - go_build
-      - test_cloudfunction_deploy:
-          requires:
-            - go_build
-      - e2e_test_aws:
-          requires:
-            - go_build
-      - docker_build:
-          requires:
-            - go_build
   master_pipeline:
     jobs:
       - publish_aws_tf_module:
