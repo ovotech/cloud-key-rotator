@@ -5,11 +5,10 @@ on:
   workflow_dispatch:
 
 jobs:
-  go_build:
+  go_checks:
     runs-on: ubuntu-latest
     container: eversc/go-pr-checks:1.19
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
       - name: go build
         run: |
@@ -27,3 +26,24 @@ jobs:
       - name: go lint
         run: |
           golint -set_exit_status $(go list ./...)
+  test_cloudfunction_deploy:
+    runs-on: ubuntu-latest
+    container: google/cloud-sdk
+    steps:
+      - uses: actions/checkout@v3
+      - name: deploy cloudfunction
+        env:
+          GCLOUD_SERVICE_KEY: ${{ secrets.gcloud_service_key }}
+        run: |
+          echo $GCLOUD_SERVICE_KEY | base64 -d | gcloud auth activate-service-account --key-file=-
+          export RAND_SUFFIX=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 8 ; echo '')
+          gcloud functions deploy ckr-dummy-$RAND_SUFFIX \
+          --region europe-west1 \
+          --entry-point Request \
+          --runtime go119 \
+          --trigger-http \
+          --project pe-dev-185509
+          gcloud functions delete ckr-dummy-$RAND_SUFFIX \
+          --region europe-west1 \
+          --project pe-dev-185509 \
+          --quiet
