@@ -13,6 +13,8 @@ jobs:
       - uses: actions/checkout@v3
       - name: go build
         run: |
-          pwd
           export GO111MODULE=on
           go build
+      - name: go fmt
+        run: |
+          test -z $(/usr/local/go/bin/gofmt -s -l $(find . -iname '*.go' -type f | grep -v /vendor/))
