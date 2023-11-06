@@ -5,16 +5,16 @@
 In order to rotate a key that's stored in GitHub secrets, you'll need:
 
 1. A GitHub personal access token of a user that has permission to update
-secrets in the target repo
+   secrets in the target repo
 2. Auth to actually perform the rotation operation with whichever cloud provider
-you're using. This will require a service-account or user (with the
-cloud-provider you're rotating with) that has the required set of permissions.
-Then, auth will need to be given to `cloud-key-rotator` (usually in the form of
-a .json file or env vars).
+   you're using. This will require a service-account or user (with the
+   cloud-provider you're rotating with) that has the required set of permissions.
+   Then, auth will need to be given to `cloud-key-rotator` (usually in the form of
+   a .json file or env vars).
 
 ## Configuration
 
-For updating a secret in a single repo:
+For updating a single repo secret:
 
 ```json
   "AccountKeyLocations": [
@@ -26,10 +26,25 @@ For updating a secret in a single repo:
           "Repo": "my_repo",
 
         },
+      ]
+    }
+  ],
+  "Credentials": {
+    "GitHubAPIToken": "my_github_api_token"
+  }
+```
+
+For updating a single environment secret:
+
+```json
+  "AccountKeyLocations": [
+    {
+      "ServiceAccountName": "my_aws_machine_user",
+      "GitHub": [
         {
           "Owner": "my_org",
           "Repo": "my_repo",
-
+          "Env": "my_env",
         },
       ]
     }

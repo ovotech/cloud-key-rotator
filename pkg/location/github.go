@@ -5,6 +5,7 @@ import (
 	crypto_rand "crypto/rand"
 	"encoding/base64"
 	"fmt"
+	"net/url"
 
 	"github.com/ovotech/cloud-key-rotator/pkg/cred"
 
@@ -15,13 +16,16 @@ import (
 
 // GitHubActionsService type
 type GitHubActionsService interface {
+	GetEnvPublicKey(context.Context, int, string) (*github.PublicKey, *github.Response, error)
 	GetRepoPublicKey(context.Context, string, string) (*github.PublicKey, *github.Response, error)
+	CreateOrUpdateEnvSecret(context.Context, int, string, *github.EncryptedSecret) (*github.Response, error)
 	CreateOrUpdateRepoSecret(context.Context, string, string, *github.EncryptedSecret) (*github.Response, error)
 }
 
 // GitHub type
 type GitHub struct {
 	Base64Decode bool
+	Env          string
 	KeyIDEnvVar  string
 	KeyEnvVar    string
 	Owner        string
@@ -56,22 +60,26 @@ func (github GitHub) Write(serviceAccountName string, keyWrapper KeyWrapper, cre
 		return
 	}
 
-	// create the ActionsService from the client so we can pass into addRepoSecret()
+	// create the ActionsService from the client so we can pass into addEnvOrRepoSecret()
 	actionsService := client.Actions
+	repo, _, err := client.Repositories.Get(ctx, github.Owner, github.Repo)
+	repoID := repo.GetID()
+	// encode forwardslash character (which is valid in GitHub environment names), otherwise it'll break a REST API call
+	env := url.PathEscape(github.Env)
 
 	if len(keyIDEnvVar) > 0 {
-		if err = addRepoSecret(ctx, actionsService, github.Owner, github.Repo, keyIDEnvVar, keyWrapper.KeyID); err != nil {
+		if err = addEnvOrRepoSecret(ctx, actionsService, github.Owner, github.Repo, env, keyIDEnvVar, keyWrapper.KeyID, repoID); err != nil {
 			return
 		}
 	}
 
-	if err = addRepoSecret(ctx, actionsService, github.Owner, github.Repo, keyEnvVar, key); err != nil {
+	if err = addEnvOrRepoSecret(ctx, actionsService, github.Owner, github.Repo, env, keyEnvVar, key, repoID); err != nil {
 		return
 	}
 
 	updated = UpdatedLocation{
 		LocationType: "GitHub",
-		LocationURI:  fmt.Sprintf("%s/%s", github.Owner, github.Repo),
+		LocationURI:  fmt.Sprintf("%s/%s/%s", github.Owner, github.Repo, github.Env),
 		LocationIDs:  []string{keyIDEnvVar, keyEnvVar}}
 
 	return updated, nil
@@ -113,19 +121,34 @@ func githubAuth(token string) (context.Context, *github.Client, error) {
 //
 // Finally, the github.EncodedSecret is passed into the GitHub client.Actions.CreateOrUpdateRepoSecret method to
 // populate the secret in the GitHub repo.
-func addRepoSecret(ctx context.Context, actionsService GitHubActionsService, owner string, repo, secretName string, secretValue string) error {
-	publicKey, _, err := actionsService.GetRepoPublicKey(ctx, owner, repo)
-	if err != nil {
-		return err
-	}
+func addEnvOrRepoSecret(ctx context.Context, actionsService GitHubActionsService, owner, repo, env, secretName, secretValue string, repoID int64) error {
 
-	encryptedSecret, err := encryptSecretWithPublicKey(publicKey, secretName, secretValue)
-	if err != nil {
-		return err
-	}
-
-	if _, err := actionsService.CreateOrUpdateRepoSecret(ctx, owner, repo, encryptedSecret); err != nil {
-		return fmt.Errorf("Actions.CreateOrUpdateRepoSecret returned error: %v", err)
+	if env != "" {
+		publicKey, _, err := actionsService.GetEnvPublicKey(ctx, int(repoID), env)
+		if err != nil {
+			return err
+		}
+		encryptedSecret, err := encryptSecretWithPublicKey(publicKey, secretName, secretValue)
+		if err != nil {
+			return err
+		}
+		_, err = actionsService.CreateOrUpdateEnvSecret(ctx, int(repoID), env, encryptedSecret)
+		if err != nil {
+			return fmt.Errorf("Actions.CreateOrUpdateEnvSecret returned error: %v", err)
+		}
+	} else {
+		publicKey, _, err := actionsService.GetRepoPublicKey(ctx, owner, repo)
+		if err != nil {
+			return err
+		}
+		encryptedSecret, err := encryptSecretWithPublicKey(publicKey, secretName, secretValue)
+		if err != nil {
+			return err
+		}
+		_, err = actionsService.CreateOrUpdateRepoSecret(ctx, owner, repo, encryptedSecret)
+		if err != nil {
+			return fmt.Errorf("Actions.CreateOrUpdateRepoSecret returned error: %v", err)
+		}
 	}
 
 	logger.Infof("Added GitHub secret: %s to %s/%s", secretName, owner, repo)

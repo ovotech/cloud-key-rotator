@@ -32,7 +32,7 @@ type MyEvent struct {
 
 var logger = log.StdoutLogger().Sugar()
 
-//HandleRequest allows cloud-key-rotator to be used in the Lambda program model
+// HandleRequest allows cloud-key-rotator to be used in the Lambda program model
 func HandleRequest(ctx context.Context, name MyEvent) (string, error) {
 	var c config.Config
 	var err error
@@ -56,7 +56,7 @@ func main() {
 	}
 }
 
-//getEnv returns the value of the env var matching the key, if it exists, and
+// getEnv returns the value of the env var matching the key, if it exists, and
 // the value of fallback otherwise
 func getEnv(key, fallback string) string {
 	if value, ok := os.LookupEnv(key); ok {

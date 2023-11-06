@@ -23,14 +23,14 @@ import (
 	"gopkg.in/ini.v1"
 )
 
-//UpdatedLocation type
+// UpdatedLocation type
 type UpdatedLocation struct {
 	LocationType string
 	LocationURI  string
 	LocationIDs  []string
 }
 
-//KeyWrapper type
+// KeyWrapper type
 type KeyWrapper struct {
 	Key         string
 	KeyID       string
@@ -45,14 +45,20 @@ type envVarDefaults struct {
 
 var (
 	defaultsMap = map[string]envVarDefaults{
+		"aiven": {
+			fileType:  "",
+			keyEnvVar: "AIVEN_TOKEN",
+		},
 		"aws": {
 			fileType:    "ini",
 			keyEnvVar:   "AWS_SECRET_ACCESS_KEY",
-			keyIDEnvVar: "AWS_ACCESS_KEY_ID"},
+			keyIDEnvVar: "AWS_ACCESS_KEY_ID",
+		},
 		"gcp": {
 			fileType:    "b64",
 			keyEnvVar:   "GCLOUD_SERVICE_KEY",
-			keyIDEnvVar: ""},
+			keyIDEnvVar: "",
+		},
 	}
 )
 

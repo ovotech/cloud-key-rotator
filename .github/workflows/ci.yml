@@ -1,0 +1,98 @@
+name: CI
+on:
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+concurrency:
+  group: ${{ github.workflow }}
+
+jobs:
+  go_checks:
+    runs-on: ubuntu-latest
+    container: eversc/go-pr-checks:1.19
+    steps:
+      - uses: actions/checkout@v3
+      - name: go build
+        run: |
+          export GO111MODULE=on
+          go build
+      - name: go fmt
+        run: |
+          test -z $(/usr/local/go/bin/gofmt -s -l $(find . -iname '*.go' -type f | grep -v /vendor/))
+      - name: go vet
+        run: |
+          go vet ./...
+      - name: go cyclo
+        run: |
+          gocyclo -over 6 cmd
+      - name: go lint
+        run: |
+          golint -set_exit_status $(go list ./...)
+      - name: go test
+        run: |
+          go test ./... -v
+  test_cloudfunction_deploy:
+    runs-on: ubuntu-latest
+    container: google/cloud-sdk
+    steps:
+      - uses: actions/checkout@v3
+      - name: deploy cloudfunction
+        env:
+          GCLOUD_SERVICE_KEY: ${{ secrets.gcloud_service_key }}
+        run: |
+          echo $GCLOUD_SERVICE_KEY | base64 -d | gcloud auth activate-service-account --key-file=-
+          export RAND_SUFFIX=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 8 ; echo '')
+          gcloud functions deploy ckr-dummy-$RAND_SUFFIX \
+          --region europe-west1 \
+          --entry-point Request \
+          --runtime go119 \
+          --trigger-http \
+          --project pe-dev-185509
+          gcloud functions delete ckr-dummy-$RAND_SUFFIX \
+          --region europe-west1 \
+          --project pe-dev-185509 \
+          --quiet
+  docker_build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: go build
+        run: |
+          export GO111MODULE=on
+          go build -o cloud-key-rotator ./cmd
+          ls -lah
+      - name: docker build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+  tf_checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: terraform format check
+        id: fmt
+        run: terraform fmt -check -recursive -diff || (echo "::error title=terraform format check failed::Run 'terraform fmt -recursive' to ensure all files are correctly formatted";exit 1)
+        # don't validate AWS terraform as the provider requires a region to be set
+      - name: terraform validate
+        id: validate
+        run: terraform validate -no-color -test-directory=tf_module/ckr_gcp
+  e2e_test:
+    runs-on: ubuntu-latest
+    container: eversc/aws-cli:1.19
+    steps:
+      - uses: actions/checkout@v3
+      - name: e2e test rotation
+        env:
+          CKR_CREDENTIALS_GITHUBAPITOKEN: ${{ secrets.CKR_GITHUB_TOKEN }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_E2E_TEST }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_E2E_TEST }}
+        run: |
+          export GO111MODULE=on
+          go build -o cloud-key-rotator ./cmd
+          chmod u+x cloud-key-rotator
+          aws secretsmanager get-secret-value --secret-id ckr-config --region eu-west-1 --query SecretString --output text > config.json
+          ./cloud-key-rotator rotate
+          rm config.json
+          sleep 10
+          if $(aws sts get-caller-identity >/dev/null 2>/dev/null); then exit 1; fi

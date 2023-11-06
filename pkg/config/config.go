@@ -19,6 +19,7 @@ import (
 	"context"
 	"errors"
 	"io/ioutil"
+	"strings"
 
 	"cloud.google.com/go/storage"
 	"github.com/aws/aws-sdk-go/aws"
@@ -29,7 +30,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-//Config type
+// Config type
 type Config struct {
 	IncludeAwsUserKeys              bool
 	IncludeInactiveKeys             bool
@@ -44,14 +45,14 @@ type Config struct {
 	EnableKeyAgeLogging             bool
 }
 
-//CloudProvider type
+// CloudProvider type
 type CloudProvider struct {
 	Name    string
 	Project string
 	Self    string
 }
 
-//Datadog type
+// Datadog type
 type Datadog struct {
 	MetricEnv     string
 	MetricTeam    string
@@ -59,13 +60,13 @@ type Datadog struct {
 	MetricProject string
 }
 
-//Filter type
+// Filter type
 type Filter struct {
 	Mode     string
 	Accounts []ProviderServiceAccounts
 }
 
-//KeyLocations type
+// KeyLocations type
 type KeyLocations struct {
 	RotationAgeThresholdMins int
 	ServiceAccountName       string
@@ -79,9 +80,10 @@ type KeyLocations struct {
 	Gocd                     []location.Gocd
 	K8s                      []location.K8s
 	SSM                      []location.Ssm
+	SecretsManager           []location.SecretsManager
 }
 
-//ProviderServiceAccounts type
+// ProviderServiceAccounts type
 type ProviderServiceAccounts struct {
 	Provider         CloudProvider
 	ProviderAccounts []string
@@ -89,12 +91,22 @@ type ProviderServiceAccounts struct {
 
 const envVarPrefix = "ckr"
 
-//GetConfig returns the application config
+// GetConfig returns the application config
 func GetConfig(configPath string) (c Config, err error) {
-	viper.AutomaticEnv()
 	viper.SetEnvPrefix(envVarPrefix)
+	// when viper picks up nested keys from env vars, it uses "." as the
+	// separator. E.g. for AivenAPIToken in the Credentials struct, it looks
+	// for "CKR_CREDENTIALS.AIVENAPITOKEN". Bash won't allow users to set this
+	// though, so we need to replace all "." with "_"
+	// so we can now set CKR_CREDENTIALS_AIVENAPITOKEN for example
+	replacer := strings.NewReplacer(".", "_")
+	viper.SetEnvKeyReplacer(replacer)
+	// setting defaults is required so users can pass values in from env vars
+	viper.SetDefault("credentials.aivenapitoken", "")
+	viper.SetDefault("credentials.circleciapitoken", "")
+	viper.SetDefault("credentials.githubapitoken", "")
+	viper.AutomaticEnv()
 	viper.AddConfigPath(configPath)
-	viper.SetEnvPrefix("ckr")
 	viper.SetConfigName("config")
 	viper.AddConfigPath(".")
 	if err = viper.ReadInConfig(); err != nil {
@@ -110,8 +122,8 @@ func GetConfig(configPath string) (c Config, err error) {
 	return
 }
 
-//GetConfigFromAWSSecretManager grabs the cloud-key-rotator's config from
-//AWS Secret Manager
+// GetConfigFromAWSSecretManager grabs the cloud-key-rotator's config from
+// AWS Secret Manager
 func GetConfigFromAWSSecretManager(secretName, configType string) (c Config, err error) {
 	var secret string
 	if secret, err = GetSecret(secretName); err != nil {
@@ -128,7 +140,7 @@ func GetConfigFromAWSSecretManager(secretName, configType string) (c Config, err
 	return
 }
 
-//GetConfigFromGCS grabs the cloud-key-rotator's config from GCS
+// GetConfigFromGCS grabs the cloud-key-rotator's config from GCS
 func GetConfigFromGCS(bucketName, objectName, configType string) (c Config, err error) {
 	ctx := context.Background()
 	var client *storage.Client
@@ -154,7 +166,7 @@ func GetConfigFromGCS(bucketName, objectName, configType string) (c Config, err 
 	return
 }
 
-//GetSecret gets the value of the secret in AWS SecretsManager with the specified name
+// GetSecret gets the value of the secret in AWS SecretsManager with the specified name
 func GetSecret(secretName string) (secretString string, err error) {
 	//Create a Secrets Manager client
 	svc := secretsmanager.New(session.New())

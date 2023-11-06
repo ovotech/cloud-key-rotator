@@ -13,19 +13,19 @@ type MockProvider struct {
 	deleted bool
 }
 
-func (m *MockProvider) Keys(project string, includeInactiveKeys bool) (keysArr []keys.Key, err error) {
+func (m *MockProvider) Keys(project string, includeInactiveKeys bool, token string) (keysArr []keys.Key, err error) {
 	k := keys.Key{Account: "account1", ID: "abcd1234", Age: keyAge, Provider: keys.Provider{Provider: "mockProvider"}}
 	keysArr = append(keysArr, k)
 
 	return
 }
 
-func (m *MockProvider) CreateKey(project, account string) (keyID, newKey string, err error) {
+func (m *MockProvider) CreateKey(project, account, token string) (keyID, newKey string, err error) {
 	m.created = true
 	return
 }
 
-func (m *MockProvider) DeleteKey(project, account, keyID string) (err error) {
+func (m *MockProvider) DeleteKey(project, account, keyID, token string) (err error) {
 	m.deleted = true
 	return
 }
