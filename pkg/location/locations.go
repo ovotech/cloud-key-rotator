@@ -23,14 +23,14 @@ import (
 	"gopkg.in/ini.v1"
 )
 
-//UpdatedLocation type
+// UpdatedLocation type
 type UpdatedLocation struct {
 	LocationType string
 	LocationURI  string
 	LocationIDs  []string
 }
 
-//KeyWrapper type
+// KeyWrapper type
 type KeyWrapper struct {
 	Key         string
 	KeyID       string

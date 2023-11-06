@@ -15,7 +15,7 @@ aliases:
         gcloud functions deploy ckr-dummy-$RAND_SUFFIX \
         --region europe-west1 \
         --entry-point Request \
-        --runtime go118 \
+        --runtime go119 \
         --trigger-http \
         --project pe-dev-185509
         gcloud functions delete ckr-dummy-$RAND_SUFFIX \
@@ -36,7 +36,7 @@ jobs:
     <<: *defaults
 
     docker:
-      - image: cimg/go:1.18
+      - image: cimg/go:1.19
 
     steps:
       - checkout
@@ -128,7 +128,7 @@ jobs:
     <<: *defaults
 
     docker:
-      - image: eversc/go-pr-checks:1.18
+      - image: eversc/go-pr-checks:1.19
 
     steps:
       - checkout
@@ -136,12 +136,12 @@ jobs:
       - run:
            name: ensure gofmt
            command: |
-             test -z $(gofmt -s -l $(find . -iname '*.go' -type f | grep -v /vendor/))
+             test -z $(/usr/local/go/bin/gofmt -s -l $(find . -iname '*.go' -type f | grep -v /vendor/))
   go_vet:
     <<: *defaults
 
     docker:
-      - image: eversc/go-pr-checks:1.18
+      - image: eversc/go-pr-checks:1.19
 
     steps:
       - checkout
@@ -157,7 +157,7 @@ jobs:
     <<: *defaults
 
     docker:
-      - image: eversc/go-pr-checks:1.18
+      - image: eversc/go-pr-checks:1.19
 
     steps:
       - checkout
@@ -170,7 +170,7 @@ jobs:
     <<: *defaults
 
     docker:
-      - image: eversc/go-pr-checks:1.18
+      - image: eversc/go-pr-checks:1.19
 
     steps:
       - checkout
@@ -183,7 +183,7 @@ jobs:
     <<: *defaults
 
     docker:
-      - image: eversc/go-pr-checks:1.18
+      - image: eversc/go-pr-checks:1.19
 
     steps:
       - checkout
@@ -198,7 +198,7 @@ jobs:
     <<: *defaults
 
     docker:
-      - image: cimg/go:1.18
+      - image: cimg/go:1.19
 
     steps:
       - checkout
@@ -221,7 +221,7 @@ jobs:
     <<: *defaults
 
     docker:
-      - image: eversc/go-pr-checks:1.18
+      - image: eversc/go-pr-checks:1.19
 
     steps:
       - checkout
@@ -237,7 +237,7 @@ jobs:
     <<: *defaults
 
     docker:
-      - image: eversc/aws-cli:1.18
+      - image: eversc/aws-cli:1.19
 
     steps:
       - checkout
@@ -288,39 +288,6 @@ workflows:
               only: /v[0-9]+(\.[0-9]+)*(-.*)*/
             branches:
               ignore: /.*/
-  commits:
-    jobs:
-      - go_build
-      - go_fmt:
-          requires:
-            - go_build
-      - go_vet:
-          requires:
-            - go_build
-      - go_cyclo:
-          requires:
-            - go_build
-      - go_lint:
-          requires:
-            - go_build
-      - go_test:
-          requires:
-            - go_build
-      - tf_check_aws:
-          requires:
-            - go_build
-      - tf_check_gcp:
-          requires:
-            - go_build
-      - test_cloudfunction_deploy:
-          requires:
-            - go_build
-      - e2e_test_aws:
-          requires:
-            - go_build
-      - docker_build:
-          requires:
-            - go_build
   master_pipeline:
     jobs:
       - publish_aws_tf_module:
