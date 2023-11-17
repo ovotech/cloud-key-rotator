@@ -28,13 +28,15 @@ while true ; do
 			echo "failed to get CI workflows with status ${STATUS}"
 			WAIT=true
         # if the count of workflows is 1, that's the current workflow we're running in
-		elif [ "${COUNT}" -gt "1" ] ; then
+		elif [ "${COUNT}" -gt "0" ] ; then
             RUN_IDS=$(curl "${CURL_OPTS[@]}" -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${GITHUB_TOKEN}" "${API_CALL_URL}?status=${STATUS}" | jq -r '.workflow_runs[] | .id' || true)
 			for RUN_ID in $RUN_IDS ; do
-                API_CALL_URL_JOBS=https://api.github.com/repos/ovotech/cloud-key-rotator/actions/runs/$RUN_ID
-                JOB_NAME_STATII=$(curl "${CURL_OPTS[@]}" -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${GITHUB_TOKEN}" "${API_CALL_URL_JOBS}" | jq -r '.jobs[] | .name,.status' || true)
+                echo "Checking run (id: ${RUN_ID}) for in_progress e2e_tests"
+                API_CALL_URL_JOBS=https://api.github.com/repos/ovotech/cloud-key-rotator/actions/runs/$RUN_ID/jobs
+                JOB_NAME_STATII=$(curl "${CURL_OPTS[@]}" -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${GITHUB_TOKEN}" "${API_CALL_URL_JOBS}" | jq -r '.jobs[] | "\(.name)\(.status)"' || true)
                 for JOB_NAME_STATUS in $JOB_NAME_STATII; do
-                    if [ "${JOB_NAME_STATUS}" == "e2e_test in_progress" ] ; then
+                    echo "Job name / status: ${JOB_NAME_STATUS}"
+                    if [ "${JOB_NAME_STATUS}" == "e2e_testin_progress" ] ; then
                         echo "Another e2e_test job is currently in progress, need to wait"
                         WAIT=true
                         break
