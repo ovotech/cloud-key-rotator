@@ -35,14 +35,13 @@ while true ; do
                 JOB_NAME_STATII=$(curl "${CURL_OPTS[@]}" -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${GITHUB_TOKEN}" "${API_CALL_URL_JOBS}" | jq -r '.jobs[] | .name,.status' || true)
                 for JOB_NAME_STATUS in $JOB_NAME_STATII; do
                     if [ "${JOB_NAME_STATUS}" == "e2e_test in_progress" ] ; then
-                        echo "Another e2e is currently in progress, need to wait"
+                        echo "Another e2e_test job is currently in progress, need to wait"
                         WAIT=true
                         break
                     fi
                 done
             done
             echo "${COUNT} CI workflows with status ${STATUS}"
-			WAIT=true
 		fi
 	done
 
