@@ -48,6 +48,7 @@ while true ; do
 	done
 
 	if [ "${WAIT}" != "true" ] ; then
+        sleep $((MIN_WAIT+RANDOM % (MAX_WAIT-MIN_WAIT)))
 		break
 	fi
 
