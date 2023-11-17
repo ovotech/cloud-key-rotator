@@ -32,7 +32,7 @@ while true ; do
             RUN_IDS=$(curl "${CURL_OPTS[@]}" -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${GITHUB_TOKEN}" "${API_CALL_URL}?status=${STATUS}" | jq -r '.workflow_runs[] | .id' || true)
 			for RUN_ID in $RUN_IDS ; do
                 echo "Checking run (id: ${RUN_ID}) for in_progress e2e_tests"
-                API_CALL_URL_JOBS=https://api.github.com/repos/ovotech/cloud-key-rotator/actions/runs/$RUN_ID
+                API_CALL_URL_JOBS=https://api.github.com/repos/ovotech/cloud-key-rotator/actions/runs/$RUN_ID/jobs
                 JOB_NAME_STATII=$(curl "${CURL_OPTS[@]}" -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${GITHUB_TOKEN}" "${API_CALL_URL_JOBS}" | jq -r '.jobs[] | .name,.status' || true)
                 for JOB_NAME_STATUS in $JOB_NAME_STATII; do
                     if [ "${JOB_NAME_STATUS}" == "e2e_test in_progress" ] ; then
