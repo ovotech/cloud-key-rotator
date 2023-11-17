@@ -35,6 +35,7 @@ while true ; do
                 API_CALL_URL_JOBS=https://api.github.com/repos/ovotech/cloud-key-rotator/actions/runs/$RUN_ID/jobs
                 JOB_NAME_STATII=$(curl "${CURL_OPTS[@]}" -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${GITHUB_TOKEN}" "${API_CALL_URL_JOBS}" | jq -r '.jobs[] | .name,.status' || true)
                 for JOB_NAME_STATUS in $JOB_NAME_STATII; do
+                    echo "Job name / status: ${JOB_NAME_STATUS}"
                     if [ "${JOB_NAME_STATUS}" == "e2e_test in_progress" ] ; then
                         echo "Another e2e_test job is currently in progress, need to wait"
                         WAIT=true
