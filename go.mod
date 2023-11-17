@@ -3,7 +3,7 @@ module github.com/ovotech/cloud-key-rotator
 go 1.19
 
 require (
-	cloud.google.com/go/storage v1.33.0
+	cloud.google.com/go/storage v1.34.1
 	github.com/CircleCI-Public/circleci-cli v0.1.29041
 	github.com/DataDog/datadog-api-client-go v1.16.0
 	github.com/Sectorbob/mlab-ns2 v0.0.0-20171030222938-d3aa0c295a8a
@@ -16,7 +16,7 @@ require (
 	github.com/mongodb/go-client-mongodb-atlas v0.3.0
 	github.com/ovotech/cloud-key-client v0.4.2
 	github.com/ovotech/mantle v0.32.3
-	github.com/spf13/cobra v1.7.0
+	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.17.0
 	go.uber.org/zap v1.26.0
 	golang.org/x/crypto v0.14.0
