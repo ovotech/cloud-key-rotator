@@ -8,6 +8,17 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  ci_block:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: block on ci workflows
+        id: block
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          MIN_WAIT: 30
+          MAX_WAIT: 180
+        run: bash ./scripts/ci_concurrency.sh
   go_checks:
     runs-on: ubuntu-latest
     container: eversc/go-pr-checks:1.19
@@ -81,6 +92,7 @@ jobs:
   e2e_test:
     runs-on: ubuntu-latest
     container: eversc/aws-cli:1.19
+    needs: ci_block
     steps:
       - uses: actions/checkout@v3
       - name: e2e test rotation
