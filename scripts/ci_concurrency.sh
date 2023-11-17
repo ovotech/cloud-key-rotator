@@ -27,7 +27,8 @@ while true ; do
 		if [ "${COUNT}" == "null" ] ; then
 			echo "failed to get CI workflows with status ${STATUS}"
 			WAIT=true
-		elif [ "${COUNT}" != "0" ] ; then
+        # if the count of workflows is 1, that's the current workflow we're running in
+		elif [ "${COUNT}" -gt "1" ] ; then
 			echo "${COUNT} CI workflows with status ${STATUS}"
 			WAIT=true
 		fi
