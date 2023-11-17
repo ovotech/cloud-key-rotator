@@ -29,7 +29,19 @@ while true ; do
 			WAIT=true
         # if the count of workflows is 1, that's the current workflow we're running in
 		elif [ "${COUNT}" -gt "1" ] ; then
-			echo "${COUNT} CI workflows with status ${STATUS}"
+            RUN_IDS=$(curl "${CURL_OPTS[@]}" -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${GITHUB_TOKEN}" "${API_CALL_URL}?status=${STATUS}" | jq -r '.workflow_runs[] | .id' || true)
+			for RUN_ID in $RUN_IDS ; do
+                API_CALL_URL_JOBS=https://api.github.com/repos/ovotech/cloud-key-rotator/actions/runs/$RUN_ID
+                JOB_NAME_STATII=$(curl "${CURL_OPTS[@]}" -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${GITHUB_TOKEN}" "${API_CALL_URL_JOBS}" | jq -r '.jobs[] | .name,.status' || true)
+                for JOB_NAME_STATUS in $JOB_NAME_STATII; do
+                    if [ "${JOB_NAME_STATUS}" == "e2e_test in_progress" ] ; then
+                        echo "Another e2e is currently in progress, need to wait"
+                        WAIT=true
+                        break
+                    fi
+                done
+            done
+            echo "${COUNT} CI workflows with status ${STATUS}"
 			WAIT=true
 		fi
 	done
