@@ -3,11 +3,34 @@ on:
   pull_request:
     branches: [master]
   workflow_dispatch:
-concurrency:
-  group: ${{ github.workflow }}
-  cancel-in-progress: false
 
 jobs:
+  ci_block:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: block on ci workflows
+        id: block
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          MIN_WAIT: 30
+          MAX_WAIT: 300
+        run: bash ./scripts/ci_concurrency.sh
+  dependabot:
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]'
+    steps:
+      - name: Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v1
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+      - name: Enable auto-merge for Dependabot PRs
+        if: steps.metadata.outputs.update-type == 'version-update:semver-patch'
+        run: gh pr merge --auto --merge "$PR_URL"
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
   go_checks:
     runs-on: ubuntu-latest
     container: eversc/go-pr-checks:1.19
@@ -81,6 +104,7 @@ jobs:
   e2e_test:
     runs-on: ubuntu-latest
     container: eversc/aws-cli:1.19
+    needs: ci_block
     steps:
       - uses: actions/checkout@v3
       - name: e2e test rotation
