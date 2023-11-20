@@ -150,7 +150,7 @@ func updateK8sSecret(ctx context.Context, secretName, dataName, namespace, key s
 		return
 	}
 	secret.Data = map[string][]byte{dataName: decodedKey}
-	return k8sclient.CoreV1().Secrets(namespace).Update(secret)
+	return k8sclient.CoreV1().Secrets(namespace).Update(ctx, secret)
 }
 
 // gkeCluster creates a GKE cluster struct
