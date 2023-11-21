@@ -24,7 +24,7 @@ import (
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	gkev1 "google.golang.org/api/container/v1"
-	"k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -64,8 +64,9 @@ func init() {
 
 func (k8s K8s) Write(serviceAccountName string, keyWrapper KeyWrapper, creds cred.Credentials) (updated UpdatedLocation, err error) {
 	var cluster *gkev1.Cluster
+	ctx := context.Background()
 
-	if cluster, err = gkeCluster(k8s.Project, k8s.Location, k8s.ClusterName); err != nil {
+	if cluster, err = gkeCluster(ctx, k8s.Project, k8s.Location, k8s.ClusterName); err != nil {
 		return
 	}
 
@@ -74,7 +75,7 @@ func (k8s K8s) Write(serviceAccountName string, keyWrapper KeyWrapper, creds cre
 		return
 	}
 
-	if _, err = updateK8sSecret(k8s.SecretName, k8s.DataName, k8s.Namespace, keyWrapper.Key, k8sClient); err != nil {
+	if _, err = updateK8sSecret(ctx, k8s.SecretName, k8s.DataName, k8s.Namespace, keyWrapper.Key, k8sClient); err != nil {
 		return
 	}
 
@@ -136,11 +137,11 @@ func newGoogleAuthProvider(addr string, config map[string]string,
 }
 
 // updateK8sSecret updates a specific namespace/secret/data with the key string
-func updateK8sSecret(secretName, dataName, namespace, key string,
+func updateK8sSecret(ctx context.Context, secretName, dataName, namespace, key string,
 	k8sclient *kubernetes.Clientset) (newSecret *v1.Secret, err error) {
 	logger.Info("Starting k8s secret updates")
 	var secret *v1.Secret
-	if secret, err = k8sclient.CoreV1().Secrets(namespace).Get(secretName,
+	if secret, err = k8sclient.CoreV1().Secrets(namespace).Get(ctx, secretName,
 		metav1.GetOptions{}); err != nil {
 		return
 	}
@@ -149,12 +150,11 @@ func updateK8sSecret(secretName, dataName, namespace, key string,
 		return
 	}
 	secret.Data = map[string][]byte{dataName: decodedKey}
-	return k8sclient.CoreV1().Secrets(namespace).Update(secret)
+	return k8sclient.CoreV1().Secrets(namespace).Update(ctx, secret, metav1.UpdateOptions{})
 }
 
 // gkeCluster creates a GKE cluster struct
-func gkeCluster(project, location, clusterName string) (cluster *gkev1.Cluster, err error) {
-	ctx := context.Background()
+func gkeCluster(ctx context.Context, project, location, clusterName string) (cluster *gkev1.Cluster, err error) {
 	var httpClient *http.Client
 	if httpClient, err = google.DefaultClient(ctx, gkev1.CloudPlatformScope); err != nil {
 		return
