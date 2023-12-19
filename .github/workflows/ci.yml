@@ -17,6 +17,8 @@ jobs:
           MAX_WAIT: 300
         run: bash ./scripts/ci_concurrency.sh
   dependabot:
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     if: github.actor == 'dependabot[bot]'
     steps:
