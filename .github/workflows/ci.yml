@@ -117,6 +117,7 @@ jobs:
           go build -o cloud-key-rotator ./cmd
           chmod u+x cloud-key-rotator
           aws secretsmanager get-secret-value --secret-id ckr-config --region eu-west-1 --query SecretString --output text > config.json
+          echo "used aws creds"
           ./cloud-key-rotator rotate
           rm config.json
           sleep 10
