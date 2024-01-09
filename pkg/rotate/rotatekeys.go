@@ -106,9 +106,15 @@ func Rotate(account, provider, project string, c config.Config) (err error) {
 		return
 	}
 	logger.Infof("Filtered down to %d keys based on current app config", len(providerKeys))
+	ddAPIKey := ""
+	if isDatadogKeySet(c.DatadogAPIKey) {
+		ddAPIKey = c.DatadogAPIKey
+	} else if isDatadogKeySet(c.Credentials.Datadog.APIKey) {
+		ddAPIKey = c.Credentials.Datadog.APIKey
+	}
 	if !c.RotationMode {
-		if isDatadogKeySet(c.DatadogAPIKey) {
-			if metricErr := postMetric(providerKeys, c.DatadogAPIKey, c.Datadog); metricErr != nil {
+		if ddAPIKey != "" {
+			if metricErr := postMetric(providerKeys, ddAPIKey, c.Datadog); metricErr != nil {
 				logger.Infow("Posting metrics errored", metricErr)
 			}
 		}
@@ -145,12 +151,12 @@ func Rotate(account, provider, project string, c config.Config) (err error) {
 	if err = rotateKeys(rc, c.Credentials); err != nil {
 		return
 	}
-	if isDatadogKeySet(c.DatadogAPIKey) {
+	if ddAPIKey != "" {
 		// Refresh key ages post rotation
 		if providerKeys, err = keysOfProviders(account, provider, project, c); err != nil {
 			return
 		}
-		return postMetric(providerKeys, c.DatadogAPIKey, c.Datadog)
+		return postMetric(providerKeys, ddAPIKey, c.Datadog)
 	}
 	return
 }
