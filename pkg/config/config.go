@@ -104,6 +104,7 @@ func GetConfig(configPath string) (c Config, err error) {
 	// setting defaults is required so users can pass values in from env vars
 	viper.SetDefault("credentials.aivenapitoken", "")
 	viper.SetDefault("credentials.circleciapitoken", "")
+	viper.SetDefault("credentials.datadog.apikey", "")
 	viper.SetDefault("credentials.githubapitoken", "")
 	viper.AutomaticEnv()
 	viper.AddConfigPath(configPath)
