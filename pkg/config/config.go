@@ -58,6 +58,7 @@ type Datadog struct {
 	MetricTeam    string
 	MetricName    string
 	MetricProject string
+	MetricService string
 }
 
 // Filter type
