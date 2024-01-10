@@ -112,12 +112,12 @@ func Rotate(account, provider, project string, c config.Config) (err error) {
 	} else if isDatadogKeySet(c.Credentials.Datadog.APIKey) {
 		ddAPIKey = c.Credentials.Datadog.APIKey
 	}
-	if !c.RotationMode {
-		if ddAPIKey != "" {
-			if metricErr := postMetric(providerKeys, ddAPIKey, c.Datadog); metricErr != nil {
-				logger.Infow("Posting metrics errored", metricErr)
-			}
+	if ddAPIKey != "" && c.Datadog != (config.Datadog{}) {
+		if metricErr := postMetric(providerKeys, ddAPIKey, c.Datadog); metricErr != nil {
+			logger.Infow("Posting metrics errored", metricErr)
 		}
+	}
+	if !c.RotationMode {
 		if c.EnableKeyAgeLogging {
 			obfuscatedKeys := []keys.Key{}
 			for _, key := range providerKeys {
@@ -148,17 +148,7 @@ func Rotate(account, provider, project string, c config.Config) (err error) {
 	logger.Infof("Finalised %d keys that are candidates for rotation: %v",
 		len(rc), rcStrings)
 
-	if err = rotateKeys(rc, c.Credentials); err != nil {
-		return
-	}
-	if ddAPIKey != "" {
-		// Refresh key ages post rotation
-		if providerKeys, err = keysOfProviders(account, provider, project, c); err != nil {
-			return
-		}
-		return postMetric(providerKeys, ddAPIKey, c.Datadog)
-	}
-	return
+	return rotateKeys(rc, c.Credentials)
 }
 
 // rotateKey creates a new key for the rotation candidate, updates its key locations,
