@@ -537,6 +537,12 @@ func isDatadogKeySet(apiKey string) bool {
 // postMetric posts details of each keys.Key to a metrics api
 func postMetric(keys []keys.Key, apiKey string, datadog config.Datadog) (err error) {
 	url := strings.Join([]string{datadogURL, apiKey}, "")
+	ddServiceTag := "cloud-key-rotator"
+	if datadog.MetricService != "" {
+		ddServiceTag = datadog.MetricService
+	} else if datadog.MetricProject != "" {
+		ddServiceTag = datadog.MetricProject
+	}
 	for _, key := range keys {
 		var jsonString = []byte(
 			`{ "series" :[{"metric":"` + datadog.MetricName + `",` +
@@ -548,6 +554,7 @@ func postMetric(keys []keys.Key, apiKey string, datadog config.Datadog) (err err
 				`"tags":[` +
 				`"team:` + datadog.MetricTeam + `",` +
 				`"project:` + datadog.MetricProject + `",` +
+				`"service:` + ddServiceTag + `",` +
 				`"environment:` + datadog.MetricEnv + `",` +
 				`"key:` + key.Name + `",` +
 				`"provider:` + key.Provider.Provider + `",` +

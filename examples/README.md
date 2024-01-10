@@ -11,7 +11,7 @@ If running in AWS Lambda, store the config in SecretManager in a secret named
 `ckr-config`.
 
 If running in GCP CloudFunctions, store the config in GCS, e.g. in
-`your_bucket/ckr-config.json`, then set an env var 
+`your_bucket/ckr-config.json`, then set an env var
 `CKR_BUCKET_NAME=your_bucket`.
 
 Otherwise, when running the binary or code directly, pop the config into
@@ -22,27 +22,29 @@ a file called `config.json` in `/etc/cloud-key-rotator/`.
 For scraping of AWS key ages:
 
 ```json
-
 {
   "EnableKeyAgeLogging": true,
   "RotationMode": false,
-  "CloudProviders": [{
-    "Name":"aws"
-  }]
+  "CloudProviders": [
+    {
+      "Name": "aws"
+    }
+  ]
 }
 ```
 
 For scraping of GCP key ages:
 
 ```json
-
 {
   "EnableKeyAgeLogging": true,
   "RotationMode": false,
-  "CloudProviders": [{
-    "Project":"my-project",
-    "Name": "gcp"
-  }]
+  "CloudProviders": [
+    {
+      "Project": "my-project",
+      "Name": "gcp"
+    }
+  ]
 }
 ```
 
@@ -55,6 +57,7 @@ If you add a Datadog struct to the config, you can get `cloud-key-rotator` to po
     "MetricEnv": "prod",
     "MetricName": "cloud-key-rotator.age",
     "MetricProject": "my_project",
+    "MetricService": "my_service",
     "MetricTeam": "my_team"
   },
   "DatadogAPIKey": "okj23434poz3j4o324p455oz3j4o324",
