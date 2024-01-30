@@ -12,7 +12,7 @@ require (
 	github.com/beamly/go-gocd v0.0.0-20190719193049-383d56afbf92
 	github.com/cenkalti/backoff/v4 v4.2.1
 	github.com/google/go-github/v45 v45.2.0
-	github.com/jszwedko/go-circleci v0.3.0
+	github.com/jszwedko/go-circleci v0.4.0
 	github.com/mongodb/go-client-mongodb-atlas v0.3.0
 	github.com/ovotech/cloud-key-client v0.4.2
 	github.com/ovotech/mantle v0.32.3
