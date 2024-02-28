@@ -21,7 +21,7 @@ require (
 	go.uber.org/zap v1.27.0
 	golang.org/x/crypto v0.19.0
 	golang.org/x/oauth2 v0.17.0
-	google.golang.org/api v0.166.0
+	google.golang.org/api v0.167.0
 	gopkg.in/ini.v1 v1.67.0
 	gopkg.in/src-d/go-git.v4 v4.13.1
 	k8s.io/api v0.29.2
