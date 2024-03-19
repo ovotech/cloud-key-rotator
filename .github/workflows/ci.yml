@@ -85,6 +85,7 @@ jobs:
       - name: go build
         run: |
           export GO111MODULE=on
+          go version
           go build -o cloud-key-rotator ./cmd
           ls -lah
       - name: docker build
