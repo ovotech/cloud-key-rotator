@@ -84,6 +84,7 @@ jobs:
       - uses: actions/checkout@v3
       - name: go build
         run: |
+          echo "blahhh"
           export GO111MODULE=on
           go version && go build -o cloud-key-rotator ./cmd
           ls -lah
