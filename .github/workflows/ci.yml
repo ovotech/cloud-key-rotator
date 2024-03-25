@@ -113,6 +113,9 @@ jobs:
     needs: ci_block
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "=1.19"
       - name: e2e test rotation
         env:
           CKR_CREDENTIALS_GITHUBAPITOKEN: ${{ secrets.CKR_GITHUB_TOKEN }}
