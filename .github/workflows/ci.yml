@@ -85,8 +85,6 @@ jobs:
       - name: go build
         run: |
           echo "blahhh"
-          export GO111MODULE=on
-          go version && go build -o cloud-key-rotator ./cmd
           ls -lah
       - name: docker build
         uses: docker/build-push-action@v5
