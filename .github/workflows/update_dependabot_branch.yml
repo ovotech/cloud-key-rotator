@@ -1,4 +1,4 @@
-name: CI
+name: Update dependabot branch
 on:
   pull_request:
     branches: [master]
@@ -8,6 +8,7 @@ jobs:
   ci_block:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - name: make empty commit to dependabot branch
         id: empty_dependabot
         env:
