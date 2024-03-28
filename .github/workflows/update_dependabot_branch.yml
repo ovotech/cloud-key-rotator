@@ -17,6 +17,7 @@ jobs:
         id: empty_dependabot
         env:
           GITHUB_DEPENDABOT_TOKEN: ${{ secrets.GH_TOKEN_DEPENDABOT_COMMIT }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           pr_number=$(gh pr list -S 'author:app/dependabot' --json number -q '.[0].number')
           branch_name=$(gh pr view $pr_number --json headRefName -q '.headRefName')
