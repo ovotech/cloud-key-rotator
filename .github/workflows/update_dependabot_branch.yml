@@ -18,5 +18,7 @@ jobs:
           branch_name=$(gh pr view $pr_number --json headRefName -q '.headRefName')
           git fetch
           git checkout $branch_name
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
           git commit --allow-empty -m "Empty commit to force CI/CD"
           git push origin $branch_name
