@@ -20,7 +20,7 @@ jobs:
     permissions:
       contents: write
     runs-on: ubuntu-latest
-    if: github.actor == 'dependabot[bot]'
+    if: github.actor == 'github-actions[bot]'
     steps:
       - name: Dependabot metadata
         id: metadata
