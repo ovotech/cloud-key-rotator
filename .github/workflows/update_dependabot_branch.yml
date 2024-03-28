@@ -24,6 +24,8 @@ jobs:
           git fetch
           git checkout $branch_name
           git config --global credential.helper '!f() { sleep 1; echo "username=git token=<TOKEN>"; }; f'
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
           git commit --allow-empty -m "Empty commit to force CI/CD"
           git remote remove origin
           git remote add origin https://$GITHUB_DEPENDABOT_TOKEN@github.com/ovotech/cloud-key-rotator
