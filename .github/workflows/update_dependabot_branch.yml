@@ -16,6 +16,7 @@ jobs:
         run: |
           pr_number=$(gh pr list -S 'author:app/dependabot' --json number -q '.[0].number')
           branch_name=$(gh pr view $pr_number --json headRefName -q '.headRefName')
+          git pull
           git checkout $branch_name
           git commit --allow-empty -m "Empty commit to force CI/CD"
           git push origin $branch_name
