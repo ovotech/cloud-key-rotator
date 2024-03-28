@@ -1,5 +1,9 @@
 name: Update dependabot branch
 on:
+  #   schedule:
+  #     - cron: "0 5 * * 1-5"
+  #   # allow the GitHub Action to be triggered manually
+  #   workflow_dispatch:
   pull_request:
     branches: [master]
   workflow_dispatch:
@@ -12,13 +16,14 @@ jobs:
       - name: make empty commit to dependabot branch
         id: empty_dependabot
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_DEPENDABOT_TOKEN: ${{ secrets.GH_TOKEN_DEPENDABOT_COMMIT }}
         run: |
           pr_number=$(gh pr list -S 'author:app/dependabot' --json number -q '.[0].number')
           branch_name=$(gh pr view $pr_number --json headRefName -q '.headRefName')
           git fetch
           git checkout $branch_name
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git config user.name "github-actions[bot]"
+          git config --global credential.helper '!f() { sleep 1; echo "username=git token=<TOKEN>"; }; f'
           git commit --allow-empty -m "Empty commit to force CI/CD"
+          git remote remove origin
+          git remote add origin https://$GITHUB_DEPENDABOT_TOKEN@github.com/ovotech/cloud-key-rotator
           git push origin $branch_name
