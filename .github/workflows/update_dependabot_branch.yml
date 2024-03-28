@@ -23,7 +23,7 @@ jobs:
           branch_name=$(gh pr view $pr_number --json headRefName -q '.headRefName')
           git fetch
           git checkout $branch_name
-          git config --global credential.helper '!f() { sleep 1; echo "username=git token=<TOKEN>"; }; f'
+          git config --global credential.helper '!f() { sleep 1; echo "username=git token=$GITHUB_DEPENDABOT_TOKEN"; }; f'
           git config user.email "chris.every@kaluza.com"
           git config user.name "eversC"
           git commit --allow-empty -m "Empty commit to force CI/CD"
