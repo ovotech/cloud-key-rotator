@@ -13,4 +13,6 @@ jobs:
         id: empty_dependabot
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: gh pr list -S 'author:app/dependabot' --json number -q '.[0].number'
+        run: |
+          pr_number=$(gh pr list -S 'author:app/dependabot' --json number -q '.[0].number')
+          gh pr view $pr_number --json headRefName -q '.headRefName'
