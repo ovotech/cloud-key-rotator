@@ -5,17 +5,6 @@ on:
   workflow_dispatch:
 
 jobs:
-  ci_block:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: block on ci workflows
-        id: block
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-          MIN_WAIT: 30
-          MAX_WAIT: 300
-        run: bash ./scripts/ci_concurrency.sh
   dependabot:
     permissions:
       contents: write
