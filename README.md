@@ -1,5 +1,8 @@
 # Cloud-Key-Rotator
 
+> _:warning:_ this is no longer supported. Security fixes will continue to be
+> applied, but if you need any other changes, please fork.
+
 [![CircleCI](https://circleci.com/gh/ovotech/cloud-key-rotator/tree/master.svg?style=svg)](https://circleci.com/gh/ovotech/cloud-key-rotator/tree/master)
 
 This is a Golang program to assist with the reporting of Service Account key
