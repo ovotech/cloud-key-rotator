@@ -7,7 +7,7 @@ import (
 
 	"github.com/ovotech/cloud-key-rotator/pkg/cred"
 
-	"github.com/CircleCI-Public/circleci-cli/api"
+	"github.com/CircleCI-Public/circleci-cli/api/context"
 	"github.com/CircleCI-Public/circleci-cli/settings"
 
 	"github.com/cenkalti/backoff/v4"
@@ -16,6 +16,9 @@ import (
 // CircleCIContext type
 type CircleCIContext struct {
 	ContextID    string
+	OrgID        string
+	VcsType      string
+	OrgName      string
 	KeyIDEnvVar  string
 	KeyEnvVar    string
 	Base64Decode bool
@@ -29,10 +32,7 @@ func (circleContext CircleCIContext) Write(serviceAccountName string, keyWrapper
 		RestEndpoint: "api/v2",
 		Token:        creds.CircleCIAPIToken,
 	}
-	var restClient *api.ContextRestClient
-	if restClient, err = api.NewContextRestClient(cfg); err != nil {
-		return
-	}
+	restClient := context.NewContextClient(&cfg, circleContext.OrgID, circleContext.VcsType, circleContext.OrgName)
 
 	provider := keyWrapper.KeyProvider
 	contextID := circleContext.ContextID
@@ -79,7 +79,7 @@ func (circleContext CircleCIContext) Write(serviceAccountName string, keyWrapper
 }
 
 func updateCircleCIContext(contextID, envVarName, envVarValue string,
-	restClient *api.ContextRestClient) (err error) {
+	restClient context.ContextInterface) (err error) {
 
 	maxElapsedTimeSecs := 500
 	backoffMultiplier := 5
