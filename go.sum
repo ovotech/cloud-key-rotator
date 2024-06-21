@@ -83,8 +83,8 @@ github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5/go.mod h1:wHh0iHkY
 github.com/aws/aws-lambda-go v1.47.0 h1:0H8s0vumYx/YKs4sE7YM0ktwL2eWse+kfopsRI1sXVI=
 github.com/aws/aws-lambda-go v1.47.0/go.mod h1:dpMpZgvWx5vuQJfBt0zqBha60q7Dd7RfgJv23DymV8A=
 github.com/aws/aws-sdk-go v1.40.34/go.mod h1:585smgzpB/KqRA+K3y/NL/oYRqQvpNJYvLm+LY1U59Q=
-github.com/aws/aws-sdk-go v1.54.3 h1:Bk+EXoq6v5I1xmHR9GQGpsMWZZFXs+FD+5uPyEmfgX0=
-github.com/aws/aws-sdk-go v1.54.3/go.mod h1:eRwEWoyTWFMVYVQzKMNHWP5/RV4xIUGMQfXQHfHkpNU=
+github.com/aws/aws-sdk-go v1.54.6 h1:HEYUib3yTt8E6vxjMWM3yAq5b+qjj/6aKA62mkgux9g=
+github.com/aws/aws-sdk-go v1.54.6/go.mod h1:eRwEWoyTWFMVYVQzKMNHWP5/RV4xIUGMQfXQHfHkpNU=
 github.com/beamly/go-gocd v0.0.0-20190719193049-383d56afbf92 h1:4cZnjWx0qjkJwyY+sFO37SFYgS3M8gAe3KARSlpPsY4=
 github.com/beamly/go-gocd v0.0.0-20190719193049-383d56afbf92/go.mod h1:pksG9m+PD4EGQOXi+SRJErSZDDPb5nodJsTRWm4I7To=
 github.com/cenkalti/backoff/v4 v4.3.0 h1:MyRJ/UdXutAwSAT+s3wNd7MfTIcy71VQueUuFK343L8=
