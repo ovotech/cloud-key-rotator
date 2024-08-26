@@ -24,7 +24,7 @@ jobs:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
   go_checks:
     runs-on: ubuntu-latest
-    container: eversc/go-pr-checks:1.19
+    container: eversc/go-pr-checks:1.20
     steps:
       - uses: actions/checkout@v4
       - name: go build
@@ -52,7 +52,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
-          go-version: "=1.19"
+          go-version: "=1.20"
       - name: go build
         run: |
           export GO111MODULE=on
