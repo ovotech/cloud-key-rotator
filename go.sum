@@ -56,8 +56,8 @@ cloud.google.com/go/storage v1.43.0/go.mod h1:ajvxEa7WmZS1PxvKRq4bq0tFT3vMd502Jw
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
-github.com/CircleCI-Public/circleci-cli v0.1.30549 h1:ESZwFLdUOx0s6i6/bi8ZyIw6dfsdIbgYNgD6H7RCZ9U=
-github.com/CircleCI-Public/circleci-cli v0.1.30549/go.mod h1:duzHDtx1ANq0tuH3HVG/0CfuTHCKh12qMm/zpw0HHnQ=
+github.com/CircleCI-Public/circleci-cli v0.1.30995 h1:jsrHeA+ORs7tvDbGwK73mvWGuNM2g4QrA79x+QFhiik=
+github.com/CircleCI-Public/circleci-cli v0.1.30995/go.mod h1:duzHDtx1ANq0tuH3HVG/0CfuTHCKh12qMm/zpw0HHnQ=
 github.com/DataDog/datadog-api-client-go v1.16.0 h1:5jOZv1m98criCvYTa3qpW8Hzv301nbZX3K9yJtwGyWY=
 github.com/DataDog/datadog-api-client-go v1.16.0/go.mod h1:PgrP2ABuJWL3Auw2iEkemAJ/r72ghG4DQQmb5sgnKW4=
 github.com/DataDog/zstd v1.5.0 h1:+K/VEwIAaPcHiMtQvpLD4lqW7f0Gk3xdYZmI1hD+CXo=
