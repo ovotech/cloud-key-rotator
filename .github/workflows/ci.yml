@@ -67,6 +67,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
       - name: terraform format check
         id: fmt
         run: terraform fmt -check -recursive -diff || (echo "::error title=terraform format check failed::Run 'terraform fmt -recursive' to ensure all files are correctly formatted";exit 1)
