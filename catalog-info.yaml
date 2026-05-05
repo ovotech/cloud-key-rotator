@@ -1,0 +1,28 @@
+---
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: cloud-key-rotator
+  description: Golang program to rotate AWS and GCP account keys
+  annotations:
+    github.com/project-slug: ovotech/cloud-key-rotator
+spec:
+  owner: infosec
+  domain: grey-it
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: cloud-key-rotator
+  description: Golang program to rotate AWS and GCP account keys
+  annotations:
+    github.com/project-slug: ovotech/cloud-key-rotator
+    backstage.io/source-location: url:https://github.com/ovotech/cloud-key-rotator/tree/main
+  tags:
+    - internal
+    - go
+spec:
+  type: service
+  lifecycle: production
+  owner: infosec
+  system: cloud-key-rotator
